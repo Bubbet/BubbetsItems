@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    uses: xoxfaby/actions/.github/workflows/dotnet-publish.yml@main
+    uses: Bubbet/faby-actions/blob/main/.github/workflows/dotnet-publish.yml@main
 
   release-thunderstore:
     needs: build
