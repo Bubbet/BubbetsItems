@@ -11,7 +11,6 @@ using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using BetterUI;
 using BubbetsItems.Behaviours;
 using BubbetsItems.Components;
 using EntityStates;
@@ -44,7 +43,6 @@ namespace BubbetsItems
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("bubbet.zioriskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("bubbet.zioconfigfile", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("com.xoxfaby.BetterUI", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.Moffein.ItemStats", BepInDependency.DependencyFlags.SoftDependency)] // Required to make sure my pickup description hook runs after
     public class BubbetsItemsPlugin : BaseUnityPlugin
     {
@@ -153,8 +151,6 @@ namespace BubbetsItems
                     Conf.MakeRiskOfOptionsZio();
             }
             ConfigCategories.Init();
-            if (Chainloader.PluginInfos.ContainsKey("com.xoxfaby.BetterUI"))
-                AddItemTierToBetterUI();
         }
 
         private void ZioConfigSetup()
@@ -162,12 +158,7 @@ namespace BubbetsItems
             //zConfigFile = new Z ioConfigFile.ZioConfigFile(RoR2Application.cloudStorage, "/BubbetsItemss.cfg", true, this);
             Conf.InitZio(Config); //zConfigFile); // TODO create wrapper that can handle both zio and normal.
         }
-
-        private void AddItemTierToBetterUI()
-        {
-            ItemSorting.tierMap.Add(VoidLunarTier.tier, 3);
-        }
-
+        
         private void MakeRiskOfOptions()
         {
             riskOfOptionsEnabled = true;

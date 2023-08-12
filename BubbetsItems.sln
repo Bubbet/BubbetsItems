@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BubbetsItemss", "BubbetsItemss.csproj", "{98022564-A133-4776-BA61-A65FB7C1542F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BubbetsItems", "BubbetsItems.csproj", "{98022564-A133-4776-BA61-A65FB7C1542F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

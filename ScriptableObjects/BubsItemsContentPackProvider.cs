@@ -7,7 +7,7 @@ using UnityEngine;
 namespace BubbetsItems
 {
 	
-	[CreateAssetMenu(menuName = "BubbetsItemss/ContentPackProvider")]
+	[CreateAssetMenu(menuName = "BubbetsItems/ContentPackProvider")]
 	public class BubsItemsContentPackProvider : SerializableContentPack
 	{
 		public ExpansionDef[] expansionDefs = {};

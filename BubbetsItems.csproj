@@ -19,10 +19,4 @@
         <PackageReference Include="CoreCLR-NCalc" Version="2.2.101" />
         <PackageReference Include="Zio" Version="0.7.3" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="BetterUI">
-        <HintPath>..\Libs\BetterUI-nstrip.dll</HintPath>
-      </Reference>
-    </ItemGroup>
 </Project>

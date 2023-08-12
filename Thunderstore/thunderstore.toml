@@ -1,0 +1,36 @@
+﻿[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "BubbetsItems"
+name = "BubbetsItems"
+versionNumber = "1.8.9"
+description = "An expansion item mod. Currently has 13 regular items, 9 Void Lunar items, 4 equipment, and 8 void items"
+websiteUrl = "https://github.com/xoxfaby/BetterUI"
+containsNsfwContent = false
+
+[package.dependencies]
+bbepis-BepInExPack = "5.4.1902"
+RiskofThunder-R2API_RecalculateStats = "1.0.0"
+
+[build]
+icon = "./icon.png"
+readme = "../README.md"
+outdir = "../zip"
+
+[[build.copy]]
+source = "./NCalc.dll"
+target = "plugins/BubbetsItems/NCalc.dll"
+
+[[build.copy]]
+source = "../bin/Release/netstandard2.0/BubbetsItems.dll"
+target = "plugins/BubbetsItems/BubbetsItems.dll"
+
+[[build.copy]]
+source = "../Languages"
+target = "plugins/BubbetsItems/Languages"
+
+[publish]
+repository = "https://thunderstore.io"
+communities = ["riskofrain2"]
+categories = ["mods", "tweaks", "client-side"]

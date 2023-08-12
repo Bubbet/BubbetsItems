@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace BubbetsItems
 {
-	[CreateAssetMenu(menuName = "BubbetsItemss/VoidLunarDropTable")]
+	[CreateAssetMenu(menuName = "BubbetsItems/VoidLunarDropTable")]
 	public class VoidLunarDropTable : PickupDropTable
 	{
 		private WeightedSelection<PickupIndex> selector = new();

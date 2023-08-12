@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace BubbetsItems
 {
-	[CreateAssetMenu(menuName = "BubbetsItemss/BubItemDef")]
+	[CreateAssetMenu(menuName = "BubbetsItems/BubItemDef")]
 	public class BubItemDef : ItemDef
 	{
 		public GameObject displayModelPrefab;
