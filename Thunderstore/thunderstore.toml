@@ -3,7 +3,7 @@ schemaVersion = "0.0.1"
 
 [package]
 namespace = "BubbetsItems"
-name = "BubbetsItems"
+name = "BubbetsItemsPlugin"
 versionNumber = "1.8.9"
 description = "An expansion item mod. Currently has 13 regular items, 9 Void Lunar items, 4 equipment, and 8 void items"
 websiteUrl = "https://github.com/xoxfaby/BetterUI"

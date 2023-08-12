@@ -35,7 +35,7 @@ using SearchableAttribute = HG.Reflection.SearchableAttribute;
 
 namespace BubbetsItems
 {
-    [BepInPlugin("bubbet.bubbetsitems", "Bubbets Items", "1.8.9")]
+    [BepInPlugin("bubbet.bubbetsitems", "Bubbets Items", Version)]
     [BepInDependency(RecalculateStatsAPI.PluginGUID)]
     //[BepInDependency(R2API.R2API.PluginGUID, BepInDependency.DependencyFlags.SoftDependency)]//, R2API.Utils.R2APISubmoduleDependency(nameof(R2API.RecalculateStatsAPI))]
     [BepInDependency(AetheriumPlugin.ModGuid, BepInDependency.DependencyFlags.SoftDependency)]
@@ -51,6 +51,8 @@ namespace BubbetsItems
         public static ContentPack ContentPack;
         public static AssetBundle AssetBundle;
         public List<SharedBase> forwardTest => SharedBase.Instances;
+
+        public const string Version = "1.8.9";
 
         public static PickupIndex[] VoidLunarItems => _voidLunarItems ??= ItemCatalog.allItemDefs
             .Where(x => x.tier == VoidLunarTier.tier)
