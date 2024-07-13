@@ -26,7 +26,7 @@ namespace BubbetsItems
     public abstract class ItemBase : SharedBase
     {
         //protected virtual void MakeTokens(){} // Description is supposed to have % and + per item, pickup is a brief message about what the item does
-        
+
         protected override void MakeConfigs()
         {
             var name = GetType().Name;
@@ -44,13 +44,102 @@ namespace BubbetsItems
         public VoidPairing? voidPairing;
         protected string SimpleDescriptionToken;
 
-        protected void AddScalingFunction(string defaultValue, string name, string? desc = null, string? oldDefault = null)
+        protected void AddScalingFunction(string defaultValue, string name, string? desc = null,
+            string? oldDefault = null)
         {
-            scalingInfos.Add(new ScalingInfo(sharedInfo.ConfigFile, defaultValue, name, new StackFrame(1).GetMethod().DeclaringType, desc, oldDefault));
+            scalingInfos.Add(new ScalingInfo(sharedInfo.ConfigFile, defaultValue, name,
+                new StackFrame(1).GetMethod().DeclaringType, desc, oldDefault));
+        }
+
+        private static List<string> alreadyPlural =
+            new List<string>() // "rounds" and "-es" does not need to be registered here
+            {
+                "400 Tickets",
+                "Balls",
+                "Gummy Vitamins",
+                // "Zoom Lenses", 
+                "Booster Boots",
+                // "Jellied Soles", 
+                "Life Savings",
+                // "Needles", 
+                "Predatory Instincts",
+                "Fueling Bellows",
+                "Sharpened Chopsticks",
+                "Hardlight Shields",
+                "Steroids",
+                // "Boxing Gloves",
+                // "Spafnar's Fries",
+                "Charging Nanobots",
+                "Experimental Jets",
+                "Prototype Jet Boots",
+                "Low Quality Speakers",
+                // "Purrfect Headphones",
+                // "Inoperative Nanomachines",
+                "Stargazer's Records",
+                // "Prison Shackles",
+                "Baby's Toys",
+                "Defensive Microbots",
+                "Death's Regards",
+                "Spare Drone Parts",
+                "Brainstalks",
+                // "Empathy Cores",
+                "Sorcerer's Pills",
+                "Shifted Quartz",
+                "Clasping Claws",
+                "Enhancement Vials",
+                "<style=cIsVoid>Corrupts all Shatterspleens.</style>",
+                // "Empyrean Braces",
+                "Orbs of Falsity",
+                "Visions of Heresy",
+                "Hooks of Heresy",
+                "Strides of Heresy",
+                "Essence of Heresy",
+                "Beads of Fealty",
+                "Prescriptions",
+                // "Snake Eyes",
+                // "Panic Mines",
+            };
+
+        // metarule: "(\\S+) of", "Pluralize($1) of $2s"
+        // metarule: "The (.+)", "Pluralize($1)"
+        // metarule: "Silence Between Two Strikes", "Silences Between Two Strikes"
+        private static Dictionary<string, string> rules = new Dictionary<string, string>()
+        {
+            { "rounds$", "rounds" },
+            { "tooth$", "teeth" },
+            { "fungus$", "fungi" },
+            { "(a|e|i|o|u)o$", "$1os" },
+            { "o$", "oes" },
+            { "(a|e|i|o|u)y$", "$1ys" },
+            { "y$", "ies" },
+            { "ff$", "s" },
+            { "fe?$", "ves" },
+            { "es$", "es" },
+            { "(ch|sh|x|z|s)$", "$1es" },
+            { "s?$", "s" }
+        };
+
+        public static string GetPlural(string str)
+        {
+            if (alreadyPlural.Contains(str)) return str;
+            if (str == "Silence Between Two Strikes") return "Silences Between Two Strikes";
+            Match metarule = Regex.Match(str, "(.+) of (.+)", RegexOptions.IgnoreCase);
+            if (metarule.Success) return GetPlural(metarule.Groups[1].Value) + " of " + metarule.Groups[2].Value;
+            metarule = Regex.Match(str, "^the (.+)", RegexOptions.IgnoreCase);
+            if (metarule.Success) return GetPlural(metarule.Groups[1].Value);
+            foreach (var k in rules.Keys)
+            {
+                if (Regex.Match(str, k, RegexOptions.IgnoreCase).Success)
+                    return Regex.Replace(str, k, rules[k], RegexOptions.IgnoreCase);
+            }
+
+            return str;
         }
 
         private static Regex formatArgParams = new Regex(@"({\d:?.*?})+", RegexOptions.Compiled);
-        public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
+
+        public override string GetFormattedDescription(Inventory? inventory, string? token = null,
+            bool forceHideExtended = false)
         {
             // ReSharper disable twice Unity.NoNullPropagation
 
@@ -64,14 +153,17 @@ namespace BubbetsItems
             {
                 if (!voidPairing.IsDefault)
                 {
-                    corruption = Language.GetStringFormatted("BUB_DEFAULT_CONVERT", string.Join(", ", voidPairing.itemDefs.Select(x =>
-                    {
-                        var str = Language.GetString(x.nameToken);
-                        if (Language.currentLanguage == Language.english)
-                            str += "s";
-                        return str;
-                    })));
-                    corruption = corruption.Style(ItemDef.tier == BubbetsItemsPlugin.VoidLunarTier.tier ? StyleEnum.VoidLunar : StyleEnum.Void);
+                    corruption = Language.GetStringFormatted("BUB_DEFAULT_CONVERT", string.Join(", ",
+                        voidPairing.itemDefs.Select(x =>
+                        {
+                            var str = Language.GetString(x.nameToken);
+                            if (Language.currentLanguage == Language.english)
+                                str = GetPlural(str);
+                            return str;
+                        })));
+                    corruption = corruption.Style(ItemDef.tier == BubbetsItemsPlugin.VoidLunarTier.tier
+                        ? StyleEnum.VoidLunar
+                        : StyleEnum.Void);
                 }
                 else
                 {
@@ -79,7 +171,9 @@ namespace BubbetsItems
                 }
             }
 
-            if (sharedInfo.UseSimpleDescIfApplicable.Value && scalingInfos.All(x => x.IsDefault) && !string.IsNullOrEmpty(SimpleDescriptionToken))
+
+            if (sharedInfo.UseSimpleDescIfApplicable.Value && scalingInfos.All(x => x.IsDefault) &&
+                !string.IsNullOrEmpty(SimpleDescriptionToken))
             {
                 var ret = Language.GetString(sharedInfo.TokenPrefix + SimpleDescriptionToken);
                 if (sharedInfo.ItemStatsInSimpleDesc.Value && !forceHideExtended)
@@ -87,9 +181,9 @@ namespace BubbetsItems
                     var para = new List<string>();
 
                     ret += corruption;
-                    
+
                     ret += "\n";
-                    
+
                     // Holy fuck i hate regex in c#
                     var match = formatArgParams.Matches(Language.GetString(token ?? ItemDef.descriptionToken));
                     foreach (Match matchGroupCapture in match)
@@ -98,7 +192,7 @@ namespace BubbetsItems
                         if (!string.IsNullOrEmpty(val))
                             para.Add(val);
                     }
-                    
+
 
                     para = para.OrderBy(x => x[1]).ToList();
 
@@ -135,7 +229,7 @@ namespace BubbetsItems
                 info.MakeInLobbyConfig(scalingFunctions[ConfigCategoriesEnum.BalancingFunctions]);
             }
         }
-        
+
         public override void MakeRiskOfOptions()
         {
             base.MakeRiskOfOptions();
@@ -153,12 +247,14 @@ namespace BubbetsItems
             {
                 if (MatchName(itemDef.name, name)) ItemDef = itemDef;
             }
+
             if (ItemDef == null)
             {
-                sharedInfo.Logger?.LogWarning($"Could not find ItemDef for item {this} in serializableContentPack, class/itemdef name are probably mismatched. This will throw an exception later.");
+                sharedInfo.Logger?.LogWarning(
+                    $"Could not find ItemDef for item {this} in serializableContentPack, class/itemdef name are probably mismatched. This will throw an exception later.");
             }
         }
-        
+
         public override void AddDisplayRules(VanillaIDRS which, ItemDisplayRule[] displayRules)
         {
             var set = IDRHelper.GetRuleSet(which);
@@ -166,11 +262,12 @@ namespace BubbetsItems
             if (rules is null) return;
             rules = rules.AddItem(new ItemDisplayRuleSet.KeyAssetRuleGroup
             {
-                displayRuleGroup = new DisplayRuleGroup {rules = displayRules},
+                displayRuleGroup = new DisplayRuleGroup { rules = displayRules },
                 keyAsset = ItemDef
             }).ToArray();
             set!.keyAssetRuleGroups = rules;
         }
+
         public override void AddDisplayRules(ModdedIDRS which, ItemDisplayRule[] displayRules)
         {
             var set = IDRHelper.GetRuleSet(which);
@@ -178,12 +275,12 @@ namespace BubbetsItems
             if (rules is null) return;
             rules = rules.AddItem(new ItemDisplayRuleSet.KeyAssetRuleGroup
             {
-                displayRuleGroup = new DisplayRuleGroup {rules = displayRules},
+                displayRuleGroup = new DisplayRuleGroup { rules = displayRules },
                 keyAsset = ItemDef
             }).ToArray();
             set!.keyAssetRuleGroups = rules;
         }
-        
+
 
         protected override void FillDefsFromContentPack()
         {
@@ -196,7 +293,7 @@ namespace BubbetsItems
                         ItemDef = itemDef;
             }
 
-            if (ItemDef == null) 
+            if (ItemDef == null)
                 sharedInfo.Logger?.LogWarning(
                     $"Could not find ItemDef for item {this}, class/itemdef name are probably mismatched. This will throw an exception later.");
         }
@@ -218,6 +315,7 @@ namespace BubbetsItems
         }
 
         public override bool RequiresSotv => voidPairing != null;
+
         protected override void FillRequiredExpansions()
         {
             if (RequiresSotv)
@@ -225,12 +323,10 @@ namespace BubbetsItems
             else
                 ItemDef.requiredExpansion = sharedInfo.Expansion;
         }
-        
+
         [HarmonyPrefix, HarmonyPatch(typeof(ContagiousItemManager), nameof(ContagiousItemManager.Init))]
         public static void FillVoidItems()
         {
-            
-            
             var pairs = new List<ItemDef.Pair>();
             /*
             foreach (var itemBase in Items)
@@ -239,23 +335,25 @@ namespace BubbetsItems
             }
              */
             var roo = Chainloader.PluginInfos.ContainsKey("com.rune580.riskofoptions");
-            
+
             foreach (var itemBase in Items)
             {
                 itemBase.voidPairing?.PostItemCatalog();
                 if (roo)
                     itemBase.voidPairing?.MakeRiskOfOptions();
             }
-            
+
             // ContagiousItemManager.originalToTransformed
             // ContagiousItemManager.itemsToCheck
             // ArrayUtils.ArrayAppend<ContagiousItemManager.TransformationInfo>(ref ContagiousItemManager._transformationInfos, transformationInfo);
-            
+
             ItemCatalog.itemRelationships[DLC1Content.ItemRelationshipTypes.ContagiousItem] = ItemCatalog
                 .itemRelationships[DLC1Content.ItemRelationshipTypes.ContagiousItem].AddRangeToArray(pairs.ToArray());
         }
 
-        protected virtual void FillVoidConversions(List<ItemDef.Pair> pairs) {}
+        protected virtual void FillVoidConversions(List<ItemDef.Pair> pairs)
+        {
+        }
 
 
         public static void CheatForAllItems()
@@ -265,7 +363,7 @@ namespace BubbetsItems
                 itemBase.CheatForItem(UnityEngine.Random.onUnitSphere);
             }
         }
-        
+
         public class ScalingInfo
         {
             private readonly string _description;
@@ -286,13 +384,16 @@ namespace BubbetsItems
 
             public bool IsDefault => _configEntry.Value.Trim() == _defaultValue.Trim();
 
-            public ScalingInfo(ConfigFile configFile, string defaultValue, string name, Type callingType, string? desc = null, string? oldDefault = null)
+            public ScalingInfo(ConfigFile configFile, string defaultValue, string name, Type callingType,
+                string? desc = null, string? oldDefault = null)
             {
                 _description = desc ?? "[a] = item count";
                 _name = name;
                 WorkingContext = new ExpressionContext();
 
-                _configEntry = configFile.Bind(ConfigCategoriesEnum.BalancingFunctions, callingType.Name + "_" + name, defaultValue,   callingType.Name + "; " + _name +"; Scaling function for item. ;" + _description, oldDefault);
+                _configEntry = configFile.Bind(ConfigCategoriesEnum.BalancingFunctions, callingType.Name + "_" + name,
+                    defaultValue, callingType.Name + "; " + _name + "; Scaling function for item. ;" + _description,
+                    oldDefault);
                 _defaultValue = defaultValue;
                 _oldValue = _configEntry.Value;
                 try
@@ -311,6 +412,7 @@ namespace BubbetsItems
             {
                 return _function(context ?? _defaultContext);
             }
+
             public float ScalingFunction(int? itemCount)
             {
                 WorkingContext.a = itemCount ?? 1;
@@ -342,7 +444,9 @@ namespace BubbetsItems
                     _function = new Expression(_configEntry.Value).ToLambda<ExpressionContext, float>();
                     _oldValue = _configEntry.Value;
                 }
-                catch (EvaluationException) {}
+                catch (EvaluationException)
+                {
+                }
             }
         }
 
@@ -368,20 +472,25 @@ namespace BubbetsItems
 
             public void SettingChangedOld()
             {
-                var pairs = ItemCatalog.itemRelationships[DLC1Content.ItemRelationshipTypes.ContagiousItem].Where(x => x.itemDef2 != Parent.ItemDef);
-                itemDefs = configEntry.Value.Split(' ').Select(str => ItemCatalog.FindItemIndex(str)).Where(index => index != ItemIndex.None).Select(index => ItemCatalog.GetItemDef(index)).ToArray();
-                var newPairs = from def in itemDefs select new ItemDef.Pair {itemDef1 = def, itemDef2 = Parent.ItemDef};
-                ItemCatalog.itemRelationships[DLC1Content.ItemRelationshipTypes.ContagiousItem] = pairs.Union(newPairs).ToArray();
+                var pairs = ItemCatalog.itemRelationships[DLC1Content.ItemRelationshipTypes.ContagiousItem]
+                    .Where(x => x.itemDef2 != Parent.ItemDef);
+                itemDefs = configEntry.Value.Split(' ').Select(str => ItemCatalog.FindItemIndex(str))
+                    .Where(index => index != ItemIndex.None).Select(index => ItemCatalog.GetItemDef(index)).ToArray();
+                var newPairs = from def in itemDefs
+                    select new ItemDef.Pair { itemDef1 = def, itemDef2 = Parent.ItemDef };
+                ItemCatalog.itemRelationships[DLC1Content.ItemRelationshipTypes.ContagiousItem] =
+                    pairs.Union(newPairs).ToArray();
             }
 
             public void PostItemCatalog()
             {
                 if (string.IsNullOrWhiteSpace(ValidEntries))
                     ValidEntries = string.Join(" ", ItemCatalog.itemNames);
-                
-                configEntry = Parent.sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.VoidConversions, Parent.GetType().Name, _default, "Valid values: " + ValidEntries, _oldDefault);
+
+                configEntry = Parent.sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.VoidConversions,
+                    Parent.GetType().Name, _default, "Valid values: " + ValidEntries, _oldDefault);
                 configEntry.SettingChanged += (_, _) => SettingChanged();
-                
+
                 SettingChanged();
             }
 
@@ -389,7 +498,7 @@ namespace BubbetsItems
             {
                 var oldItems = itemDefs;
                 SettingChangedOld();
-                if(setup && !oldItems.SequenceEqual(itemDefs))
+                if (setup && !oldItems.SequenceEqual(itemDefs))
                     ContagiousItemManager.InitTransformationTable();
                 setup = true;
             }
@@ -401,7 +510,7 @@ namespace BubbetsItems
                 _madeRiskOfOptions = true;
             }
         }
-        
+
         [SuppressMessage("ReSharper", "InconsistentNaming")]
         [SuppressMessage("ReSharper", "ParameterHidesMember")]
         public class ExpressionContext
@@ -452,9 +561,12 @@ namespace BubbetsItems
             public float Exp(float x) => Mathf.Exp(x);
             public float Floor(float x) => Mathf.Floor(x);
             public float Gamma(float x, float y, float z) => Mathf.Gamma(x, y, z);
+
             public float Lerp(float x, float y, float z) => Mathf.Lerp(x, y, z);
+
             //public float Log(float x) => Mathf.Log(x);
-            public double Log(double x, double y) => Mathf.Log((float) x, (float) y);
+            public double Log(double x, double y) => Mathf.Log((float)x, (float)y);
+
             //public float Log10(float x) => Mathf.Log10(x);
             public float Max(float x, float y) => Mathf.Max(x, y);
             public float Min(float x, float y) => Mathf.Min(x, y);
@@ -471,10 +583,14 @@ namespace BubbetsItems
             public float LerpUnclamped(float x, float y, float z) => Mathf.LerpUnclamped(x, y, z);
             public float MoveTowards(float x, float y, float z) => Mathf.MoveTowards(x, y, z);
             public float PerlinNoise(float x, float y) => Mathf.PerlinNoise(x, y);
+
             public float PingPong(float x, float y) => Mathf.PingPong(x, y);
+
             //public float SmoothDamp(float x, float y, ref float z, float w, float m, float d) => Mathf.SmoothDamp(x, y, ref z, w, m, d);
             public float SmoothStep(float x, float y, float z) => Mathf.SmoothStep(x, y, z);
+
             public float MoveTowardsAngle(float x, float y, float z) => Mathf.MoveTowardsAngle(x, y, z);
+
             //public float SmoothDampAngle(float x, float y, ref float z, float w, float m) => Mathf.SmoothDampAngle(x, y, ref z, w, m);
             public float GammaToLinearSpace(float x) => Mathf.GammaToLinearSpace(x);
             public float LinearToGammaSpace(float x) => Mathf.LinearToGammaSpace(x);
