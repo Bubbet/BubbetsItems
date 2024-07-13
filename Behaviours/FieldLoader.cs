@@ -138,10 +138,7 @@ namespace MaterialHud
 					if (instance != null) DestroyImmediate(instance);
 					var prefab = obj.Result;
 					var parent = Instantiate(prefab);
-					if (parent.transform.childCount > 0)
-						instance = parent.transform.GetChild(Math.Min(childIndex, parent.transform.childCount - 1)).gameObject;
-					else
-						instance = parent;
+					instance = parent.transform.childCount > 0 ? parent.transform.GetChild(Math.Min(childIndex, parent.transform.childCount - 1)).gameObject : parent;
 
 					var transformChild = instance.transform;
 					SetRecursiveFlags(transformChild);

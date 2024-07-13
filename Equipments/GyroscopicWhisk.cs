@@ -110,7 +110,8 @@ namespace BubbetsItems.Equipments
 				body.characterDirection.forward = Quaternion.Euler(0, speed, 0) * body.characterDirection.forward;
 				if (speed > 50f)
 				{
-					body.characterMotor.velocity.y += 10f;
+					var motor = body.characterMotor;
+					BrokenClock.velocity.SetValue(motor, ((IPhysMotor) motor).velocity + Vector3.up * 10f);
 				}
 			}
 			else

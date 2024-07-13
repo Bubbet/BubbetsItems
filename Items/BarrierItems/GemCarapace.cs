@@ -42,7 +42,7 @@ namespace BubbetsItems.Items.BarrierItems
 		protected override void MakeConfigs()
 		{
 			base.MakeConfigs();
-			AddScalingFunction("(0.1[a] / (0.1[a] + 1))  * [m]", "Barrier Add", desc: "[a] = item count; [b] = buff stacks; [m] = maximum barrier", oldDefault: "(0.075 * [b] + 0.1) * [m]");
+			AddScalingFunction("(0.1 * [a] / (0.1 * [a] + 1))  * [m]", "Barrier Add", desc: "[a] = item count; [b] = buff stacks; [m] = maximum barrier", oldDefault: "(0.075 * [b] + 0.1) * [m]");
 			AddScalingFunction("2", "Refresh Duration", oldDefault: "1");
 			AddScalingFunction("[a] * 0.4 + 1", "Max Buff Stacks", oldDefault: "[a]");
 		}

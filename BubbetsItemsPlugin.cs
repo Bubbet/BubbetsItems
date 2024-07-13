@@ -194,7 +194,7 @@ namespace BubbetsItems
             {
                 var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 AkSoundEngine.AddBasePath(path);
-                var result = AkSoundEngine.LoadBank("BubbetsItemss.bnk", out _bankID);
+                var result = AkSoundEngine.LoadBank("BubbetsItems.bnk", out _bankID);
                 if (result != AKRESULT.AK_Success)
                     Debug.LogError("[Bubbets Items] SoundBank Load Failed: " + result);
             }

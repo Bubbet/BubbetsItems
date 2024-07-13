@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Reflection;
 using HarmonyLib;
 using RoR2;
 using UnityEngine;
@@ -8,6 +9,9 @@ namespace BubbetsItems
 	[HarmonyPatch]
 	public static class ColorCatalogPatches
 	{
+		public static FieldInfo? indexToColor32 = typeof(ColorCatalog).GetField("indexToColor32", BindingFlags.Static | BindingFlags.NonPublic);
+		public static FieldInfo? indexToHexString = typeof(ColorCatalog).GetField("indexToHexString", BindingFlags.Static | BindingFlags.NonPublic);
+		
 		public static Color32 VoidLunarColor = new(134, 0, 203, 255);
 
 		
@@ -19,8 +23,8 @@ namespace BubbetsItems
 			
 			var voidLunarDark = new Color32(83, 0, 126, 255);
             
-			ColorCatalog.indexToColor32 = ColorCatalog.indexToColor32.AddItem(VoidLunarColor).AddItem(voidLunarDark).ToArray();
-			ColorCatalog.indexToHexString = ColorCatalog.indexToHexString.AddItem(Util.RGBToHex(VoidLunarColor)).AddItem(Util.RGBToHex(voidLunarDark)).ToArray();
+			indexToColor32?.SetValue(null, ColorCatalog.indexToColor32.AddItem(VoidLunarColor).AddItem(voidLunarDark).ToArray());
+			indexToHexString?.SetValue(null, ColorCatalog.indexToHexString.AddItem(Util.RGBToHex(VoidLunarColor)).AddItem(Util.RGBToHex(voidLunarDark)).ToArray());
 		}
 
 		[HarmonyPrefix, HarmonyPatch(typeof(ColorCatalog), nameof(ColorCatalog.GetColor))]
