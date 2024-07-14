@@ -5,8 +5,8 @@
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <RootNamespace>BubbetsItems</RootNamespace>
+        <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
     </PropertyGroup>
-
     <ItemGroup>
         <PackageReference Include="BepInEx.Core" Version="5.4.19" />
         <PackageReference Include="KingEnderBrine-InLobbyConfig" Version="1.4.0" />

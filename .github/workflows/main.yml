@@ -1,16 +1,17 @@
-on:
-  push:
-    tags:
-      - 'v*'
+on: push
 
 jobs:
   build:
-    uses: xoxfaby/actions/.github/workflows/dotnet-publish.yml@main
-
-  release-thunderstore:
-    needs: build
-    uses: xoxfaby/actions/.github/workflows/thunderstore.yml@main
-    with:
-      version: ${{ needs.build.outputs.version }}
-    secrets:
-      THUNDERSTORE_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
+    runs-on: ubuntu-latest
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.x
+          cache: true
+        run: dotnet restore --locked-mode
+      - name: Execute dotnet
+        run: dotnet build
