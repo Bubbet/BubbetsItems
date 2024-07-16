@@ -32,15 +32,15 @@ namespace BubbetsItems.ItemBehaviors
         {
             if (stack > _oldStack && body)
             {
-                var toAdd = Mathf.FloorToInt(_instance!.scalingInfos[0].ScalingFunction(stack) -
-                                             _instance.scalingInfos[0].ScalingFunction(_oldStack));
+                var toAdd = Mathf.FloorToInt(_instance!.ScalingInfos[0].ScalingFunction(stack) -
+                                             _instance.ScalingInfos[0].ScalingFunction(_oldStack));
                 if (NetworkServer.active)
                     body.SetBuffCount(Tarnished.BuffDef!.buffIndex, body.GetBuffCount(Tarnished.BuffDef!.buffIndex) + toAdd);
                 body.master.OnInventoryChanged();
             }
         }
 
-        private void Awake()
+        private new void Awake()
         {
             base.Awake();
             _instance = SharedBase.GetInstance<Tarnished>();

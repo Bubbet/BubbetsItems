@@ -30,7 +30,7 @@ namespace BubbetsItems.Items
 			base.MakeConfigs();
 			AddScalingFunction("[a]", "Barnacle Count");
 			AddScalingFunction("[a] * 3", "Item Count");
-			KillOld = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Void Blindfold Should Kill Old", true, "Should it kill the old minion, or just not spawn more.");
+			_killOld = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Void Blindfold Should Kill Old", true, "Should it kill the old minion, or just not spawn more.");
 		}
 
 		protected override void FillVoidConversions(List<ItemDef.Pair> pairs)
@@ -42,7 +42,7 @@ namespace BubbetsItems.Items
 		public override void MakeRiskOfOptions()
 		{
 			base.MakeRiskOfOptions();
-			ModSettingsManager.AddOption(new CheckBoxOption(KillOld));
+			ModSettingsManager.AddOption(new CheckBoxOption(_killOld));
 		}
 
 		protected override void MakeBehaviours()
@@ -66,7 +66,7 @@ namespace BubbetsItems.Items
 			var inst = GetInstance<VoidBlindfold>();
 			var stack = inv.GetItemCount(inst.ItemDef);
 			if (stack <= 0) return true;
-			var maxCount = inst.scalingInfos[0].ScalingFunction(stack);
+			var maxCount = inst.ScalingInfos[0].ScalingFunction(stack);
 			__result = Mathf.FloorToInt(maxCount);
 			return false;
 		}
@@ -82,9 +82,9 @@ namespace BubbetsItems.Items
 			if (!inv) return;
 			var stack = inv.GetItemCount(ItemDef);
 			if (stack <= 0) return;
-			if (!KillOld.Value)
+			if (!_killOld.Value)
 			{
-				var maxCount = scalingInfos[0].ScalingFunction(stack);
+				var maxCount = ScalingInfos[0].ScalingFunction(stack);
 				var count = master.GetDeployableCount(Slot);
 				if (count >= maxCount) return;
 			}
@@ -102,10 +102,10 @@ namespace BubbetsItems.Items
 			DirectorCore.instance.TrySpawnObject(request);
 		}
 
-		private SpawnCard? csc;
-		private ConfigEntry<bool> KillOld;
+		private SpawnCard? _csc;
+		private ConfigEntry<bool> _killOld = null!;
 
-		public SpawnCard Csc => csc ??= Addressables
+		public SpawnCard Csc => _csc ??= Addressables
 			.LoadAssetAsync<SpawnCard>("RoR2/DLC1/VoidBarnacle/cscVoidBarnacleAlly.asset").WaitForCompletion(); 
 
 		private void BarnacleSpawnedServer(SpawnCard.SpawnResult obj)
@@ -128,7 +128,7 @@ namespace BubbetsItems.Items
 			var list1 = runInstance.availableVoidTier1DropList;
 			var tRng = runInstance.treasureRng;
 			
-			for (var i = 0; i < scalingInfos[1].ScalingFunction(stack); i++)
+			for (var i = 0; i < ScalingInfos[1].ScalingFunction(stack); i++)
 			{
 				master.inventory.GiveItem(list1[tRng.RangeInt(0, list1.Count)].pickupDef.itemIndex);
 			}

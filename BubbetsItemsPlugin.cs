@@ -48,9 +48,9 @@ namespace BubbetsItems
     {
         private const string AssetBundleName = "MainAssetBundle";
         
-        public static ContentPack ContentPack;
-        public static AssetBundle AssetBundle;
-        public List<SharedBase> forwardTest => SharedBase.Instances;
+        public static ContentPack ContentPack = null!;
+        public static AssetBundle AssetBundle = null!;
+        public List<SharedBase> ForwardTest => SharedBase.Instances;
 
         public const string Version = "1.8.9";
 
@@ -58,8 +58,8 @@ namespace BubbetsItems
             .Where(x => x.tier == VoidLunarTier.tier)
             .Select(x => PickupCatalog.FindPickupIndex(x.itemIndex)).ToArray();
 
-        public static BubbetsItemsPlugin instance;
-        public static ManualLogSource Log;
+        public static BubbetsItemsPlugin Instance = null!;
+        public static ManualLogSource Log = null!;
         
         private static ExpansionDef? _bubExpansion;
         private static ExpansionDef? _bubSotvExpansion;
@@ -100,7 +100,7 @@ namespace BubbetsItems
             if (Chainloader.PluginInfos.ContainsKey("com.rune580.riskofoptions"))
                 MakeRiskOfOptions();
             
-            instance = this;
+            Instance = this;
             Log = Logger;
             RoR2Application.isModded = true;
             var harm = new Harmony(Info.Metadata.GUID);
@@ -163,7 +163,7 @@ namespace BubbetsItems
         
         private void MakeRiskOfOptions()
         {
-            riskOfOptionsEnabled = true;
+            RiskOfOptionsEnabled = true;
             RiskOfOptions.ModSettingsManager.AddOption(new GenericButtonOption("Report An Issue", "General", "If you find a bug in the mod, reporting an issue is the best way to ensure it gets fixed.","Open Link", () =>
             {
                 Application.OpenURL("https://github.com/Bubbet/Risk-Of-Rain-Mods/issues/new");
@@ -180,11 +180,11 @@ namespace BubbetsItems
         }
 
         private static uint _bankID;
-        public static ItemTierDef VoidLunarTier;
+        public static ItemTierDef VoidLunarTier = null!;
         private static PickupIndex[]? _voidLunarItems;
         //private ZioConfigFile.ZioConfigFile zConfigFile;
-        private SharedBase.SharedInfo sharedInfo;
-        public static bool riskOfOptionsEnabled;
+        private SharedBase.SharedInfo _sharedInfo = null!;
+        public static bool RiskOfOptionsEnabled;
 
         //[SystemInitializer]
         public static void LoadSoundBank()
@@ -218,13 +218,13 @@ namespace BubbetsItems
 
         public static class Conf
         {
-            public static ConfigEntry<bool> AmmoPickupAsOrbEnabled;
-            public static ConfigEntry<bool> VoidCoinShareOnPickup;
-            public static ConfigEntry<float> VoidCoinDropChanceStart;
-            public static ConfigEntry<float> VoidCoinDropChanceMult;
-            public static ConfigEntry<bool> VoidCoinBarrelDrop;
-            public static ConfigEntry<bool> VoidCoinVoidFields;
-            public static ConfigEntry<float> EffectVolume;
+            public static ConfigEntry<bool> AmmoPickupAsOrbEnabled = null!;
+            public static ConfigEntry<bool> VoidCoinShareOnPickup = null!;
+            public static ConfigEntry<float> VoidCoinDropChanceStart = null!;
+            public static ConfigEntry<float> VoidCoinDropChanceMult = null!;
+            public static ConfigEntry<bool> VoidCoinBarrelDrop = null!;
+            public static ConfigEntry<bool> VoidCoinVoidFields = null!;
+            public static ConfigEntry<float> EffectVolume = null!;
             //public static bool RequiresR2Api;
 
             internal static void Init(ConfigFile configFile)
@@ -243,7 +243,7 @@ namespace BubbetsItems
                 EffectVolume.SettingChanged += (_, _) => AkSoundEngine.SetRTPCValue("Volume_Effects", EffectVolume.Value);
                 AkSoundEngine.SetRTPCValue("Volume_Effects", EffectVolume.Value);
                 
-                instance.sharedInfo.MakeZioOptions(configFile);
+                Instance._sharedInfo.MakeZioOptions(configFile);
             }
 
             internal static void MakeRiskOfOptions()
@@ -276,10 +276,10 @@ namespace BubbetsItems
             }
             serialContent.entityStateTypes = states.ToArray();
             
-            SharedBase.Initialize(Logger, Config, out sharedInfo, serialContent, harmony, "BUB_");
+            SharedBase.Initialize(Logger, Config, out _sharedInfo, serialContent, harmony, "BUB_");
             ContentPack = serialContent.CreateContentPack();
             SharedBase.AddContentPack(ContentPack);
-            ContentPackProvider.Initialize(Info.Metadata.GUID, ContentPack, sharedInfo);
+            ContentPackProvider.Initialize(Info.Metadata.GUID, ContentPack, _sharedInfo);
 
             if (!Conf.AmmoPickupAsOrbEnabled.Value) return;
             var go = AssetBundle.LoadAsset<GameObject>("AmmoPickupOrb");
@@ -289,9 +289,9 @@ namespace BubbetsItems
 
         private class ContentPackProvider : IContentPackProvider
         {
-            private static ContentPack contentPack;
-            private static string _identifier;
-            private static SharedBase.SharedInfo info;
+            private static ContentPack _contentPack = null!;
+            private static string _identifier = null!;
+            private static SharedBase.SharedInfo _info = null!;
             public string identifier => _identifier;
 
             public IEnumerator LoadStaticContentAsync(LoadStaticContentAsyncArgs args)
@@ -303,7 +303,7 @@ namespace BubbetsItems
 
             public IEnumerator GenerateContentPackAsync(GetContentPackAsyncArgs args)
             {
-                ContentPack.Copy(contentPack, args.output);
+                ContentPack.Copy(_contentPack, args.output);
                 //Log.LogError(ContentPack.identifier);
                 args.ReportProgress(1f);
                 yield break;
@@ -313,16 +313,16 @@ namespace BubbetsItems
             {
                 args.ReportProgress(1f);
             Log.LogInfo("Contentpack finished");    
-                info.Expansion = BubExpansion;
-                info.SotVExpansion = BubSotvExpansion;
+                _info.Expansion = BubExpansion;
+                _info.SotVExpansion = BubSotvExpansion;
                 yield break;
             }
 
             internal static void Initialize(string identifier, ContentPack pack, SharedBase.SharedInfo sharedInfo)
             {
                 _identifier = identifier;
-                contentPack = pack;
-                info = sharedInfo;
+                _contentPack = pack;
+                _info = sharedInfo;
                 ContentManager.collectContentPackProviders += AddCustomContent;
             }
 

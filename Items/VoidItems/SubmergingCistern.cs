@@ -11,8 +11,8 @@ namespace BubbetsItems.Items
 	//TODO make tethering effect and item behavior, and tethering controller
 	public class SubmergingCistern : ItemBase
 	{
-		private ConfigEntry<float> _dropChance;
-		public ConfigEntry<bool> ignoreHealNova;
+		private ConfigEntry<float> _dropChance = null!;
+		public ConfigEntry<bool> IgnoreHealNova = null!;
 
 		protected override void MakeConfigs()
 		{
@@ -21,7 +21,7 @@ namespace BubbetsItems.Items
 			AddScalingFunction("[d] * 0.5", "Healing From Damage", "[a] = item count; [d] = damage dealt");
 			AddScalingFunction("[a]", "Teammate Count", oldDefault: "[a] + 2");
 			AddScalingFunction("20", "Range");
-			ignoreHealNova = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General,
+			IgnoreHealNova = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General,
 				"SubmergingCistern Dont Proc HealNova", true, "Disable procs of N'kuhana's Opinion");
 			//_range = configFile.Bind(ConfigCategoriesEnum.BalancingFunctions, "Submerging Cistern Range", 20f, "Range for the Submerging Cistern to heal within.");
 			//_amount = configFile.Bind(ConfigCategoriesEnum.BalancingFunctions, "Submerging Cistern Damage", 0.5f, "Damage percent to heal.");
@@ -30,7 +30,7 @@ namespace BubbetsItems.Items
 		public override void MakeRiskOfOptions()
 		{
 			base.MakeRiskOfOptions();
-			ModSettingsManager.AddOption(new CheckBoxOption(ignoreHealNova));
+			ModSettingsManager.AddOption(new CheckBoxOption(IgnoreHealNova));
 			ModSettingsManager.AddOption(new SliderOption(_dropChance));
 		}
 
@@ -55,7 +55,7 @@ namespace BubbetsItems.Items
 
 		public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
 		{
-			scalingInfos[0].WorkingContext.d = 1f;
+			ScalingInfos[0].WorkingContext.d = 1f;
 			return base.GetFormattedDescription(inventory, token, forceHideExtended);
 		}
 

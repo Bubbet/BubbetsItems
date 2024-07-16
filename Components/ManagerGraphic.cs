@@ -13,12 +13,12 @@ namespace BubbetsItems
 		/// <summary>
 		/// The width of the edge to create.
 		/// </summary>
-		float width = 2.0f;
+		private float width = 2.0f;
 
 		/// <summary>
 		/// The points we're tracking (that we made in Start()) to make into a line strip.
 		/// </summary>
-		List<RectTransform> points = new List<RectTransform>();
+		private List<RectTransform> points = new List<RectTransform>();
 
 		public List<Vector2> lineStrip = new List<Vector2>();
 
@@ -42,12 +42,12 @@ namespace BubbetsItems
 			//CreateInflatedMesh(vh, lineStrip, infs, 1.0f, Color.black);
 		}
 
-		private float cellWidth;
-		private float cellHeight;
+		private float _cellWidth;
+		private float _cellHeight;
 		public Vector2Int gridSize = new Vector2Int(49, 5);
-		private float thickness = 2f;
+		private float _thickness = 2f;
 		public Vector2 size;
-		public LogBookPageScalingGraph parent;
+		public LogBookPageScalingGraph? parent;
 
 		private void MakeGrid(VertexHelper vh)
 		{
@@ -55,8 +55,8 @@ namespace BubbetsItems
 			//var width = rectTransform.rect.width * 5f;
 			//var height = rectTransform.rect.height * 5f;
 
-			cellWidth = size.x / gridSize.x;
-			cellHeight = size.y / gridSize.y;
+			_cellWidth = size.x / gridSize.x;
+			_cellHeight = size.y / gridSize.y;
 
 			int count = 0;
 			for (int y = 0; y < gridSize.y; y++)
@@ -71,8 +71,8 @@ namespace BubbetsItems
 
 		private void DrawCell(int x, int y, int index, VertexHelper vh)
 		{
-			float xPos = cellWidth * x - 0.5f * size.x;
-			float yPos = cellHeight * y - 0.5f * size.y;
+			float xPos = _cellWidth * x - 0.5f * size.x;
+			float yPos = _cellHeight * y - 0.5f * size.y;
             
 			UIVertex vertex = UIVertex.simpleVert;
 			vertex.color = new Color(0.6f, 0.6f, 0.6f);
@@ -81,32 +81,32 @@ namespace BubbetsItems
 			vertex.position = new Vector3(xPos, yPos);
 			vh.AddVert(vertex);
 
-			vertex.position = new Vector3(xPos, yPos + cellHeight);
+			vertex.position = new Vector3(xPos, yPos + _cellHeight);
 			vh.AddVert(vertex);
             
-			vertex.position = new Vector3(xPos + cellWidth, yPos + cellHeight);
+			vertex.position = new Vector3(xPos + _cellWidth, yPos + _cellHeight);
 			vh.AddVert(vertex);
             
-			vertex.position = new Vector3(xPos + cellWidth, yPos);
+			vertex.position = new Vector3(xPos + _cellWidth, yPos);
 			vh.AddVert(vertex);
             
 			//vh.AddTriangle(0, 1, 2);
 			//vh.AddTriangle(2, 3, 0);
 
-			var widthSqr = thickness * thickness;
+			var widthSqr = _thickness * _thickness;
 			var distanceSqr = widthSqr / 2f;
 			var distance = Mathf.Sqrt(distanceSqr);
 
 			vertex.position = new Vector3(xPos + distance, yPos + distance);
 			vh.AddVert(vertex);
             
-			vertex.position = new Vector3(xPos + distance, yPos + cellHeight - distance);
+			vertex.position = new Vector3(xPos + distance, yPos + _cellHeight - distance);
 			vh.AddVert(vertex);
             
-			vertex.position = new Vector3(xPos + cellWidth - distance, yPos + cellHeight - distance);
+			vertex.position = new Vector3(xPos + _cellWidth - distance, yPos + _cellHeight - distance);
 			vh.AddVert(vertex);
             
-			vertex.position = new Vector3(xPos + cellWidth - distance, yPos + distance);
+			vertex.position = new Vector3(xPos + _cellWidth - distance, yPos + distance);
 			vh.AddVert(vertex);
 
 			int offset = index * 8;

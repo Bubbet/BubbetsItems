@@ -42,7 +42,7 @@ namespace BubbetsItems.Items.BarrierItems
 
 		public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
 		{
-			scalingInfos[0].WorkingContext.b = 1;
+			ScalingInfos[0].WorkingContext.b = 1;
 			return base.GetFormattedDescription(inventory, token, forceHideExtended);
 		}
 
@@ -70,7 +70,7 @@ namespace BubbetsItems.Items.BarrierItems
 			if (inst == null) return previous;
 			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return previous;
-			var info = inst.scalingInfos[1];
+			var info = inst.ScalingInfos[1];
 			info.WorkingContext.h = hc.health;
 			info.WorkingContext.b = hc.fullBarrier;
 			info.WorkingContext.p = previous;
@@ -95,18 +95,19 @@ namespace BubbetsItems.Items.BarrierItems
 		{
 			var count = obj.inventory.GetItemCount(ItemDef);
 			if (count <= 0) return;
-			obj.barrierDecayMult += scalingInfos[0].ScalingFunction(count);
+			obj.barrierDecayMult += ScalingInfos[0].ScalingFunction(count);
 		}
 
 		public class SlugData : ExtraHealthBarSegments.BarData
 		{
-			private bool enabled;
-			private float barPos;
+			private bool _enabled;
+			private float _barPos;
 
 			public override HealthBarStyle.BarStyle GetStyle()
 			{
-				var style = bar.style.barrierBarStyle;
-				style.sizeDelta = bar.style.lowHealthOverStyle.sizeDelta;
+				if (Bar == null) return default;
+				var style = Bar.style.barrierBarStyle;
+				style.sizeDelta = Bar.style.lowHealthOverStyle.sizeDelta;
 				return style;
 			}
 
@@ -114,29 +115,28 @@ namespace BubbetsItems.Items.BarrierItems
 				HealthComponent healthComponent)
 			{
 				base.CheckInventory(ref info, inv, characterBody, healthComponent);
-				
+
 				var inst = GetInstance<EternalSlug>();
-				if (inst == null) return;
 				var amount = inv.GetItemCount(inst.ItemDef);
 				if (amount <= 0)
 				{
-					enabled = false;
+					_enabled = false;
 					return;
 				}
-				var sinfo = inst.scalingInfos[1];
+				var sinfo = inst.ScalingInfos[1];
 				sinfo.WorkingContext.h = healthComponent.health;
 				sinfo.WorkingContext.b = healthComponent.fullBarrier;
 				sinfo.WorkingContext.p = 0f;
-				barPos = sinfo.ScalingFunction(amount) /*healthComponent.fullCombinedHealth/* / healthComponent.fullCombinedHealth*/;
-				enabled = true;
+				_barPos = sinfo.ScalingFunction(amount) /*healthComponent.fullCombinedHealth/* / healthComponent.fullCombinedHealth*/;
+				_enabled = true;
 			}
 
 			public override void UpdateInfo(ref HealthBar.BarInfo info, HealthComponent.HealthBarValues healthBarValues)
 			{
-				info.enabled = enabled;
+				info.enabled = _enabled;
 				var curse = 1f - healthBarValues.curseFraction;
-				info.normalizedXMin = barPos * curse;
-				info.normalizedXMax = barPos * curse + 0.005f;
+				info.normalizedXMin = _barPos * curse;
+				info.normalizedXMax = _barPos * curse + 0.005f;
 				base.UpdateInfo(ref info, healthBarValues);
 			}
 		}

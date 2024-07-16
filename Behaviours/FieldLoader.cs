@@ -6,57 +6,57 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Events;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.Serialization;
 
 namespace MaterialHud
 {
 	[ExecuteAlways]
 	public class FieldLoader : MonoBehaviour
 	{
-		public string addressablePath;
-		public string targetFieldName;
-		public Component target;
+		public string addressablePath = "";
+		public string targetFieldName = "";
+		public Component target = null!;
 
-		private static readonly MethodInfo LoadAssetAsyncInfo = typeof(Addressables).GetMethod(nameof(Addressables.LoadAssetAsync), new[] { typeof(string) });
+		private static readonly MethodInfo? LoadAssetAsyncInfo = typeof(Addressables).GetMethod(nameof(Addressables.LoadAssetAsync), new[] { typeof(string) });
 
-		private static readonly BindingFlags flags = BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.NonPublic;
+		private const BindingFlags Flags = BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.NonPublic;
 
-		void LoadAsset(bool dontSave = false)
+		private void LoadAsset(bool dontSave = false)
 		{
 			var typ = target.GetType();
-			var field = typ.GetField(targetFieldName, flags);
-			PropertyInfo property = null;
+			var field = typ.GetField(targetFieldName, Flags);
+			PropertyInfo? property = null;
 			if (field == null)
 			{
-				property = typ.GetProperty(targetFieldName, flags);
+				property = typ.GetProperty(targetFieldName, Flags);
 				if (property == null) return;
 			}
-			var meth = LoadAssetAsyncInfo.MakeGenericMethod(field?.FieldType ?? property.PropertyType);
-			var awaiter = meth.Invoke(null, new object[] { addressablePath });
-			var wait = awaiter.GetType().GetMethod("WaitForCompletion", BindingFlags.Instance | BindingFlags.Public);
-			var asset = wait.Invoke(awaiter, null);
-			var assetObject = (UnityEngine.Object)asset;
-			if (assetObject != null)
+			var meth = LoadAssetAsyncInfo?.MakeGenericMethod(field?.FieldType ?? property!.PropertyType);
+			var awaiter = meth?.Invoke(null, new object[] { addressablePath });
+			var wait = awaiter?.GetType().GetMethod("WaitForCompletion", BindingFlags.Instance | BindingFlags.Public);
+			var asset = wait?.Invoke(awaiter, null);
+			var assetObject = asset as UnityEngine.Object;
+			if (assetObject == null) return;
+			if (dontSave)
 			{
-				if (dontSave)
-				{
-					assetObject.hideFlags |= HideFlags.DontSave;
-				}
-				field?.SetValue(target, asset);
-				property?.SetValue(target, asset);
+				assetObject.hideFlags |= HideFlags.DontSave;
 			}
+			field?.SetValue(target, asset);
+			property?.SetValue(target, asset);
 		}
-		IEnumerator WaitAndLoadAsset()
+
+		private IEnumerator WaitAndLoadAsset()
 		{
 			yield return new WaitUntil(() => Addressables.InternalIdTransformFunc != null);
 			LoadAsset(true);
 		}
 
-		void Start()
+		private void Start()
 		{
 			LoadAsset();
 		}
 
-		void OnValidate()
+		private void OnValidate()
 		{
 			if(gameObject.activeInHierarchy) StartCoroutine(WaitAndLoadAsset());
 		}
@@ -65,29 +65,30 @@ namespace MaterialHud
 	[ExecuteAlways]
 	public class ParticleSystemMaterialLoader : MonoBehaviour
 	{
-		public string addressablePath;
-		public ParticleSystem target;
-		public Color Tint;
+		public string addressablePath = null!;
+		public ParticleSystem target = null!;
+		[FormerlySerializedAs("Tint")] public Color tint;
 
-		void LoadAsset(bool dontSave = false)
+		private void LoadAsset(bool dontSave = false)
 		{
 			var renderer = target.GetComponent<ParticleSystemRenderer>();
 			renderer.material = Addressables.LoadAssetAsync<Material>(addressablePath).WaitForCompletion();
-			if (Tint != default)
-				renderer.material.SetColor("_TintColor", Tint);
+			if (tint != default)
+				renderer.material.SetColor("_TintColor", tint);
 		}
-		IEnumerator WaitAndLoadAsset()
+
+		private IEnumerator WaitAndLoadAsset()
 		{
 			yield return new WaitUntil(() => Addressables.InternalIdTransformFunc != null);
 			LoadAsset(true);
 		}
 
-		void Start()
+		private void Start()
 		{
 			LoadAsset();
 		}
 
-		void OnValidate()
+		private void OnValidate()
 		{
 			if(gameObject.activeInHierarchy) StartCoroutine(WaitAndLoadAsset());
 		}
@@ -96,37 +97,36 @@ namespace MaterialHud
 	[ExecuteAlways]
 	public class PrefabChildLoader : MonoBehaviour
 	{
-		public string prefabAddress;
+		public string prefabAddress = "";
 		public int childIndex;
 		
-		private Boolean loading = false;
-		private GameObject instance;
-		private int loadedIndex = -1;
+		private bool _loading = false;
+		private GameObject? _instance;
+		private int _loadedIndex = -1;
 
 		public UnityEvent finished = new();
 
-		void Start()
+		private void Start()
 		{
 			LoadPrefab();
 		}
 
-		void OnValidate()
+		private void OnValidate()
 		{
 			LoadPrefab();
 		}
 
-		void LoadPrefab()
+		private void LoadPrefab()
 		{
-			if (loadedIndex != childIndex)
+			if (_loadedIndex != childIndex)
 			{
-				loadedIndex = -1;
-				if (instance != null) DestroyImmediate(instance);
+				_loadedIndex = -1;
+				if (_instance != null) DestroyImmediate(_instance);
 			}
-			if (!string.IsNullOrEmpty(prefabAddress) && !loading)
-			{
-				loading = true;
-				Addressables.LoadAssetAsync<GameObject>(prefabAddress).Completed += PrefabLoaded;
-			}
+
+			if (string.IsNullOrEmpty(prefabAddress) || _loading) return;
+			_loading = true;
+			Addressables.LoadAssetAsync<GameObject>(prefabAddress).Completed += PrefabLoaded;
 		}
 
 		private void PrefabLoaded(AsyncOperationHandle<GameObject> obj)
@@ -134,13 +134,13 @@ namespace MaterialHud
 			switch (obj.Status)
 			{
 				case AsyncOperationStatus.Succeeded:
-					if (loadedIndex == childIndex) break;
-					if (instance != null) DestroyImmediate(instance);
+					if (_loadedIndex == childIndex) break;
+					if (_instance != null) DestroyImmediate(_instance);
 					var prefab = obj.Result;
 					var parent = Instantiate(prefab);
-					instance = parent.transform.childCount > 0 ? parent.transform.GetChild(Math.Min(childIndex, parent.transform.childCount - 1)).gameObject : parent;
+					_instance = parent.transform.childCount > 0 ? parent.transform.GetChild(Math.Min(childIndex, parent.transform.childCount - 1)).gameObject : parent;
 
-					var transformChild = instance.transform;
+					var transformChild = _instance.transform;
 					SetRecursiveFlags(transformChild);
 					transformChild.eulerAngles = Vector3.zero;
 					transformChild.position = Vector3.zero;
@@ -148,22 +148,23 @@ namespace MaterialHud
 					transformChild.SetParent(gameObject.transform, false);
 					if (parent.transform.childCount > 0)
 						DestroyImmediate(parent);
-					loadedIndex = childIndex;
-					loading = false;
+					_loadedIndex = childIndex;
+					_loading = false;
 					finished.Invoke();
 					break;
 				case AsyncOperationStatus.Failed:
-					if (instance != null) DestroyImmediate(instance);
+					if (_instance != null) DestroyImmediate(_instance);
 					Debug.LogError("Prefab load failed.");
-					loading = false;
+					_loading = false;
 					break;
+				case AsyncOperationStatus.None:
 				default:
 					// case AsyncOperationStatus.None:
 					break;
 			}
 		}
 
-		static void SetRecursiveFlags(Transform transform)
+		private static void SetRecursiveFlags(Transform transform)
 		{
 			transform.gameObject.hideFlags |= HideFlags.DontSave;
 			foreach(Transform child in transform)
@@ -176,9 +177,8 @@ namespace MaterialHud
 	[ExecuteAlways]
 	public class ShaderLoader : MonoBehaviour
 	{
-		public string addressablePath;
-		public Renderer target;
-		
+		public string addressablePath = "";
+		public Renderer target = null!;
 
 		[ContextMenu("Fill In Editor")]
 		[ExecuteAlways]

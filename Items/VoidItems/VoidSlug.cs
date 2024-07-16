@@ -33,7 +33,7 @@ namespace BubbetsItems.Items
 
 		public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
 		{
-			scalingInfos[0].WorkingContext.h = 1f;
+			ScalingInfos[0].WorkingContext.h = 1f;
 			return base.GetFormattedDescription(inventory, token, forceHideExtended);
 		}
 		
@@ -64,7 +64,7 @@ namespace BubbetsItems.Items
 			var voidSlug = GetInstance<VoidSlug>();
 			var count = __instance.inventory?.GetItemCount(voidSlug.ItemDef) ?? 0;
 			if (count <= 0 || __instance.outOfDanger) return;
-			var info = voidSlug.scalingInfos[0];
+			var info = voidSlug.ScalingInfos[0];
 			info.WorkingContext.h = __instance.healthComponent.missingCombinedHealth;
 			__instance.regen += info.ScalingFunction(count);
 		}

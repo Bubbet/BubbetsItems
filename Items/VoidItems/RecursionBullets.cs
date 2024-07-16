@@ -70,7 +70,7 @@ namespace BubbetsItems.Items
 			if (amount <= 0) return;
 
 
-			body!.AddTimedBuff(BuffDef, scalingInfos[2].ScalingFunction(amount), Mathf.FloorToInt(scalingInfos[1].ScalingFunction(amount) / scalingInfos[0].ScalingFunction(amount)));
+			body!.AddTimedBuff(BuffDef, ScalingInfos[2].ScalingFunction(amount), Mathf.FloorToInt(ScalingInfos[1].ScalingFunction(amount) / ScalingInfos[0].ScalingFunction(amount)));
 		}
 		
 		
@@ -84,7 +84,7 @@ namespace BubbetsItems.Items
 			
 			var buffAmount = __instance.GetBuffCount(BuffDef);
 			//var baseAttack = __instance.baseAttackSpeed + __instance.levelAttackSpeed * (__instance.level - 1f);
-			args.attackSpeedMultAdd += 1f + buffAmount * recursionBullets.scalingInfos[0].ScalingFunction(amount); 
+			args.attackSpeedMultAdd += 1f + buffAmount * recursionBullets.ScalingInfos[0].ScalingFunction(amount); 
 			//__instance.attackSpeed /= baseAttack;
 			//__instance.attackSpeed *= baseAttack;
 		}

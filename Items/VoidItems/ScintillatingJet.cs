@@ -30,8 +30,8 @@ namespace BubbetsItems.Items
 			base.MakeConfigs();
 			AddScalingFunction("([a] * 5 + 5) * [b]", "Armor amount", "[a] = Item amount, [b] = Buff amount", oldDefault: "([a] * 10 + 10) * [b]");
 			AddScalingFunction("2", "Buff Duration");
-			stackable = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "ScintillatingJet Buff Stackable", false, "Can the buff stack.");
-			stackable.SettingChanged += (_,_) => StackableChanged();
+			_stackable = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "ScintillatingJet Buff Stackable", false, "Can the buff stack.");
+			_stackable.SettingChanged += (_,_) => StackableChanged();
 		}
 
 		protected override void FillVoidConversions(List<ItemDef.Pair> pairs)
@@ -48,14 +48,14 @@ namespace BubbetsItems.Items
 
 		private void StackableChanged()
 		{
-			BuffDef!.canStack = stackable.Value;
+			BuffDef!.canStack = _stackable.Value;
 		}
 		public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
 		{
-			scalingInfos[0].WorkingContext.b = 1; // Make tooltip not update with buff amount
+			ScalingInfos[0].WorkingContext.b = 1; // Make tooltip not update with buff amount
 			return base.GetFormattedDescription(inventory, token, forceHideExtended);
 		}
-		private ConfigEntry<bool> stackable;
+		private ConfigEntry<bool> _stackable = null!;
 		private static BuffDef? _buffDef;
 		public static BuffDef? BuffDef => _buffDef ??= BubbetsItemsPlugin.ContentPack.buffDefs.Find("BuffDefScintillatingJet");
 		protected override void FillDefsFromSerializableCP(SerializableContentPack serializableContentPack)
@@ -85,7 +85,7 @@ namespace BubbetsItems.Items
 		public override void MakeRiskOfOptions()
 		{
 			base.MakeRiskOfOptions();
-			RiskOfOptions.ModSettingsManager.AddOption(new CheckBoxOption(stackable));
+			RiskOfOptions.ModSettingsManager.AddOption(new CheckBoxOption(_stackable));
 		}
 
 		private void DamageDealt(DamageReport obj)
@@ -96,8 +96,8 @@ namespace BubbetsItems.Items
 			if (!inv) return;
 			var count = inv.GetItemCount(ItemDef);
 			if (count <= 0) return;
-			if (!stackable.Value && body.GetBuffCount(BuffDef) > 0) return; // Make the buff not get added again if you already have it.
-			body.AddTimedBuff(BuffDef, scalingInfos[1].ScalingFunction(count));
+			if (!_stackable.Value && body.GetBuffCount(BuffDef) > 0) return; // Make the buff not get added again if you already have it.
+			body.AddTimedBuff(BuffDef, ScalingInfos[1].ScalingFunction(count));
 		}
 		
 		
@@ -106,7 +106,7 @@ namespace BubbetsItems.Items
 			if (!__instance) return;
 			if (!__instance.inventory) return;
 			var instance = GetInstance<ScintillatingJet>();
-			var info = instance.scalingInfos[0];
+			var info = instance.ScalingInfos[0];
 			info.WorkingContext.b = __instance.GetBuffCount(BuffDef);
 			args.armorAdd += info.ScalingFunction(__instance.inventory.GetItemCount(instance.ItemDef));
 		}

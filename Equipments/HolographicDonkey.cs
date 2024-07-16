@@ -18,8 +18,8 @@ namespace BubbetsItems.Equipments
 		{
 			base.MakeConfigs();
 			TargetAttachedTo = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Holographic Donkey Target Attached To", false, "Should the enemies try to target the enemy the donkey is attached to or just the donkey.");
-			duration = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Holographic Donkey Duration", 15f, "Donkey effect duration.");
-			range = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Holographic Donkey Range", 60f, "Donkey effect range.");
+			Duration = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Holographic Donkey Duration", 15f, "Donkey effect duration.");
+			Range = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Holographic Donkey Range", 60f, "Donkey effect range.");
 			// range
 		}
 
@@ -28,8 +28,8 @@ namespace BubbetsItems.Equipments
 			base.MakeRiskOfOptions();
 			ModSettingsManager.AddOption(new CheckBoxOption(TargetAttachedTo));
 			var config = new SliderConfig() { min = 0, max = 80};
-			ModSettingsManager.AddOption(new SliderOption(duration, config));
-			ModSettingsManager.AddOption(new SliderOption(range, config));
+			ModSettingsManager.AddOption(new SliderOption(Duration, config));
+			ModSettingsManager.AddOption(new SliderOption(Range, config));
 		}
 
 		protected override void MakeTokens()
@@ -43,10 +43,11 @@ namespace BubbetsItems.Equipments
 
 		public override string GetFormattedDescription(Inventory? inventory = null, string? token = null, bool forceHideExtended = false)
 		{
-			return Language.GetStringFormatted(EquipmentDef.descriptionToken, duration.Value, Cooldown.Value);
+			return Language.GetStringFormatted(EquipmentDef.descriptionToken, Duration.Value, Cooldown.Value);
 		}
 
 		[HarmonyPrefix, HarmonyPatch(typeof(CharacterMaster), nameof(CharacterMaster.GetDeployableSameSlotLimit))]
+		// ReSharper disable twice InconsistentNaming
 		public static bool GetDeployableLimit(CharacterMaster __instance, DeployableSlot slot, ref int __result)
 		{
 			if (slot != Slot) return true;
@@ -55,10 +56,10 @@ namespace BubbetsItems.Equipments
 		}
 
 		private static GameObject? _projectile;
-		public static ConfigEntry<bool> TargetAttachedTo;
-		public static ConfigEntry<float> duration;
-		public static ConfigEntry<float> range;
-		public static GameObject projectile => _projectile ??= BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("HolographicDonkeyProjectile");
+		public static ConfigEntry<bool> TargetAttachedTo = null!;
+		public static ConfigEntry<float> Duration = null!;
+		public static ConfigEntry<float> Range = null!;
+		public static GameObject Projectile => _projectile ??= BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("HolographicDonkeyProjectile");
 		
 		public override void PerformClientAction(EquipmentSlot equipmentSlot, EquipmentActivationState state)
 		{
@@ -74,11 +75,11 @@ namespace BubbetsItems.Equipments
 			if (!master) return EquipmentActivationState.DidNothing;
 			if (master.IsDeployableLimited(Slot)) return EquipmentActivationState.DidNothing;
 			var ray = equipmentSlot.GetAimRay();
-			projectile.GetComponent<DonkeyBehavior>().teamIndex = equipmentSlot.teamComponent.teamIndex;
+			Projectile.GetComponent<DonkeyBehavior>().teamIndex = equipmentSlot.teamComponent.teamIndex;
 			ProjectileManager.instance.FireProjectile(
 				new FireProjectileInfo
 				{
-					projectilePrefab = projectile,
+					projectilePrefab = Projectile,
 					owner = equipmentSlot.gameObject,
 					position = ray.origin,
 					rotation = Quaternion.LookRotation(ray.direction),
@@ -90,15 +91,15 @@ namespace BubbetsItems.Equipments
 
 	public class DonkeyBehavior : MonoBehaviour, IOnTakeDamageServerReceiver
 	{
-		private CharacterBody ownerBody;
-		public Transform donkeyTransform;
+		private CharacterBody ownerBody = null!;
+		public Transform donkeyTransform = null!;
 		private float watch;
 		private float interval = 1f;
-		private BullseyeSearch search;
-		private CharacterBody stuckTo;
+		private BullseyeSearch search = null!;
+		private CharacterBody? stuckTo;
 		private TeamIndex stuckToTeam;
 		private bool justStuck;
-		private ProjectileStickOnImpact impact;
+		private ProjectileStickOnImpact impact = null!;
 		public TeamIndex teamIndex;
 		private int sound;
 
@@ -133,12 +134,12 @@ namespace BubbetsItems.Equipments
 			mask.AddTeam(TeamIndex.Neutral);
 			search = new BullseyeSearch
 			{
-				maxDistanceFilter = HolographicDonkey.range.Value,
+				maxDistanceFilter = HolographicDonkey.Range.Value,
 				teamMaskFilter = mask,
 			};
 			impact = GetComponent<ProjectileStickOnImpact>();
 
-			GetComponent<ProjectileSimple>().lifetime = HolographicDonkey.duration.Value;
+			GetComponent<ProjectileSimple>().lifetime = HolographicDonkey.Duration.Value;
 		}
 
 		private void Update()
@@ -181,15 +182,16 @@ namespace BubbetsItems.Equipments
 						if (!ais.Any()) continue;
 						foreach (var ai in ais)
 						{
-							if (stuckTo && stuckTo.master != master && HolographicDonkey.TargetAttachedTo.Value)
+							if (stuckTo != null && stuckTo && stuckTo.master != master && HolographicDonkey.TargetAttachedTo.Value)
 							{
 								ai.currentEnemy.gameObject = stuckTo.gameObject;
-								ai.customTarget.gameObject = stuckTo.gameObject;
+								ai.customTarget.gameObject = stuckTo!.gameObject;
 							}
 							else
 							{
-								ai.currentEnemy.gameObject = gameObject;
-								ai.customTarget.gameObject = gameObject;
+								var o = gameObject;
+								ai.currentEnemy.gameObject = o;
+								ai.customTarget.gameObject = o;
 								//ai.skillDriverUpdateTimer = 2f;
 								//ai.targetRefreshTimer = 2f;
 							}
@@ -207,7 +209,7 @@ namespace BubbetsItems.Equipments
 
 		private void OnDisable()
 		{
-			if (stuckTo)
+			if (stuckTo != null && stuckTo)
 			{
 				stuckTo.teamComponent.teamIndex = stuckToTeam;
 			}
@@ -225,7 +227,7 @@ namespace BubbetsItems.Equipments
 
 		public void OnTakeDamageServer(DamageReport damageReport)
 		{
-			if (stuckTo && stuckTo.healthComponent)
+			if (stuckTo != null && stuckTo && stuckTo.healthComponent)
 			{
 				/*
 				var damageInfo = (DamageInfo) SharedBase.MemberwiseCloneRef?.Invoke(damageReport.damageInfo, new object[]{})!;

@@ -49,7 +49,7 @@ namespace BubbetsItems.Items.BarrierItems
 
 		public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
 		{
-			var context = scalingInfos[0].WorkingContext;
+			var context = ScalingInfos[0].WorkingContext;
 			context.b = 1;
 			context.m = 1;
 			
@@ -78,12 +78,12 @@ namespace BubbetsItems.Items.BarrierItems
 			var amount = inv.GetItemCount(ItemDef);
 			if (amount <= 0) return;
 
-			if (body.GetBuffCount(BuffDefStacking) >= Mathf.FloorToInt(scalingInfos[2].ScalingFunction(amount))) return;
+			if (body.GetBuffCount(BuffDefStacking) >= Mathf.FloorToInt(ScalingInfos[2].ScalingFunction(amount))) return;
 			
-			body.AddTimedBuff(BuffDefStacking, scalingInfos[1].ScalingFunction(amount));
+			body.AddTimedBuff(BuffDefStacking, ScalingInfos[1].ScalingFunction(amount));
 			var count = inv.GetItemCount(ItemDef);
 			
-			var info = scalingInfos[0];
+			var info = ScalingInfos[0];
 			info.WorkingContext.b = body.GetBuffCount(BuffDefStacking);
 			info.WorkingContext.m = body.maxBarrier;
 

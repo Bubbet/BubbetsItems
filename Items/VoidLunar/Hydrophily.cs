@@ -33,7 +33,7 @@ namespace BubbetsItems.Items.VoidLunar
 
 		public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
 		{
-			scalingInfos[0].WorkingContext.h = 1;
+			ScalingInfos[0].WorkingContext.h = 1;
 			return base.GetFormattedDescription(inventory, token, forceHideExtended);
 		}
 
@@ -78,7 +78,7 @@ namespace BubbetsItems.Items.VoidLunar
 			var iamount = inv.GetItemCount(inst.ItemDef);
 			if (iamount <= 0) return true;
 			if (!nonRegen) return __instance.barrier <= 0.01;
-			var info = inst.scalingInfos[0];
+			var info = inst.ScalingInfos[0];
 			info.WorkingContext.h = amount;
 			__instance.AddBarrier(info.ScalingFunction(iamount));
 			return false;

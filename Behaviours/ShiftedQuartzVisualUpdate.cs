@@ -10,55 +10,58 @@ namespace BubbetsItems.Behaviours
 		
 		private void Awake()
 		{
-			renderer = GetComponentInChildren<Renderer>();
+			_renderer = GetComponentInChildren<Renderer>();
 		}
 
 		private void Startup()
 		{
-			started = true;
-			body = transform.parent.GetComponent<CharacterBody>();
+			_started = true;
+			_body = transform.parent.GetComponent<CharacterBody>();
 			
 			var allButNeutral = TeamMask.allButNeutral;
-			var objectTeam = body.teamComponent.teamIndex;
+			var objectTeam = _body.teamComponent.teamIndex;
 			if (objectTeam != TeamIndex.None)
 			{
 				allButNeutral.RemoveTeam(objectTeam);
 			}
-			search = new BullseyeSearch
+			_search = new BullseyeSearch
 			{
 				teamMaskFilter = allButNeutral,
-				viewer = body
+				viewer = _body
 			};
-			renderer.material.SetFloat("_Color2BaseAlpha", ShiftedQuartz.visualTransparency.Value);
-			if (ShiftedQuartz.visualOnlyForAuthority.Value && !body.hasEffectiveAuthority)
+			_renderer.material.SetFloat(Color2BaseAlpha, ShiftedQuartz.VisualTransparency.Value);
+			if (ShiftedQuartz.VisualOnlyForAuthority.Value && !_body.hasEffectiveAuthority)
 			{
-				renderer.material.SetColor("_Color", Color.clear);
-				renderer.material.SetColor("_Color2", Color.clear);
+				_renderer.material.SetColor(Color1, Color.clear);
+				_renderer.material.SetColor(Color2, Color.clear);
 			}
 		}
 
 		private bool Search()
 		{
-			search.searchOrigin = gameObject.transform.position;
-			search.RefreshCandidates();
-			return search.GetResults()?.Any() ?? false;
+			_search.searchOrigin = gameObject.transform.position;
+			_search.RefreshCandidates();
+			return _search.GetResults()?.Any() ?? false;
 		}
 
 		private void FixedUpdate()
 		{
 			if(!transform.parent) return;
-			if(!started) Startup();
-			search.maxDistanceFilter = transform.localScale.z / 2f;
+			if(!_started) Startup();
+			_search.maxDistanceFilter = transform.localScale.z / 2f;
 			inside = Search();
 			var inRadius = inside ? 1f : 0f;
-			renderer.material.SetFloat("_ColorMix", inRadius);
+			_renderer.material.SetFloat(ColorMix, inRadius);
 		}
 		
-		private GameObject nearbyDamageBonusIndicator;
-		private Renderer renderer;
-		private BullseyeSearch search;
+		private Renderer _renderer = null!;
+		private BullseyeSearch _search = null!;
 		public bool inside;
-		private CharacterBody body;
-		private bool started;
+		private CharacterBody _body = null!;
+		private bool _started;
+		private static readonly int Color2BaseAlpha = Shader.PropertyToID("_Color2BaseAlpha");
+		private static readonly int Color1 = Shader.PropertyToID("_Color");
+		private static readonly int Color2 = Shader.PropertyToID("_Color2");
+		private static readonly int ColorMix = Shader.PropertyToID("_ColorMix");
 	}
 }

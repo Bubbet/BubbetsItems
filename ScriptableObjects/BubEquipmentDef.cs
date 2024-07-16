@@ -7,7 +7,7 @@ namespace BubbetsItems
 	[CreateAssetMenu(menuName = "BubbetsItemss/BubEquipmentDef")]
 	public class BubEquipmentDef : EquipmentDef
 	{
-		public GameObject displayModelPrefab;
+		public GameObject displayModelPrefab = null!;
 
 		private void OnValidate()
 		{

@@ -44,7 +44,7 @@ namespace BubbetsItems.Items.VoidLunar
 			var inst = GetInstance<Decent>();
 			var amount = __instance.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return;
-			__result *= 1f + inst.scalingInfos[1].ScalingFunction(amount);
+			__result *= 1f + inst.ScalingInfos[1].ScalingFunction(amount);
 		}
 
 		protected override void MakeBehaviours()
@@ -67,7 +67,7 @@ namespace BubbetsItems.Items.VoidLunar
 			if (amount <= 0) return;
 			var def = EquipmentCatalog.GetEquipmentDef(index);
 			if (!def) return;
-			for (var i = 0; i < Mathf.FloorToInt(scalingInfos[0].ScalingFunction(amount)); i++)
+			for (var i = 0; i < Mathf.FloorToInt(ScalingInfos[0].ScalingFunction(amount)); i++)
 			{
 				slot.PerformEquipmentAction(def);
 			}
@@ -89,7 +89,7 @@ namespace BubbetsItems.Items.VoidLunar
 			var inst = GetInstance<Decent>();
 			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return;
-			for (var i = 0; i < Mathf.FloorToInt(inst.scalingInfos[0].ScalingFunction(amount)); i++)
+			for (var i = 0; i < Mathf.FloorToInt(inst.ScalingInfos[0].ScalingFunction(amount)); i++)
 			{
 				slot.Execute();
 			}

@@ -15,10 +15,10 @@ namespace BubbetsItems.Items
 {
 	public class DecreaseBarrierDecay : ItemBase
 	{
-		public ConfigEntry<string> skillBlacklist;
-		public ConfigEntry<string> skillWhitelist;
-		private static List<SkillDef> skillDefBlacklist;
-		private static List<SkillDef> skillDefWhitelist;
+		public ConfigEntry<string> SkillBlacklist = null!;
+		public ConfigEntry<string> SkillWhitelist = null!;
+		private static List<SkillDef> _skillDefBlacklist = null!;
+		private static List<SkillDef> _skillDefWhitelist = null!;
 
 		protected override void MakeTokens()
 		{
@@ -45,13 +45,13 @@ namespace BubbetsItems.Items
 			
 			var defaultValue = "";
 			var values = string.Join(" ", SkillCatalog._allSkillDefs.Select(x => x.skillName));
-			skillBlacklist = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Mechanical Snail Blacklist", defaultValue, "Skills to not give barrier for, Valid values: " + values);
-			skillBlacklist.SettingChanged += (_, _) => SettingChanged();
-			skillWhitelist = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Mechanical Snail Whitelist", defaultValue, "Skills to bypass cooldown/stock check and give barrier for, Valid values: " + values);
-			skillWhitelist.SettingChanged += (_, _) => SettingChanged();
+			SkillBlacklist = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Mechanical Snail Blacklist", defaultValue, "Skills to not give barrier for, Valid values: " + values);
+			SkillBlacklist.SettingChanged += (_, _) => SettingChanged();
+			SkillWhitelist = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Mechanical Snail Whitelist", defaultValue, "Skills to bypass cooldown/stock check and give barrier for, Valid values: " + values);
+			SkillWhitelist.SettingChanged += (_, _) => SettingChanged();
 			SettingChanged();
 
-			if (BubbetsItemsPlugin.riskOfOptionsEnabled)
+			if (BubbetsItemsPlugin.RiskOfOptionsEnabled)
 			{
 				MakeRiskOfOptionsLate();
 			}
@@ -59,17 +59,17 @@ namespace BubbetsItems.Items
 
 		private void MakeRiskOfOptionsLate()
 		{
-			ModSettingsManager.AddOption(new StringInputFieldOption(skillWhitelist));
-			ModSettingsManager.AddOption(new StringInputFieldOption(skillBlacklist));
+			ModSettingsManager.AddOption(new StringInputFieldOption(SkillWhitelist));
+			ModSettingsManager.AddOption(new StringInputFieldOption(SkillBlacklist));
 		}
 
 		private void SettingChanged()
 		{
-			skillDefBlacklist = skillBlacklist.Value.Split(' ')
+			_skillDefBlacklist = SkillBlacklist.Value.Split(' ')
 				.Select(SkillCatalog.FindSkillIndexByName)
 				.Where(index => index != -1)
 				.Select(SkillCatalog.GetSkillDef).ToList();
-			skillDefWhitelist = skillWhitelist.Value.Split(' ')
+			_skillDefWhitelist = SkillWhitelist.Value.Split(' ')
 				.Select(SkillCatalog.FindSkillIndexByName)
 				.Where(index => index != -1)
 				.Select(SkillCatalog.GetSkillDef).ToList();
@@ -77,7 +77,7 @@ namespace BubbetsItems.Items
 
 		public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
 		{
-			scalingInfos[0].WorkingContext.c = 1;
+			ScalingInfos[0].WorkingContext.c = 1;
 			return base.GetFormattedDescription(inventory, token, forceHideExtended);
 		}
 
@@ -85,12 +85,12 @@ namespace BubbetsItems.Items
 		[HarmonyPostfix, HarmonyPatch(typeof(CharacterBody), nameof(CharacterBody.OnSkillActivated))]
 		public static void SkillActivated(CharacterBody __instance, GenericSkill skill)
 		{
-			if (!skillDefWhitelist.Contains(skill.baseSkill) && (skill.baseSkill.baseRechargeInterval <= 0.001 || skill.baseSkill.stockToConsume == 0) || skillDefBlacklist.Contains(skill.baseSkill)) return;
+			if (!_skillDefWhitelist.Contains(skill.baseSkill) && (skill.baseSkill.baseRechargeInterval <= 0.001 || skill.baseSkill.stockToConsume == 0) || _skillDefBlacklist.Contains(skill.baseSkill)) return;
 			var inst = GetInstance<DecreaseBarrierDecay>();
 			var inv = __instance.inventory;
 			var amt = inv.GetItemCount(inst!.ItemDef);
 			if (amt <= 0) return;
-			var info = inst.scalingInfos[0];
+			var info = inst.ScalingInfos[0];
 			info.WorkingContext.c = skill.baseSkill.baseRechargeInterval;
 			__instance.healthComponent.AddBarrier(__instance.healthComponent.fullHealth * info.ScalingFunction(amt));
 		}
@@ -114,7 +114,7 @@ namespace BubbetsItems.Items
 			if (!inv) return;
 			var amt = inv.GetItemCount(inst!.ItemDef);
 			if (amt <= 0) return;
-			if (characterBody.healthComponent.barrier > 0) args.armorAdd += inst.scalingInfos[1].ScalingFunction(amt);
+			if (characterBody.healthComponent.barrier > 0) args.armorAdd += inst.ScalingInfos[1].ScalingFunction(amt);
 		}
 	}
 }

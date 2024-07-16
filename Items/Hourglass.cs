@@ -16,11 +16,11 @@ namespace BubbetsItems.Items
     [HarmonyPatch]
     public class Hourglass : ItemBase
     {
-        private MethodInfo _aetheriumOrig;
-        private MethodInfo _aetheriumOrig1;
-        public ConfigEntry<string> buffBlacklist;
+        private MethodInfo? _aetheriumOrig;
+        private MethodInfo? _aetheriumOrig1;
+        public ConfigEntry<string> BuffBlacklist = null!;
 
-        private IEnumerable<BuffDef> buffDefBlacklist;
+        private IEnumerable<BuffDef> _buffDefBlacklist = null!;
         private static bool AetheriumEnabled => Chainloader.PluginInfos.ContainsKey(AetheriumPlugin.ModGuid);
 
         protected override void MakeTokens()
@@ -43,11 +43,11 @@ namespace BubbetsItems.Items
         protected override void FillRequiredExpansions()
         {
             var defaultValue = "bdBearVoidCooldown bdElementalRingsCooldown bdElementalRingVoidCooldown bdVoidFogMild bdVoidFogStrong bdVoidRaidCrabWardWipeFog bdMedkitHeal";
-            buffBlacklist = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Hourglass Buff Blacklist", defaultValue, "Blocks debuffs automatically. These are all considered buffs by the game and there is no way to tell if they're used as a timed buff it'll just do nothing if its not, Valid values: " +  string.Join(" ", BuffCatalog.nameToBuffIndex.Where(x => !BuffCatalog.GetBuffDef(x.Value).isDebuff).Select(x => x.Key).ToList()));
-            buffBlacklist.SettingChanged += (_, _) => SettingChanged();
+            BuffBlacklist = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Hourglass Buff Blacklist", defaultValue, "Blocks debuffs automatically. These are all considered buffs by the game and there is no way to tell if they're used as a timed buff it'll just do nothing if its not, Valid values: " +  string.Join(" ", BuffCatalog.nameToBuffIndex.Where(x => !BuffCatalog.GetBuffDef(x.Value).isDebuff).Select(x => x.Key).ToList()));
+            BuffBlacklist.SettingChanged += (_, _) => SettingChanged();
             SettingChanged();
             
-            if (BubbetsItemsPlugin.riskOfOptionsEnabled)
+            if (BubbetsItemsPlugin.RiskOfOptionsEnabled)
             {
                 MakeRiskOfOptionsLate();
             }
@@ -57,12 +57,12 @@ namespace BubbetsItems.Items
 
         private void MakeRiskOfOptionsLate()
         {
-            ModSettingsManager.AddOption(new StringInputFieldOption(buffBlacklist));
+            ModSettingsManager.AddOption(new StringInputFieldOption(BuffBlacklist));
         }
 
         private void SettingChanged()
         {
-            buffDefBlacklist = from str in buffBlacklist.Value.Split(' ') select BuffCatalog.FindBuffIndex(str) into index where index != BuffIndex.None select BuffCatalog.GetBuffDef(index);
+            _buffDefBlacklist = from str in BuffBlacklist.Value.Split(' ') select BuffCatalog.FindBuffIndex(str) into index where index != BuffIndex.None select BuffCatalog.GetBuffDef(index);
         }
 
         //*
@@ -112,12 +112,12 @@ namespace BubbetsItems.Items
         {
             if (def.isDebuff) return duration;
             var hourglass = GetInstance<Hourglass>();
-            if (hourglass.buffDefBlacklist.Contains(def)) return duration;
+            if (hourglass._buffDefBlacklist.Contains(def)) return duration;
             var inv = cb.inventory;
             if (!inv) return duration;
             var amount = cb.inventory.GetItemCount(hourglass.ItemDef);
             if (amount <= 0) return duration;
-            duration *= hourglass.scalingInfos[0].ScalingFunction(amount);
+            duration *= hourglass.ScalingInfos[0].ScalingFunction(amount);
             return duration;
         }
     }

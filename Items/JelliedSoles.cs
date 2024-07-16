@@ -36,10 +36,10 @@ namespace BubbetsItems.Items
 
 		public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
 		{
-			if (!inventory) return base.GetFormattedDescription(inventory, token, forceHideExtended);
+			if (inventory == null || !inventory) return base.GetFormattedDescription(inventory, token, forceHideExtended);
 			var body = inventory.GetComponent<CharacterMaster>().GetBody();
 			if (!body) return base.GetFormattedDescription(inventory, token, forceHideExtended);
-			var info = scalingInfos[1].WorkingContext;
+			var info = ScalingInfos[1].WorkingContext;
 			var beh = inventory.GetComponent<JelliedSolesBehavior>();
 			if (beh)
 				info.s = beh.storedDamage;
@@ -134,7 +134,7 @@ namespace BubbetsItems.Items
 				//Min([s] * [d] * [a] * 0.1, Max([h] - [c], 0))/([d] * [a] * 0.1)
 
 				// Initial setup
-				var info = instance.scalingInfos[1];
+				var info = instance.ScalingInfos[1];
 				var context = info.WorkingContext;
 				context.d = body.damage / body.baseDamage;
 				context.h = hc.combinedHealth;
@@ -181,7 +181,7 @@ namespace BubbetsItems.Items
 			if (weakAssKnees || body.teamComponent.teamIndex == TeamIndex.Player && Run.instance.selectedDifficulty >= DifficultyIndex.Eclipse3)
 				damage *= 2f;
 			
-			var frac = instance.scalingInfos[0].ScalingFunction(count);
+			var frac = instance.ScalingInfos[0].ScalingFunction(count);
 			behavior.storedDamage += damage * frac;
 			EntitySoundManager.EmitSoundServer(hitGroundSound.index, body.gameObject);
 		}
@@ -192,7 +192,7 @@ namespace BubbetsItems.Items
 			var instance = GetInstance<JelliedSoles>();
 			var count = inv.GetItemCount(instance.ItemDef);
 			if (count <= 0) return info;
-			var frac = instance.scalingInfos[0].ScalingFunction(count);
+			var frac = instance.ScalingInfos[0].ScalingFunction(count);
 			info.damage *= 1f - frac;
 			return info;
 		}

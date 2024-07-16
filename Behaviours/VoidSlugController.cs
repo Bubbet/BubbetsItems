@@ -6,9 +6,10 @@ namespace BubbetsItems
 {
 	public class VoidSlugController : MonoBehaviour
 	{
-		private Animator _animator;
-		private CharacterModel _characterModel;
+		private Animator _animator = null!;
+		private CharacterModel _characterModel = null!;
 		private bool _lastInDanger;
+		private static readonly int InCombat = Animator.StringToHash("inCombat");
 
 		private void Start()
 		{
@@ -24,11 +25,11 @@ namespace BubbetsItems
 				var inDanger = !body.outOfDanger;
 				if (inDanger && _lastInDanger)
 				{
-					_animator.SetBool("inCombat", true);
+					_animator.SetBool(InCombat, true);
 					// Do effect system stuff
 				}else if (!inDanger && _lastInDanger)
 				{
-					_animator.SetBool("inCombat", false);
+					_animator.SetBool(InCombat, false);
 					// Do effect system stuff
 				}
 				_lastInDanger = inDanger;

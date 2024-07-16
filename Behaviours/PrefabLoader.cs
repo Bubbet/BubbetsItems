@@ -8,25 +8,26 @@ namespace ZedMod
 	[ExecuteAlways]
 	public class PrefabLoader : MonoBehaviour
 	{
-		public string prefabAddress;
-		private string loadedPrefab;
-		private Boolean loading = false;
-		GameObject instance;
-		void Start()
+		public string prefabAddress = null!;
+		private string _loadedPrefab = null!;
+		private bool _loading = false;
+		private GameObject _instance = null!;
+
+		private void Start()
 		{
 			LoadPrefab();
 		}
 
-		void OnValidate()
+		private void OnValidate()
 		{
 			LoadPrefab();
 		}
 
-		void LoadPrefab()
+		private void LoadPrefab()
 		{
-			if (!string.IsNullOrEmpty(prefabAddress) && !loading)
+			if (!string.IsNullOrEmpty(prefabAddress) && !_loading)
 			{
-				loading = true;
+				_loading = true;
 				Addressables.LoadAssetAsync<GameObject>(prefabAddress).Completed += PrefabLoaded;
 			}
 		}
@@ -36,27 +37,27 @@ namespace ZedMod
 			switch (obj.Status)
 			{
 				case AsyncOperationStatus.Succeeded:
-					if (loadedPrefab == prefabAddress) break;
-					if (instance != null) DestroyImmediate(instance);
+					if (_loadedPrefab == prefabAddress) break;
+					if (_instance != null) DestroyImmediate(_instance);
 					var prefab = obj.Result;
-					instance = Instantiate(prefab);
-					SetRecursiveFlags(instance.transform);
-					instance.transform.SetParent(this.gameObject.transform, false);
-					loadedPrefab = prefabAddress;
-					loading = false;
+					_instance = Instantiate(prefab, gameObject.transform, false);
+					SetRecursiveFlags(_instance.transform);
+					_loadedPrefab = prefabAddress;
+					_loading = false;
 					break;
 				case AsyncOperationStatus.Failed:
-					if (instance != null) DestroyImmediate(instance);
+					if (_instance != null) DestroyImmediate(_instance);
 					Debug.LogError("Prefab load failed.");
-					loading = false;
+					_loading = false;
 					break;
+				case AsyncOperationStatus.None:
 				default:
 					// case AsyncOperationStatus.None:
 					break;
 			}
 		}
 
-		static void SetRecursiveFlags(Transform transform)
+		private static void SetRecursiveFlags(Transform transform)
 		{
 			transform.gameObject.hideFlags |= HideFlags.DontSave;
 			foreach(Transform child in transform)

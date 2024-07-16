@@ -66,7 +66,7 @@ namespace BubbetsItems.Items.VoidLunar
 			DefaultCampCost ??= card.spawnCard.directorCreditCost;
 			card.spawnCard.directorCreditCost = DefaultCampCost.Value;
 			if (amount <= 0) return;
-			var a = inst.scalingInfos[0].ScalingFunction(amount);
+			var a = inst.ScalingInfos[0].ScalingFunction(amount);
 			weight += a;
 			card.spawnCard.directorCreditCost = Mathf.FloorToInt(DefaultCampCost.Value / (1f + a));
 		}
@@ -77,7 +77,7 @@ namespace BubbetsItems.Items.VoidLunar
 			var amount = Util.GetItemCountForTeam(TeamIndex.Player, inst!.ItemDef.itemIndex, false, false);
 			if (amount <= 0) return;
 			var camp = categorySelection.categories.SelectMany(x => x.cards).First(x => x.spawnCard.name == "iscVoidCamp"); // TODO fix this for simulacrum, currently its fine because you cant obtain void lunar
-			var a = Mathf.FloorToInt(1 + inst.scalingInfos[0].ScalingFunction(amount));
+			var a = Mathf.FloorToInt(1 + inst.ScalingInfos[0].ScalingFunction(amount));
 			camp.spawnCard.directorCreditCost /= a;
 			camp.selectionWeight *= a;
 		}
@@ -133,7 +133,7 @@ namespace BubbetsItems.Items.VoidLunar
 				var inst = GetInstance<OrbOfFalsity>();
 				var amount = Util.GetItemCountForTeam(TeamIndex.Player, inst!.ItemDef.itemIndex, false, false);
 				if (amount <= 0) return f;
-				return f + inst.scalingInfos[0].ScalingFunction(amount);
+				return f + inst.ScalingInfos[0].ScalingFunction(amount);
 			});
 		}
 	}

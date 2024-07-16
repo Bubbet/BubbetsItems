@@ -16,9 +16,9 @@ namespace BubbetsItems.Items
 {
     public class RepulsionPlateMk2 : ItemBase
     {
-        public static ConfigEntry<bool> _reductionOnTrue;
-        private static ScalingInfo _reductionScalingConfig;
-        private static ScalingInfo _armorScalingConfig;
+        public static ConfigEntry<bool> ReductionOnTrue = null!;
+        private static ScalingInfo _reductionScalingConfig = null!;
+        private static ScalingInfo _armorScalingConfig = null!;
 
         protected override void MakeTokens()
         {
@@ -49,14 +49,14 @@ The cost of purchase and production associated with Mk2 is considerably higher t
         protected override void MakeConfigs()
         {
             base.MakeConfigs();
-            _reductionOnTrue = sharedInfo.ConfigFile!.Bind(ConfigCategoriesEnum.General, "Reduction On True", true,  "Makes the item behave more like mk1 and give a flat reduction in damage taken if set to true.");
-            _reductionOnTrue.SettingChanged += (_, _) => UpdateScalingFunction(); 
+            ReductionOnTrue = sharedInfo.ConfigFile!.Bind(ConfigCategoriesEnum.General, "Reduction On True", true,  "Makes the item behave more like mk1 and give a flat reduction in damage taken if set to true.");
+            ReductionOnTrue.SettingChanged += (_, _) => UpdateScalingFunction(); 
             
             var name = GetType().Name;;
             AddScalingFunction("[d] - (20 + [p] * (4 + [a]))", name + " Reduction", "[a] = amount, [p] = plate amount, [d] = damage");
             AddScalingFunction("20 + [p] * (4 + [a])", name + " Armor", "[a] = amount, [p] = plate amount");
-            _reductionScalingConfig = scalingInfos[0];
-            _armorScalingConfig = scalingInfos[1];
+            _reductionScalingConfig = ScalingInfos[0];
+            _armorScalingConfig = ScalingInfos[1];
             
             //_reductionScalingConfig = configFile.Bind(ConfigCategoriesEnum.BalancingFunctions, name + " Reduction", "[d] - (20 + [p] * (4 + [a]))", "Scaling function for item. ;");
             //_armorScalingConfig = configFile.Bind(ConfigCategoriesEnum.BalancingFunctions, name + " Armor", "", "Scaling function for item. ;");
@@ -66,26 +66,26 @@ The cost of purchase and production associated with Mk2 is considerably higher t
         public override void MakeRiskOfOptions()
         {
             base.MakeRiskOfOptions();
-            ModSettingsManager.AddOption(new CheckBoxOption(_reductionOnTrue));
+            ModSettingsManager.AddOption(new CheckBoxOption(ReductionOnTrue));
         }
 
         private void UpdateScalingFunction()
         {
-            scalingInfos.Clear();
-            scalingInfos.Add(_reductionOnTrue.Value ? _reductionScalingConfig : _armorScalingConfig);
+            ScalingInfos.Clear();
+            ScalingInfos.Add(ReductionOnTrue.Value ? _reductionScalingConfig : _armorScalingConfig);
         }
         public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
         {
             //ItemDef.descriptionToken = _reductionOnTrue.Value ? "BUB_REPULSION_ARMOR_MK2_DESC_REDUCTION" :  "BUB_REPULSION_ARMOR_MK2_DESC_ARMOR"; Cannot do this, it breaks the token matching from the tooltip patch
-            var context = scalingInfos[0].WorkingContext;
+            var context = ScalingInfos[0].WorkingContext;
             context.p = inventory?.GetItemCount(RoR2Content.Items.ArmorPlate) ?? 0;
             context.d = 0f;
 
-            var tokenChoice = _reductionOnTrue.Value
+            var tokenChoice = ReductionOnTrue.Value
                 ? "BUB_REPULSION_ARMOR_MK2_DESC_REDUCTION"
                 : "BUB_REPULSION_ARMOR_MK2_DESC_ARMOR";
             
-            SimpleDescriptionToken = _reductionOnTrue.Value
+            SimpleDescriptionToken = ReductionOnTrue.Value
                 ? "REPULSION_ARMOR_MK2_DESC_REDUCTION_SIMPLE"
                 : "REPULSION_ARMOR_MK2_DESC_ARMOR_SIMPLE";
             
@@ -95,7 +95,7 @@ The cost of purchase and production associated with Mk2 is considerably higher t
         public override void MakeInLobbyConfig(Dictionary<ConfigCategoriesEnum, List<object>> scalingFunctions)
         {
             base.MakeInLobbyConfig(scalingFunctions);
-            scalingFunctions[ConfigCategoriesEnum.BalancingFunctions].Add(ConfigFieldUtilities.CreateFromBepInExConfigEntry(_reductionOnTrue));
+            scalingFunctions[ConfigCategoriesEnum.BalancingFunctions].Add(ConfigFieldUtilities.CreateFromBepInExConfigEntry(ReductionOnTrue));
         }
 
         /*
@@ -123,7 +123,7 @@ The cost of purchase and production associated with Mk2 is considerably higher t
 
         public static void RecalcStats(CharacterBody __instance, RecalculateStatsAPI.StatHookEventArgs args)
         {
-            if (_reductionOnTrue.Value) return;
+            if (ReductionOnTrue.Value) return;
             var inv = __instance.inventory;
             if (!inv) return;
             var repulsionPlateMk2 = GetInstance<RepulsionPlateMk2>();
@@ -132,7 +132,7 @@ The cost of purchase and production associated with Mk2 is considerably higher t
             
             var plateAmount = inv.GetItemCount(RoR2Content.Items.ArmorPlate);
             // 20 + inv.GetItemCount(RoR2Content.Items.ArmorPlate) * (4 + amount);
-            var info = repulsionPlateMk2.scalingInfos[0];
+            var info = repulsionPlateMk2.ScalingInfos[0];
             info.WorkingContext.p = plateAmount; 
             args.armorAdd += info.ScalingFunction(amount);
         }
@@ -147,7 +147,7 @@ The cost of purchase and production associated with Mk2 is considerably higher t
             if (amount <= 0) return false;
             var plateAmount = hc.body.inventory.GetItemCount(RoR2Content.Items.ArmorPlate);
             //damage = Mathf.Max(1f, damage - (20 + plateAmount * (4 + amount)));
-            var info = repulsionPlateMk2.scalingInfos[0];
+            var info = repulsionPlateMk2.ScalingInfos[0];
             info.WorkingContext.p = plateAmount;
             info.WorkingContext.d = damage;
             damage = Mathf.Max(1f, info.ScalingFunction(amount));
@@ -159,9 +159,9 @@ The cost of purchase and production associated with Mk2 is considerably higher t
         [HarmonyILManipulator, HarmonyPatch(typeof(HealthComponent), nameof(HealthComponent.TakeDamage))]
         public static void TakeDamageHook(ILContext il)
         {
-            if (!_reductionOnTrue.Value) return;
+            if (!ReductionOnTrue.Value) return;
             var c = new ILCursor(il);
-            ILLabel jumpInstruction = null;
+            ILLabel? jumpInstruction = null;
             int damageNum = -1;
             c.GotoNext(
                 x => x.MatchLdcR4(out _),

@@ -61,9 +61,9 @@ namespace BubbetsItems.Items.VoidLunar
             bool forceHideExtended = false)
         {
             var name = GetType().Name.ToUpper();
-            SimpleDescriptionToken = name + "_DESC_SIMPLE" + (oldTarnished.Value ? "_OLD" : "");
+            SimpleDescriptionToken = name + "_DESC_SIMPLE" + (OldTarnished.Value ? "_OLD" : "");
             return base.GetFormattedDescription(inventory,
-                !oldTarnished.Value ? token : ItemDef.descriptionToken + "_OLD", forceHideExtended);
+                !OldTarnished.Value ? token : ItemDef.descriptionToken + "_OLD", forceHideExtended);
         }
 
         protected override void MakeConfigs()
@@ -73,14 +73,14 @@ namespace BubbetsItems.Items.VoidLunar
             AddScalingFunction("[a] * -1", "Unfavorable Rolls");
             AddScalingFunction("[a] * 2 + 3", "Skill Lock Duration");
             AddScalingFunction("[a]", "Luck Add");
-            oldTarnished = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Tarnished Old", false,
+            OldTarnished = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Tarnished Old", false,
                 "Make tarnished function how it used to.");
         }
 
         public override void MakeRiskOfOptions()
         {
             base.MakeRiskOfOptions();
-            ModSettingsManager.AddOption(new CheckBoxOption(oldTarnished));
+            ModSettingsManager.AddOption(new CheckBoxOption(OldTarnished));
         }
 
         protected override void FillVoidConversions(List<ItemDef.Pair> pairs)
@@ -114,7 +114,7 @@ namespace BubbetsItems.Items.VoidLunar
                     genericSkill.UnsetSkillOverride(this, SkillDef, GenericSkill.SkillOverridePriority.Contextual);
                 var instance = GetInstance<Tarnished>();
                 var stack = sender.inventory.GetItemCount(instance!.ItemDef);
-                var toAdd = Mathf.FloorToInt(scalingInfos[0].ScalingFunction(stack));
+                var toAdd = Mathf.FloorToInt(ScalingInfos[0].ScalingFunction(stack));
                 if (NetworkServer.active)
                     sender.SetBuffCount(Tarnished.BuffDef!.buffIndex, toAdd);
                 sender.master.OnInventoryChanged();
@@ -124,7 +124,7 @@ namespace BubbetsItems.Items.VoidLunar
         private static BuffDef? _buffDef2;
         private static BuffDef? _buffDef;
         private static SkillDef? _skillDef;
-        public static ConfigEntry<bool> oldTarnished;
+        public static ConfigEntry<bool> OldTarnished = null!;
         public static BuffDef? BuffDef => _buffDef ??= BubbetsItemsPlugin.ContentPack.buffDefs.Find("BuffDefTarnished");
 
         public static BuffDef? BuffDef2 =>
@@ -151,39 +151,40 @@ namespace BubbetsItems.Items.VoidLunar
         [HarmonyPrefix,
          HarmonyPatch(typeof(Util), nameof(Util.CheckRoll), typeof(float), typeof(float), typeof(CharacterMaster))]
         public static void UpdateRollsPre(float percentChance, float luck = 0f,
-            CharacterMaster effectOriginMaster = null)
+            CharacterMaster? effectOriginMaster = null)
         {
             if (!NetworkServer.active) return;
             if (!effectOriginMaster) return;
-            var body = effectOriginMaster.GetBody();
-            if (!body) return;
+            var body = effectOriginMaster != null ? effectOriginMaster.GetBody() : null;
+            if (body == null || !body) return;
             if (!body.wasLucky) return;
             body.wasLucky = false;
         }
 
         [HarmonyPostfix,
          HarmonyPatch(typeof(Util), nameof(Util.CheckRoll), typeof(float), typeof(float), typeof(CharacterMaster))]
+        // ReSharper disable once InconsistentNaming
         public static void UpdateRolls(bool __result, float percentChance, float luck = 0f,
-            CharacterMaster effectOriginMaster = null)
+            CharacterMaster? effectOriginMaster = null)
         {
             if (!NetworkServer.active) return;
             if (!__result) return;
             if (!effectOriginMaster) return;
-            var body = effectOriginMaster.GetBody();
-            if (!body) return;
+            var body = effectOriginMaster != null ? effectOriginMaster.GetBody() : null;
+            if (body == null || !body) return;
             if (!body.wasLucky) return;
-            var inv = effectOriginMaster.inventory;
+            var inv = effectOriginMaster!.inventory;
             if (!inv) return;
             var inst = GetInstance<Tarnished>();
-            var amount = inv.GetItemCount(inst.ItemDef);
+            var amount = inv.GetItemCount(inst!.ItemDef);
             if (amount <= 0) return;
             var count = body.GetBuffCount(BuffDef!.buffIndex);
             body.SetBuffCount(BuffDef.buffIndex, count - 1);
             if (count - 1 == 0)
             {
-                if (!body.HasBuff(Tarnished.BuffDef2) && !Tarnished.oldTarnished.Value)
+                if (!body.HasBuff(Tarnished.BuffDef2) && !Tarnished.OldTarnished.Value)
                 {
-                    body.AddTimedBuff(Tarnished.BuffDef2, inst.scalingInfos[2].ScalingFunction(amount));
+                    body.AddTimedBuff(Tarnished.BuffDef2, inst.ScalingInfos[2].ScalingFunction(amount));
                 }
 
                 effectOriginMaster.OnInventoryChanged();
@@ -202,14 +203,14 @@ namespace BubbetsItems.Items.VoidLunar
                 var body = __instance.GetBody();
                 if (body.GetBuffCount(BuffDef) <= 0)
                 {
-                    if (Tarnished.oldTarnished.Value)
-                        luckDifference = Mathf.FloorToInt(instance.scalingInfos[1].ScalingFunction(stack));
+                    if (Tarnished.OldTarnished.Value)
+                        luckDifference = Mathf.FloorToInt(instance.ScalingInfos[1].ScalingFunction(stack));
                     //if(NetworkServer.active && !body.HasBuff(Tarnished.BuffDef))
                     //body.AddBuff(Tarnished.BuffDef);
                 }
                 else
                 {
-                    luckDifference = Mathf.RoundToInt(instance.scalingInfos[3].ScalingFunction(stack));
+                    luckDifference = Mathf.RoundToInt(instance.ScalingInfos[3].ScalingFunction(stack));
                     body.statsDirty = true;
                     //if(NetworkServer.active && body.HasBuff(Tarnished.BuffDef))
                     //body.RemoveBuff(Tarnished.BuffDef);

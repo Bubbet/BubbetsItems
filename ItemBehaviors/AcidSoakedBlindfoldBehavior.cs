@@ -26,7 +26,7 @@ namespace BubbetsItems.ItemBehaviors
 			var master = body.master; 
 			if (!master) return;
 			var instance = SharedBase.GetInstance<AcidSoakedBlindfold>();
-			var maxCount = instance.scalingInfos[0].ScalingFunction(stack);
+			var maxCount = instance.ScalingInfos[0].ScalingFunction(stack);
 			var count = master.GetDeployableCount(Slot);
 			if (count >= maxCount) return;
 			_deployableTime -= Time.fixedDeltaTime;
@@ -43,7 +43,7 @@ namespace BubbetsItems.ItemBehaviors
 				}, RoR2Application.rng
 			) {summonerBodyObject = gameObject, onSpawnedServer = VerminSpawnedServer};
 			DirectorCore.instance.TrySpawnObject(request);
-			_deployableTime = master.GetDeployableCount(Slot) >= maxCount ? TimeBetweenRetries : instance.scalingInfos[3].ScalingFunction(stack);
+			_deployableTime = master.GetDeployableCount(Slot) >= maxCount ? TimeBetweenRetries : instance.ScalingInfos[3].ScalingFunction(stack);
 		}
 
 		private void VerminSpawnedServer(SpawnCard.SpawnResult obj)
@@ -56,14 +56,14 @@ namespace BubbetsItems.ItemBehaviors
 			//master.inventory;
 
 			var instance = SharedBase.GetInstance<AcidSoakedBlindfold>();
-			var greenChance = instance.scalingInfos[2].ScalingFunction(stack);
+			var greenChance = instance.ScalingInfos[2].ScalingFunction(stack);
 
 			var runInstance = Run.instance;
 			var list1 = runInstance.availableTier1DropList;
 			var list2 = runInstance.availableTier2DropList;
 			var tRng = runInstance.treasureRng;
 			
-			for (var i = 0; i < instance.scalingInfos[1].ScalingFunction(stack); i++)
+			for (var i = 0; i < instance.ScalingInfos[1].ScalingFunction(stack); i++)
 			{
 				master.inventory.GiveItem(tRng.nextNormalizedFloat < greenChance
 					? list2[tRng.RangeInt(0, list2.Count)].pickupDef.itemIndex

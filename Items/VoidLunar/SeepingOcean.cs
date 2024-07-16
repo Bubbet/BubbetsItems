@@ -41,21 +41,22 @@ namespace BubbetsItems.Items.VoidLunar
 		}
 		
 		[HarmonyPrefix, HarmonyPatch(typeof(RandomlyLunarUtils), nameof(RandomlyLunarUtils.CheckForLunarReplacement))]
+		// ReSharper disable once InconsistentNaming
 		public static bool CheckForVoidReplacement(PickupIndex pickupIndex, Xoroshiro128Plus rng, ref PickupIndex __result)
 		{
 			var inst = GetInstance<SeepingOcean>();
-			PickupDef pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
-			if (CanReplace(pickupDef))
+			PickupDef? pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
+			if (pickupDef != null && CanReplace(pickupDef))
 			{
 				int itemCountGlobal = Util.GetItemCountGlobal(inst.ItemDef.itemIndex, false, false);
 				if (itemCountGlobal > 0)
 				{
-					List<PickupIndex> list = null;
+					List<PickupIndex>? list = null;
 					if (pickupDef.itemIndex != ItemIndex.None)
 					{
 						list = BubbetsItemsPlugin.VoidLunarItems.ToList();
 					}
-					if (list != null && list.Count > 0 && rng.nextNormalizedFloat < inst.scalingInfos[0].ScalingFunction(itemCountGlobal))
+					if (list != null && list.Count > 0 && rng.nextNormalizedFloat < inst.ScalingInfos[0].ScalingFunction(itemCountGlobal))
 					{
 						int index = rng.RangeInt(0, list.Count);
 						__result = list[index];
@@ -72,13 +73,13 @@ namespace BubbetsItems.Items.VoidLunar
 			var inst = GetInstance<SeepingOcean>();
 			var itemCountGlobal = Util.GetItemCountGlobal(inst.ItemDef.itemIndex, false, false);
 			if (itemCountGlobal <= 0) return true;
-			List<PickupIndex> list = null;
+			List<PickupIndex>? list = null;
 			var any = false;
 			for (var i = 0; i < pickupIndices.Length; i++)
 			{
-				PickupDef pickupDef = PickupCatalog.GetPickupDef(pickupIndices[i]);
-				if (!CanReplace(pickupDef) || !(rng.nextNormalizedFloat < inst.scalingInfos[0].ScalingFunction(itemCountGlobal))) continue;
-				List<PickupIndex> list3 = null;
+				PickupDef? pickupDef = PickupCatalog.GetPickupDef(pickupIndices[i]);
+				if (pickupDef == null || !CanReplace(pickupDef) || !(rng.nextNormalizedFloat < inst.ScalingInfos[0].ScalingFunction(itemCountGlobal))) continue;
+				List<PickupIndex>? list3 = null;
 				if (pickupDef.itemIndex != ItemIndex.None)
 				{
 					if (list == null)

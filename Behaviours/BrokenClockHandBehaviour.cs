@@ -4,8 +4,8 @@ namespace BubbetsItems
 {
     public class BrokenClockHandBehaviour : MonoBehaviour
     {
-        public Transform hourHand;
-        public Transform minuteHand;
+        public Transform hourHand = null!;
+        public Transform minuteHand = null!;
 
         private float _ratio = 2f;
         private float _nextMinuteY;

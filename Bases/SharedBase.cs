@@ -45,7 +45,8 @@ namespace BubbetsItems
         protected PatchClassProcessor? PatchProcessor;
         protected static readonly List<ContentPack> ContentPacks = new List<ContentPack>();
 
-        public SharedInfo sharedInfo;
+        // ReSharper disable once InconsistentNaming
+        public SharedInfo sharedInfo = null!;
         
         
         private static ExpansionDef? _sotvExpansion;
@@ -54,7 +55,7 @@ namespace BubbetsItems
         //This is probably bad practice
         public virtual bool RequiresSotv => false;
         
-        public virtual string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
+        public virtual string GetFormattedDescription(Inventory? inventory = null, string? token = null, bool forceHideExtended = false)
         {
             return "Not Implemented";
         }
@@ -107,10 +108,10 @@ namespace BubbetsItems
             var eliteEquipments = serializableContentPack.eliteDefs.Select(x => x.eliteEquipmentDef);
             serializableContentPack.equipmentDefs = serializableContentPack.equipmentDefs.Where(x => EquipmentBase.Equipments.Any(y => x is not null && MatchName(x.name, y.GetType().Name))).Union(eliteEquipments).ToArray();
         }
-        public static T? GetInstance<T>() where T : SharedBase
+        public static T GetInstance<T>() where T : SharedBase
         {
             InstanceDict.TryGetValue(typeof(T), out var t);
-            return t as T;
+            return (t as T)!;
         }
 
         public static void ResetConfigs()
@@ -181,7 +182,7 @@ namespace BubbetsItems
         [SystemInitializer(typeof(BodyCatalog))]
         public static void FillIDRS()
         {
-            return;
+/*
             foreach (var instance in Instances)
             {
                 instance.FillItemDisplayRules();
@@ -210,6 +211,7 @@ namespace BubbetsItems
                 }
                 instance.sharedInfo.Logger.LogWarning($"{instance.GetType().Name} has no item display rules for {string.Join(", ", noDisplayRules)}");
             }
+*/
         }
 
         protected virtual void FillItemDisplayRules()
@@ -261,11 +263,11 @@ namespace BubbetsItems
         [SuppressMessage("ReSharper", "NotAccessedField.Global")]
         public class SharedInfo
         {
-            public ConfigEntry<bool> ExpandedTooltips;
-            public ConfigEntry<bool> DescInPickup;
-            public ConfigEntry<bool> ForceHideScalingInfoInPickup;
-            public ConfigEntry<bool> UseSimpleDescIfApplicable;
-            public ConfigEntry<bool> ItemStatsInSimpleDesc;
+            public ConfigEntry<bool> ExpandedTooltips = null!;
+            public ConfigEntry<bool> DescInPickup = null!;
+            public ConfigEntry<bool> ForceHideScalingInfoInPickup = null!;
+            public ConfigEntry<bool> UseSimpleDescIfApplicable = null!;
+            public ConfigEntry<bool> ItemStatsInSimpleDesc = null!;
             public ConfigFile ConfigFile;
             public Harmony? Harmony;
             public readonly ManualLogSource Logger;

@@ -13,9 +13,9 @@ namespace BubbetsItems.Equipments
 {
 	public class GyroscopicWhisk : EquipmentBase
 	{
-		private GameObject _indicator;
-		private ConfigEntry<bool> _filterOutBosses;
-		private ConfigEntry<bool> _filterOutPlayers;
+		private GameObject _indicator = null!;
+		private ConfigEntry<bool> _filterOutBosses = null!;
+		private ConfigEntry<bool> _filterOutPlayers = null!;
 
 		protected override void MakeTokens()
 		{
@@ -78,14 +78,13 @@ namespace BubbetsItems.Equipments
 
 	public class WhiskBehavior : MonoBehaviour
 	{
-		private KinematicCharacterMotor kcm;
-		private float speed = 10f;
-		private CharacterBody body;
+		private float _speed = 10f;
+		private CharacterBody _body = null!;
 
 		private void Awake()
 		{
 			//kcm = GetComponent<KinematicCharacterMotor>();
-			body = GetComponent<CharacterBody>();
+			_body = GetComponent<CharacterBody>();
 			foreach (var entityStateMachine in GetComponents<EntityStateMachine>())
 			{
 				if (entityStateMachine.state is GenericCharacterMain)
@@ -104,26 +103,26 @@ namespace BubbetsItems.Equipments
 
 		private void FixedUpdate()
 		{
-			speed += Time.fixedDeltaTime * 5f;
-			if (body.characterMotor)
+			_speed += Time.fixedDeltaTime * 5f;
+			if (_body.characterMotor)
 			{
-				body.characterDirection.forward = Quaternion.Euler(0, speed, 0) * body.characterDirection.forward;
-				if (speed > 50f)
+				_body.characterDirection.forward = Quaternion.Euler(0, _speed, 0) * _body.characterDirection.forward;
+				if (_speed > 50f)
 				{
-					var motor = body.characterMotor;
-					BrokenClock.velocity.SetValue(motor, ((IPhysMotor) motor).velocity + Vector3.up * 10f);
+					var motor = _body.characterMotor;
+					BrokenClock.Velocity.SetValue(motor, ((IPhysMotor) motor).velocity + Vector3.up * 10f);
 				}
 			}
 			else
 			{
-				var dir = body.GetComponent<RigidbodyDirection>();
+				var dir = _body.GetComponent<RigidbodyDirection>();
 				dir.enabled = false;
-				var transform = body.GetComponent<Transform>();
+				var transf1 = _body.GetComponent<Transform>();
 				
-				transform.forward = Quaternion.Euler(0, speed, 0) * transform.forward;
+				transf1.forward = Quaternion.Euler(0, _speed, 0) * transf1.forward;
 				
-				var mot = body.GetComponent<RigidbodyMotor>() as IPhysMotor;
-				if (speed > 50f)
+				var mot = _body.GetComponent<RigidbodyMotor>() as IPhysMotor;
+				if (_speed > 50f)
 				{
 					var motVelocityAuthority = mot.velocityAuthority;
 					motVelocityAuthority.y += 10f;

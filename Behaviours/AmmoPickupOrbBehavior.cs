@@ -14,11 +14,11 @@ namespace BubbetsItems
 
     public class AmmoPickupOrbBehavior : MonoBehaviour
     {
-        private TrailRenderer _trail;
+        private TrailRenderer _trail = null!;
         private float _localTime;
         private Vector3 _startPos;
         private Vector3 _initialVelocity;
-        public Transform TargetTransform { get; set; }
+        public Transform? TargetTransform { get; set; }
         public float TravelTime { get; set; } = 1f;
 
         private void Awake()
@@ -37,12 +37,12 @@ namespace BubbetsItems
         private void Update()
         {
             _localTime += Time.deltaTime;
-            if (!TargetTransform)
+            if (TargetTransform == null || !TargetTransform)
             {
                 var effectData = GetComponent<EffectComponent>().effectData;
                 TargetTransform = effectData?.ResolveHurtBoxReference()?.transform; // nre is being thrown here
                 if (effectData != null) TravelTime = effectData.genericFloat;
-                if (!TargetTransform)
+                if (TargetTransform == null || !TargetTransform)
                 {
                     Destroy(gameObject);
                     return;

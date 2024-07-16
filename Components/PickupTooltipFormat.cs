@@ -35,6 +35,7 @@ namespace BubbetsItems
         }*/
 
         [HarmonyPostfix, HarmonyPatch(typeof(TooltipProvider), "get_bodyText")]
+        // ReSharper disable twice InconsistentNaming
         public static void FixToken(TooltipProvider __instance, ref string __result)
         {
             try
@@ -44,21 +45,31 @@ namespace BubbetsItems
                 var s = __result;
                 var item = ItemBase.Items.FirstOrDefault(x =>
                 {
-                    if (x.ItemDef == null) // This is a really bad way of doing this
-                        BubbetsItemsPlugin.Log.LogWarning($"ItemDef is null for {x} in tooltipProvider, this will throw errors.");
+                    if (x?.ItemDef == null)
+                    {
+                        // This is a really bad way of doing this
+                        BubbetsItemsPlugin.Log.LogWarning(
+                            $"ItemDef is null for {x} in tooltipProvider, this will throw errors.");
+                        return false;
+                    }
                     return __instance.bodyToken == x.ItemDef.descriptionToken || __instance.bodyToken == x.ItemDef.pickupToken || __instance.titleToken == x.ItemDef.nameToken || Language.GetString(x.ItemDef.descriptionToken) == s;
                 });
                 var equipment = EquipmentBase.Equipments.FirstOrDefault(x =>
                 {
-                    if (x.EquipmentDef == null)
-                        BubbetsItemsPlugin.Log.LogWarning($"EquipmentDef is null for {x} in tooltipProvider, this will throw errors.");
+                    if (x?.EquipmentDef == null)
+                    {
+                        BubbetsItemsPlugin.Log.LogWarning(
+                            $"EquipmentDef is null for {x} in tooltipProvider, this will throw errors.");
+                        return false;
+                    }
+
                     return __instance.bodyToken == x.EquipmentDef.descriptionToken || __instance.bodyToken == x.EquipmentDef.pickupToken || __instance.titleToken == x.EquipmentDef.nameToken || Language.GetString(x.EquipmentDef.descriptionToken) == s;
                 });
                 var titleEquipment = EquipmentBase.Equipments.FirstOrDefault(x =>
                 {
-                    if (x.EquipmentDef == null)
+                    if (x?.EquipmentDef == null)
                         BubbetsItemsPlugin.Log.LogWarning($"EquipmentDef is null for {x} in tooltipProvider, this will throw errors.");
-                    return __instance.titleToken == x.EquipmentDef.nameToken;
+                    return __instance.titleToken == x?.EquipmentDef.nameToken;
                 });
 
                 var inventoryDisplay = __instance.transform.parent.GetComponent<ItemInventoryDisplay>();

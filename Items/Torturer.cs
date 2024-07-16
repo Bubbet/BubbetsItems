@@ -24,7 +24,7 @@ namespace BubbetsItems.Items
 
         public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
         {
-            scalingInfos[0].WorkingContext.d = 1;
+            ScalingInfos[0].WorkingContext.d = 1;
             return base.GetFormattedDescription(inventory, token, forceHideExtended);
         }
 
@@ -46,7 +46,7 @@ namespace BubbetsItems.Items
             var count = obj.attackerBody.inventory.GetItemCount(ItemDef);
             if (count <= 0) return;
             //var amt = obj.damageDealt * (count * 0.025f + 0.025f);
-            var info = scalingInfos[0];
+            var info = ScalingInfos[0];
             info.WorkingContext.d = obj.damageDealt;
             var amt = info.ScalingFunction(count);
             //Logger.LogInfo("HEALED FROM DAMAGE: " + amt);

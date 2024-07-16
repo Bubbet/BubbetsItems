@@ -35,24 +35,25 @@ namespace BubbetsItems
             FillVoidConversions(pairs);
         }
 
-        public ItemDef ItemDef;
+        public ItemDef ItemDef = null!;
 
         private static IEnumerable<ItemBase>? _items;
         public static IEnumerable<ItemBase> Items => _items ??= Instances.OfType<ItemBase>();
 
-        public ScalingInfoIndexer scalingInfos = new();
+        public ScalingInfoIndexer ScalingInfos = new();
+        // ReSharper disable once InconsistentNaming
         public VoidPairing? voidPairing;
-        protected string SimpleDescriptionToken;
+        protected string SimpleDescriptionToken = null!;
 
         protected void AddScalingFunction(string defaultValue, string name, string? desc = null,
             string? oldDefault = null)
         {
-            scalingInfos.Add(new ScalingInfo(sharedInfo.ConfigFile, defaultValue, name,
+            ScalingInfos.Add(new ScalingInfo(sharedInfo.ConfigFile, defaultValue, name,
                 new StackFrame(1).GetMethod().DeclaringType, desc, oldDefault));
         }
 
-        private static List<string> alreadyPlural =
-            new List<string>() // "rounds" and "-es" does not need to be registered here
+        private static List<string> _alreadyPlural =
+            new() // "rounds" and "-es" does not need to be registered here
             {
                 "400 Tickets",
                 "Balls",
@@ -121,7 +122,7 @@ namespace BubbetsItems
 
         public static string GetPlural(string str)
         {
-            if (alreadyPlural.Contains(str)) return str;
+            if (_alreadyPlural.Contains(str)) return str;
             if (str == "Silence Between Two Strikes") return "Silences Between Two Strikes";
             Match metarule = Regex.Match(str, "(.+) of (.+)", RegexOptions.IgnoreCase);
             if (metarule.Success) return GetPlural(metarule.Groups[1].Value) + " of " + metarule.Groups[2].Value;
@@ -143,9 +144,9 @@ namespace BubbetsItems
         {
             // ReSharper disable twice Unity.NoNullPropagation
 
-            if (scalingInfos.Count <= 0) return Language.GetString(ItemDef.descriptionToken);
+            if (ScalingInfos.Count <= 0) return Language.GetString(ItemDef.descriptionToken);
 
-            var formatArgs = scalingInfos.Select(info => info.ScalingFunction(inventory?.GetItemCount(ItemDef)))
+            var formatArgs = ScalingInfos.Select(info => info.ScalingFunction(inventory?.GetItemCount(ItemDef)))
                 .Cast<object>().ToArray();
 
             var corruption = "";
@@ -154,7 +155,7 @@ namespace BubbetsItems
                 if (!voidPairing.IsDefault)
                 {
                     corruption = Language.GetStringFormatted("BUB_DEFAULT_CONVERT", string.Join(", ",
-                        voidPairing.itemDefs.Select(x =>
+                        voidPairing.ItemDefs.Select(x =>
                         {
                             var str = Language.GetString(x.nameToken);
                             if (Language.currentLanguage == Language.english)
@@ -172,7 +173,7 @@ namespace BubbetsItems
             }
 
 
-            if (sharedInfo.UseSimpleDescIfApplicable.Value && scalingInfos.All(x => x.IsDefault) &&
+            if (sharedInfo.UseSimpleDescIfApplicable.Value && ScalingInfos.All(x => x.IsDefault) &&
                 !string.IsNullOrEmpty(SimpleDescriptionToken))
             {
                 var ret = Language.GetString(sharedInfo.TokenPrefix + SimpleDescriptionToken);
@@ -199,7 +200,7 @@ namespace BubbetsItems
                     foreach (var param in para)
                     {
                         if (int.TryParse(param[1].ToString(), out var i))
-                            ret += "\n" + scalingInfos[i]._name + ": " + param;
+                            ret += "\n" + ScalingInfos[i]._name + ": " + param;
                     }
 
                     ret = string.Format(ret, formatArgs);
@@ -216,7 +217,7 @@ namespace BubbetsItems
                 var ret = Language.GetStringFormatted(token ?? ItemDef.descriptionToken, formatArgs) + corruption;
                 if (sharedInfo.ExpandedTooltips.Value && !forceHideExtended)
                     ret += "\n\nTooltip updates automatically with these fully configurable Scaling Functions:\n" +
-                           string.Join("\n", scalingInfos.Select(info => info.ToString()));
+                           string.Join("\n", ScalingInfos.Select(info => info.ToString()));
                 return ret;
             }
         }
@@ -224,7 +225,7 @@ namespace BubbetsItems
         public override void MakeInLobbyConfig(Dictionary<ConfigCategoriesEnum, List<object>> scalingFunctions)
         {
             base.MakeInLobbyConfig(scalingFunctions);
-            foreach (var info in scalingInfos)
+            foreach (var info in ScalingInfos)
             {
                 info.MakeInLobbyConfig(scalingFunctions[ConfigCategoriesEnum.BalancingFunctions]);
             }
@@ -233,7 +234,7 @@ namespace BubbetsItems
         public override void MakeRiskOfOptions()
         {
             base.MakeRiskOfOptions();
-            foreach (var info in scalingInfos)
+            foreach (var info in ScalingInfos)
             {
                 info.MakeRiskOfOptions();
             }
@@ -371,7 +372,7 @@ namespace BubbetsItems
             private Func<ExpressionContext, float> _function;
             private string _oldValue;
             public readonly string _name;
-            private readonly ExpressionContext _defaultContext;
+            private readonly ExpressionContext _defaultContext = null!;
             public readonly ExpressionContext WorkingContext;
             private string _defaultValue;
             private bool _madeRiskOfOptions;
@@ -453,18 +454,18 @@ namespace BubbetsItems
         public class VoidPairing
         {
             public static string ValidEntries = string.Join(" ", ItemCatalog.itemNames);
-            private ConfigEntry<string> configEntry;
-            private ItemBase Parent;
-            public ItemDef[] itemDefs;
+            private ConfigEntry<string> _configEntry = null!;
+            private ItemBase _parent;
+            public ItemDef[] ItemDefs = null!;
             private string _default;
             private string? _oldDefault;
-            private bool setup;
+            private bool _setup;
             private bool _madeRiskOfOptions;
-            public bool IsDefault => _default.Trim() == configEntry.Value.Trim();
+            public bool IsDefault => _default.Trim() == _configEntry.Value.Trim();
 
             public VoidPairing(string defaultValue, ItemBase parent, string? oldDefault = null)
             {
-                Parent = parent;
+                _parent = parent;
                 _default = defaultValue;
                 _oldDefault = oldDefault;
                 //SettingChanged();
@@ -473,11 +474,11 @@ namespace BubbetsItems
             public void SettingChangedOld()
             {
                 var pairs = ItemCatalog.itemRelationships[DLC1Content.ItemRelationshipTypes.ContagiousItem]
-                    .Where(x => x.itemDef2 != Parent.ItemDef);
-                itemDefs = configEntry.Value.Split(' ').Select(str => ItemCatalog.FindItemIndex(str))
+                    .Where(x => x.itemDef2 != _parent.ItemDef);
+                ItemDefs = _configEntry.Value.Split(' ').Select(str => ItemCatalog.FindItemIndex(str))
                     .Where(index => index != ItemIndex.None).Select(index => ItemCatalog.GetItemDef(index)).ToArray();
-                var newPairs = from def in itemDefs
-                    select new ItemDef.Pair { itemDef1 = def, itemDef2 = Parent.ItemDef };
+                var newPairs = from def in ItemDefs
+                    select new ItemDef.Pair { itemDef1 = def, itemDef2 = _parent.ItemDef };
                 ItemCatalog.itemRelationships[DLC1Content.ItemRelationshipTypes.ContagiousItem] =
                     pairs.Union(newPairs).ToArray();
             }
@@ -487,26 +488,26 @@ namespace BubbetsItems
                 if (string.IsNullOrWhiteSpace(ValidEntries))
                     ValidEntries = string.Join(" ", ItemCatalog.itemNames);
 
-                configEntry = Parent.sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.VoidConversions,
-                    Parent.GetType().Name, _default, "Valid values: " + ValidEntries, _oldDefault);
-                configEntry.SettingChanged += (_, _) => SettingChanged();
+                _configEntry = _parent.sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.VoidConversions,
+                    _parent.GetType().Name, _default, "Valid values: " + ValidEntries, _oldDefault);
+                _configEntry.SettingChanged += (_, _) => SettingChanged();
 
                 SettingChanged();
             }
 
             public void SettingChanged()
             {
-                var oldItems = itemDefs;
+                var oldItems = ItemDefs;
                 SettingChangedOld();
-                if (setup && !oldItems.SequenceEqual(itemDefs))
+                if (_setup && !oldItems.SequenceEqual(ItemDefs))
                     ContagiousItemManager.InitTransformationTable();
-                setup = true;
+                _setup = true;
             }
 
             public void MakeRiskOfOptions()
             {
                 if (_madeRiskOfOptions) return;
-                ModSettingsManager.AddOption(new StringInputFieldOption(configEntry));
+                ModSettingsManager.AddOption(new StringInputFieldOption(_configEntry));
                 _madeRiskOfOptions = true;
             }
         }

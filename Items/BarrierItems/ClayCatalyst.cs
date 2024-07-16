@@ -48,7 +48,7 @@ namespace BubbetsItems.Items.BarrierItems
 		{
 			var master = inventory ? inventory!.GetComponent<CharacterMaster>() : null;
 			if (master) // TODO test if this even works, and do the same for void beads and locus if it does
-				scalingInfos[0].WorkingContext.a = Util.GetItemCountForTeam(master!.teamIndex, ItemDef.itemIndex, false, false);
+				ScalingInfos[0].WorkingContext.a = Util.GetItemCountForTeam(master!.teamIndex, ItemDef.itemIndex, false, false);
 			return base.GetFormattedDescription(null, token, forceHideExtended);
 		}
 
@@ -71,7 +71,7 @@ namespace BubbetsItems.Items.BarrierItems
 			var teamIndex = __instance.teamComponent.teamIndex;
 			if (__instance.GetBuffCount(BuffDef) <= 0) return;
 			var amount = Util.GetItemCountForTeam(teamIndex, instance.ItemDef.itemIndex, false);
-			__instance.barrierDecayRate *= instance.scalingInfos[1].ScalingFunction(amount);
+			__instance.barrierDecayRate *= instance.ScalingInfos[1].ScalingFunction(amount);
 		}
 		
 		public static Dictionary<HoldoutZoneController, GameObject[]> ZoneInstances = new(); 

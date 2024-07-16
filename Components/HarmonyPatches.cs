@@ -45,6 +45,7 @@ namespace BubbetsItems
                 target = report.attackerBody.mainHurtBox,
             });
         }
-        delegate void AmmoPickupDele(DamageReport report);
+
+        private delegate void AmmoPickupDele(DamageReport report);
     }
 }

@@ -51,9 +51,9 @@ namespace BubbetsItems.Items.VoidLunar
 				var inst = GetInstance<ClumpedSand>();
 				var amount = inv.GetItemCount(inst.ItemDef);
 				if (amount <= 0) return;
-				damageInfo.damage *= inst.scalingInfos[2].ScalingFunction(amount);
+				damageInfo.damage *= inst.ScalingInfos[2].ScalingFunction(amount);
 				mostRecentInfo = damageInfo;
-				for (var i = 0; i < inst.scalingInfos[0].ScalingFunction(amount); i++)
+				for (var i = 0; i < inst.ScalingInfos[0].ScalingFunction(amount); i++)
 				{
 					__instance.TakeDamage(damageInfo);
 				}
@@ -81,7 +81,7 @@ namespace BubbetsItems.Items.VoidLunar
 			var inst = GetInstance<ClumpedSand>()!;
 			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return;
-			__instance.regen += inst.scalingInfos[1].ScalingFunction(amount);
+			__instance.regen += inst.ScalingInfos[1].ScalingFunction(amount);
 		}
 	}
 }

@@ -19,10 +19,10 @@ namespace BubbetsItems.Items
 {
 	public class BunnyFoot : ItemBase
 	{
-		public static ConfigEntry<bool> addAirControl;
-		public static ConfigEntry<bool> isLunar;
-		private Sprite greenIcon;
-		private Sprite lunarIcon;
+		public static ConfigEntry<bool> AddAirControl = null!;
+		public static ConfigEntry<bool> IsLunar = null!;
+		private Sprite _greenIcon = null!;
+		private Sprite _lunarIcon = null!;
 
 		protected override void MakeTokens()
 		{
@@ -44,30 +44,30 @@ namespace BubbetsItems.Items
 			AddScalingFunction("[a] * 0.5", "Jump Control");
 			AddScalingFunction("3", "Auto Jump Requirement");
 			AddScalingFunction("0.25", "Merc Dash Exit Mult");
-			addAirControl = sharedInfo.ConfigFile.Bind("General", "Bunny Foot Add Air Control", false, "Add a bit of vanilla air control when at low speeds with bunny foot.");
-			isLunar = sharedInfo.ConfigFile.Bind("General", "Bunny Foot Is Lunar", false, "Makes bunny foot a lunar item.");
-			isLunar.SettingChanged += IsLunarOnSettingChanged;
+			AddAirControl = sharedInfo.ConfigFile.Bind("General", "Bunny Foot Add Air Control", false, "Add a bit of vanilla air control when at low speeds with bunny foot.");
+			IsLunar = sharedInfo.ConfigFile.Bind("General", "Bunny Foot Is Lunar", false, "Makes bunny foot a lunar item.");
+			IsLunar.SettingChanged += IsLunarOnSettingChanged;
 		}
 
-		private void IsLunarOnSettingChanged(object o, EventArgs e)
+		private void IsLunarOnSettingChanged(object? o, EventArgs? e)
 		{
-			ItemDef.tier = isLunar.Value ? ItemTier.Lunar : ItemTier.Tier2;
-			ItemDef.pickupIconSprite = isLunar.Value ? lunarIcon : greenIcon;
+			ItemDef.tier = IsLunar.Value ? ItemTier.Lunar : ItemTier.Tier2;
+			ItemDef.pickupIconSprite = IsLunar.Value ? _lunarIcon : _greenIcon;
 		}
 
 		protected override void FillDefsFromContentPack()
 		{
 			base.FillDefsFromContentPack();
-			greenIcon = ItemDef.pickupIconSprite;
-			lunarIcon = BubbetsItemsPlugin.AssetBundle.LoadAsset<Sprite>("BunnyFootLunar");
+			_greenIcon = ItemDef.pickupIconSprite;
+			_lunarIcon = BubbetsItemsPlugin.AssetBundle.LoadAsset<Sprite>("BunnyFootLunar");
 			IsLunarOnSettingChanged(null, null);
 		}
 
 		public override void MakeRiskOfOptions()
 		{
 			base.MakeRiskOfOptions();
-			ModSettingsManager.AddOption(new CheckBoxOption(addAirControl));
-			ModSettingsManager.AddOption(new CheckBoxOption(isLunar));
+			ModSettingsManager.AddOption(new CheckBoxOption(AddAirControl));
+			ModSettingsManager.AddOption(new CheckBoxOption(IsLunar));
 		}
 
 		[HarmonyILManipulator, HarmonyPatch(typeof(ProjectileGrappleController.GripState), nameof(ProjectileGrappleController.GripState.FixedUpdateBehavior))]
@@ -89,6 +89,7 @@ namespace BubbetsItems.Items
 		}
 
 		[HarmonyILManipulator, HarmonyPatch(typeof(Assaulter2), nameof(Assaulter2.OnEnter)), HarmonyPatch(typeof(Assaulter2), nameof(Assaulter2.OnExit)), HarmonyPatch(typeof(FocusedAssaultDash), nameof(FocusedAssaultDash.OnExit)), HarmonyPatch(typeof(EvisDash), nameof(EvisDash.OnExit))]//, HarmonyPatch(typeof(WhirlwindBase), nameof(WhirlwindBase.FixedUpdate))]
+		// ReSharper disable once InconsistentNaming
 		public static void FixAssulter2Dash(ILContext il, MethodBase __originalMethod)
 		{
 			var c = new ILCursor(il);
@@ -99,7 +100,7 @@ namespace BubbetsItems.Items
 				var count = assaulter2.characterBody.inventory.GetItemCount(GetInstance<BunnyFoot>()?.ItemDef);
 				if (count <= 0) return vector3;
 				if (__originalMethod.Name != "OnExit") return ((IPhysMotor) assaulter2.characterMotor).velocity;
-				var outputVelocity = (Vector3) (__originalMethod.DeclaringType?.GetField("dashVector", (BindingFlags) (-1))?.GetValue(assaulter2) ?? Vector3.zero) * (float) (__originalMethod.DeclaringType?.GetField("speedCoefficient")?.GetValue(assaulter2) ?? 0f) * assaulter2.moveSpeedStat * GetInstance<BunnyFoot>().scalingInfos[5].ScalingFunction(count);
+				var outputVelocity = (Vector3) (__originalMethod.DeclaringType?.GetField("dashVector", (BindingFlags) (-1))?.GetValue(assaulter2) ?? Vector3.zero) * (float) (__originalMethod.DeclaringType?.GetField("speedCoefficient")?.GetValue(assaulter2) ?? 0f) * assaulter2.moveSpeedStat * GetInstance<BunnyFoot>().ScalingInfos[5].ScalingFunction(count);
 				var inputVelocity = ((IPhysMotor) assaulter2.characterMotor).velocity;
 				return outputVelocity.normalized * Mathf.Sqrt(Mathf.Max(inputVelocity.sqrMagnitude, outputVelocity.sqrMagnitude));
 			});
@@ -169,14 +170,14 @@ namespace BubbetsItems.Items
 			}
 
 			var addvel = Accelerate(velocity, wishDir, wishSpeed,
-				wishSpeed * bunnyFoot.scalingInfos[2].ScalingFunction(count),
-				bunnyFoot.scalingInfos[3].ScalingFunction(count), 1f, vector, wishSpeed);
+				wishSpeed * bunnyFoot.ScalingInfos[2].ScalingFunction(count),
+				bunnyFoot.ScalingInfos[3].ScalingFunction(count), 1f, vector, wishSpeed);
 
 			addvel.y = vector.y;
 			
 			if (!grounded) return addvel;
 
-			return Time.time - bh.hitGroundTime > bunnyFoot!.scalingInfos[1].ScalingFunction(characterBody.inventory.GetItemCount(bunnyFoot.ItemDef)) ? vector : addvel;
+			return Time.time - bh.hitGroundTime > bunnyFoot!.ScalingInfos[1].ScalingFunction(characterBody.inventory.GetItemCount(bunnyFoot.ItemDef)) ? vector : addvel;
 		}
 
 		[HarmonyILManipulator, HarmonyPatch(typeof(CharacterMotor), nameof(CharacterMotor.PreMove))]
@@ -206,7 +207,7 @@ namespace BubbetsItems.Items
 			var wishDir = newTarget.normalized;
 			var wishSpeed = motor.walkSpeed * wishDir.magnitude;
 
-			return Accelerate(velocity, wishDir, wishSpeed, bunnyFoot.scalingInfos[0].ScalingFunction(count), motor.acceleration, deltaTime, target, num);
+			return Accelerate(velocity, wishDir, wishSpeed, bunnyFoot.ScalingInfos[0].ScalingFunction(count), motor.acceleration, deltaTime, target, num);
 		}
 
 		//Ripped from sbox or gmod, i dont remember
@@ -223,7 +224,7 @@ namespace BubbetsItems.Items
 
 			// If not going to add any speed, done.
 			if ( addspeed <= 0 )
-				if (!addAirControl.Value)
+				if (!AddAirControl.Value)
 					return velocity;
 				else
 					return target.sqrMagnitude < velocity.sqrMagnitude ? velocity : Vector3.MoveTowards(velocity, target, num * deltaTime); //return velocity;

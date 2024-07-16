@@ -34,8 +34,8 @@ namespace BubbetsItems.Items.VoidLunar
 
 		public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
 		{
-			scalingInfos[0].WorkingContext.m = 1;
-			scalingInfos[0].WorkingContext.d = 1;
+			ScalingInfos[0].WorkingContext.m = 1;
+			ScalingInfos[0].WorkingContext.d = 1;
 			return base.GetFormattedDescription(inventory, token, forceHideExtended);
 		}
 
@@ -65,7 +65,7 @@ namespace BubbetsItems.Items.VoidLunar
 			if (!inv) return;
 			var amount = inv.GetItemCount(ItemDef);
 			if (amount <= 0) return;
-			var info = scalingInfos[1];
+			var info = ScalingInfos[1];
 			body.AddTimedBuff(BuffDef, info.ScalingFunction(amount));
 		}
 
@@ -98,7 +98,7 @@ namespace BubbetsItems.Items.VoidLunar
 			if (!body) return true;
 			if (body.HasBuff(BuffDef)) return false;
 
-			var info = inst.scalingInfos[0];
+			var info = inst.ScalingInfos[0];
 			info.WorkingContext.m = change;
 			info.WorkingContext.d = Run.instance.difficultyCoefficient;
 			var reduction = info.ScalingFunction(amount);

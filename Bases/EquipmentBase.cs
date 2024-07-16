@@ -60,10 +60,10 @@ namespace BubbetsItems
             EquipmentDef.cooldown = Cooldown.Value;
         }
         
-        public EquipmentDef EquipmentDef;
+        public EquipmentDef EquipmentDef = null!;
         
         private static IEnumerable<EquipmentBase>? _equipments;
-        internal ConfigEntry<float> Cooldown;
+        internal ConfigEntry<float> Cooldown = null!;
         public static IEnumerable<EquipmentBase> Equipments => _equipments ??= Instances.OfType<EquipmentBase>();
 
         public enum EquipmentActivationState

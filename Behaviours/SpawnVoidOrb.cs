@@ -8,26 +8,26 @@ namespace BubbetsItems.Behaviours
 {
 	public class SpawnVoidOrb : MonoBehaviour
 	{
-		private Boolean loading = false;
-		private GameObject instance;
-		private int loadedIndex = -1;
-		private bool inEditor;
-		void Start()
+		private bool _loading = false;
+		private GameObject? _instance;
+		private bool _inEditor;
+
+		private void Start()
 		{
 			LoadPrefab();
 		}
 
-		void OnValidate()
+		private void OnValidate()
 		{
-			inEditor = true;
+			_inEditor = true;
 			LoadPrefab();
 		}
 
-		void LoadPrefab()
+		private void LoadPrefab()
 		{
-			if (!loading)
+			if (!_loading)
 			{
-				loading = true;
+				_loading = true;
 				Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/VoidChest/VoidChest.prefab").Completed += PrefabLoaded;
 			}
 		}
@@ -40,9 +40,9 @@ namespace BubbetsItems.Behaviours
 					DestroyInst();
 					var prefab = obj.Result;
 					var parent = Instantiate(prefab);
-					instance = parent.transform.GetChild(0).GetChild(0).gameObject;
+					_instance = parent.transform.GetChild(0).GetChild(0).gameObject;
 
-					var transformChild = instance.transform;
+					var transformChild = _instance.transform;
 					DestroyImmediate(transformChild.GetChild(2).gameObject);
 					var root = transformChild.GetChild(1);
 					root.Find("Base").localScale = Vector3.zero;
@@ -55,19 +55,19 @@ namespace BubbetsItems.Behaviours
 					DestroyImmediate(transformChild.GetComponent<AnimationEvents>());
 					DestroyImmediate(transformChild.GetComponentInChildren<Light>());
 					
-					if (inEditor)
+					if (_inEditor)
 						SetRecursiveFlags(transformChild);
 					else
 					{
-						DontDestroyOnLoad(instance);
-						instance.hideFlags |= HideFlags.HideInInspector | HideFlags.HideInHierarchy;
+						DontDestroyOnLoad(_instance);
+						_instance.hideFlags |= HideFlags.HideInInspector | HideFlags.HideInHierarchy;
 					}
 
 					transformChild.eulerAngles = Vector3.zero;
 					transformChild.position = Vector3.zero;
 					transformChild.localScale = Vector3.one;
 					transformChild.SetParent(gameObject.transform, false);
-					if (inEditor)
+					if (_inEditor)
 						DestroyImmediate(parent);
 					else
 						parent.SetActive(false); // I have no fucking idea why but deleting the parent also deletes the now disjointed child
@@ -77,12 +77,12 @@ namespace BubbetsItems.Behaviours
 					transformChild.localPosition = Vector3.zero; 
 					
 					
-					loading = false;
+					_loading = false;
 					break;
 				case AsyncOperationStatus.Failed:
 					DestroyInst();
 					Debug.LogError("Prefab load failed.");
-					loading = false;
+					_loading = false;
 					break;
 				default:
 					// case AsyncOperationStatus.None:
@@ -92,11 +92,11 @@ namespace BubbetsItems.Behaviours
 
 		public void DestroyInst()
 		{
-			if (instance == null) return;
-			if (inEditor) 
-				DestroyImmediate(instance);
+			if (_instance == null) return;
+			if (_inEditor) 
+				DestroyImmediate(_instance);
 			else
-				Destroy(instance);
+				Destroy(_instance);
 		}
 
 		private void OnDestroy()
@@ -104,7 +104,7 @@ namespace BubbetsItems.Behaviours
 			DestroyInst();
 		}
 
-		static void SetRecursiveFlags(Transform transform)
+		private static void SetRecursiveFlags(Transform transform)
 		{
 			transform.gameObject.hideFlags |= HideFlags.DontSave;
 			foreach(Transform child in transform)

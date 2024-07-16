@@ -16,11 +16,11 @@ namespace BubbetsItems.Behaviours
 	[HarmonyPatch]
 	public static class ExtraHealthBarSegments
 	{
-		private static List<Type> barDataTypes = new();
+		private static List<Type> _barDataTypes = new();
 
 		public static void AddType<T>() where T : BarData, new()
 		{
-			barDataTypes.Add(typeof(T));
+			_barDataTypes.Add(typeof(T));
 		}
 		
 		/*
@@ -31,12 +31,15 @@ namespace BubbetsItems.Behaviours
 		}*/
 		
 		[HarmonyPostfix, HarmonyPatch(typeof(HealthBar), nameof(HealthBar.Awake))]
-		public static void AddTracker(HealthBar __instance)
+		// ReSharper disable once InconsistentNaming
+		public static void AddTracker(HealthBar? __instance)
 		{
-			__instance.gameObject.AddComponent<BubsExtraHealthbarInfoTracker>().Init(__instance);
+			if (__instance != null)
+				__instance.gameObject.AddComponent<BubsExtraHealthbarInfoTracker>().Init(__instance);
 		}
 
 		[HarmonyPostfix, HarmonyPatch(typeof(HealthBar), nameof(HealthBar.CheckInventory))]
+		// ReSharper disable once InconsistentNaming
 		public static void CheckInventory(HealthBar __instance)
 		{
 			var tracker = __instance.GetComponent<BubsExtraHealthbarInfoTracker>();
@@ -51,6 +54,7 @@ namespace BubbetsItems.Behaviours
 		}
 
 		[HarmonyPostfix, HarmonyPatch(typeof(HealthBar), nameof(HealthBar.UpdateBarInfos))]
+		// ReSharper disable once InconsistentNaming
 		public static void UpdateInfos(HealthBar __instance)
 		{
 			var tracker = __instance.GetComponent<BubsExtraHealthbarInfoTracker>();
@@ -63,7 +67,7 @@ namespace BubbetsItems.Behaviours
 			var c = new ILCursor(il);
 
 			var cls = -1;
-			FieldReference fld = null;
+			FieldReference? fld = null;
 			c.GotoNext(
 				x => x.MatchLdloca(out cls),
 				x => x.MatchLdcI4(0),
@@ -77,7 +81,7 @@ namespace BubbetsItems.Behaviours
 			c.EmitDelegate<Func<int, HealthBar, int>>((i, bar) =>
 			{
 				var tracker = bar.GetComponent<BubsExtraHealthbarInfoTracker>();
-				i += tracker.barInfos.Count(x => x.info.enabled);
+				i += tracker.BarInfos.Count(x => x.Info.enabled);
 				return i;
 			});
 			c.Index = il.Instrs.Count - 2;
@@ -108,19 +112,19 @@ namespace BubbetsItems.Behaviours
 		
 		public abstract class BarData
 		{
-			public BubsExtraHealthbarInfoTracker tracker;
-			public HealthBar bar;
-			public HealthBar.BarInfo info;
-			public HealthBarStyle.BarStyle? cachedStyle;
-			private Image _imageReference;
-			public virtual Image ImageReference
+			public BubsExtraHealthbarInfoTracker Tracker = null!;
+			public HealthBar? Bar;
+			public HealthBar.BarInfo Info;
+			public HealthBarStyle.BarStyle? CachedStyle;
+			private Image? _imageReference;
+			public virtual Image? ImageReference
 			{
 				get => _imageReference;
 				set
 				{
-					if (_imageReference && _imageReference != value)
+					if (_imageReference != null && _imageReference && _imageReference != value && Bar != null)
 					{
-						_imageReference.material = bar.barAllocator.elementPrefab.GetComponent<Image>().material;
+						_imageReference.material = Bar.barAllocator.elementPrefab.GetComponent<Image>().material;
 					}
 					_imageReference = value;
 				}
@@ -128,30 +132,30 @@ namespace BubbetsItems.Behaviours
 
 			public abstract HealthBarStyle.BarStyle GetStyle();
 
-			public virtual void UpdateInfo(ref HealthBar.BarInfo info, HealthComponent.HealthBarValues healthBarValues)
+			public virtual void UpdateInfo(ref HealthBar.BarInfo inf, HealthComponent.HealthBarValues healthBarValues)
 			{
-				if (cachedStyle == null) cachedStyle = GetStyle();
-				var style = cachedStyle.Value;
+				if (CachedStyle == null) CachedStyle = GetStyle();
+				var style = CachedStyle.Value;
 				
-				info.enabled &= style.enabled;
-				info.color = style.baseColor;
-				info.imageType = style.imageType;
-				info.sprite = style.sprite;
-				info.sizeDelta = style.sizeDelta;
+				inf.enabled &= style.enabled;
+				inf.color = style.baseColor;
+				inf.imageType = style.imageType;
+				inf.sprite = style.sprite;
+				inf.sizeDelta = style.sizeDelta;
 			}
 
-			public virtual void CheckInventory(ref HealthBar.BarInfo info, Inventory inventory, CharacterBody characterBody, HealthComponent healthComponent) {}
-			public virtual void ApplyBar(ref HealthBar.BarInfo info, Image image, ref int i)
+			public virtual void CheckInventory(ref HealthBar.BarInfo inf, Inventory inventory, CharacterBody characterBody, HealthComponent healthComponent) {}
+			public virtual void ApplyBar(ref HealthBar.BarInfo inf, Image image, ref int i)
 			{
-				image.type = info.imageType;
-				image.sprite = info.sprite;
-				image.color = info.color;
+				image.type = inf.imageType;
+				image.sprite = inf.sprite;
+				image.color = inf.color;
 
 				var rectTransform = (RectTransform) image.transform;
-				rectTransform.anchorMin = new Vector2(info.normalizedXMin, 0f);
-				rectTransform.anchorMax = new Vector2(info.normalizedXMax, 1f);
+				rectTransform.anchorMin = new Vector2(inf.normalizedXMin, 0f);
+				rectTransform.anchorMax = new Vector2(inf.normalizedXMax, 1f);
 				rectTransform.anchoredPosition = Vector2.zero;
-				rectTransform.sizeDelta = new Vector2(info.sizeDelta * 0.5f + 1f, info.sizeDelta + 1f);
+				rectTransform.sizeDelta = new Vector2(inf.sizeDelta * 0.5f + 1f, inf.sizeDelta + 1f);
 
 				i++;
 			}
@@ -159,50 +163,51 @@ namespace BubbetsItems.Behaviours
 
 		public class BubsExtraHealthbarInfoTracker : MonoBehaviour
 		{
-			public List<BarData> barInfos;
-			public HealthBar healthBar;
+			public List<BarData> BarInfos = null!;
+			public HealthBar? healthBar;
 			
 			public void CheckInventory(Inventory inv, CharacterBody characterBody, HealthComponent healthComponent)
 			{
-				foreach (var barInfo in barInfos)
+				foreach (var barInfo in BarInfos)
 				{
-					barInfo.CheckInventory(ref barInfo.info, inv, characterBody, healthComponent);
+					barInfo.CheckInventory(ref barInfo.Info, inv, characterBody, healthComponent);
 				}
 			}
 			public void UpdateInfo()
 			{
-				if (!healthBar || !healthBar.source) return;
+				if (healthBar == null || !healthBar || !healthBar.source) return;
 				var healthBarValues = healthBar.source.GetHealthBarValues();
-				foreach (var barInfo in barInfos)
+				foreach (var barInfo in BarInfos)
 				{
-					if(barInfo.tracker == null)
-						barInfo.tracker = this;
-					if(barInfo.bar == null) // I cant do this in the init because it loses its reference somehow
-						barInfo.bar = healthBar;
-					barInfo.UpdateInfo(ref barInfo.info, healthBarValues);
+					if(barInfo.Tracker == null)
+						barInfo.Tracker = this;
+					if(barInfo.Bar == null) // I cant do this in the init because it loses its reference somehow
+						barInfo.Bar = healthBar;
+					barInfo.UpdateInfo(ref barInfo.Info, healthBarValues);
 				}
 			}
 			public void ApplyBar(ref int i)
 			{
-				foreach (var barInfo in barInfos)
+				foreach (var barInfo in BarInfos)
 				{
-					ref var info = ref barInfo.info;
+					ref var info = ref barInfo.Info;
 					if (!info.enabled)
 					{
 						barInfo.ImageReference = null; // Release the reference.
 						continue;
 					}
 
+					if (healthBar == null) continue;
 					Image image = healthBar.barAllocator.elements[i];
 					barInfo.ImageReference = image;
-					barInfo.ApplyBar(ref barInfo.info, image, ref i);
+					barInfo.ApplyBar(ref barInfo.Info, image, ref i);
 				}
 			}
 
-			public void Init(HealthBar healthBar)
+			public void Init(HealthBar? hBar)
 			{
-				this.healthBar = healthBar;
-				barInfos = barDataTypes.Select(dataType => (BarData) Activator.CreateInstance(dataType)).ToList();
+				healthBar = hBar;
+				BarInfos = _barDataTypes.Select(dataType => (BarData) Activator.CreateInstance(dataType)).ToList();
 			}
 		}
 	}

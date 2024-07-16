@@ -47,10 +47,10 @@ namespace BubbetsItems.Items.VoidLunar
 			var inst = GetInstance<Imperfect>();
 			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return;
-			__instance.maxShield *= 1 + inst.scalingInfos[0].ScalingFunction(amount);
+			__instance.maxShield *= 1 + inst.ScalingInfos[0].ScalingFunction(amount);
 			__instance.maxHealth += __instance.maxShield - 1;
 			__instance.maxShield = 1;
-			__instance.armor += inst.scalingInfos[1].ScalingFunction(amount);
+			__instance.armor += inst.ScalingInfos[1].ScalingFunction(amount);
 		}
 
 		protected override void MakeBehaviours()
@@ -71,8 +71,8 @@ namespace BubbetsItems.Items.VoidLunar
 			var inst = GetInstance<Imperfect>()!;
 			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return;
-			args.armorAdd += inst.scalingInfos[1].ScalingFunction(amount);
-			args.shieldMultAdd += inst.scalingInfos[0].ScalingFunction(amount);
+			args.armorAdd += inst.ScalingInfos[1].ScalingFunction(amount);
+			args.shieldMultAdd += inst.ScalingInfos[0].ScalingFunction(amount);
 		}
 
 		/*

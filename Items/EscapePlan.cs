@@ -16,7 +16,7 @@ namespace BubbetsItems.Items
     [HarmonyPatch]
     public class EscapePlan : ItemBase
     {
-        public static ConfigEntry<float> Granularity;
+        public static ConfigEntry<float> Granularity = null!;
         
         
         private static BuffDef? _buffDef;
@@ -68,9 +68,9 @@ namespace BubbetsItems.Items
 
         public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
         {
-            if (inventory)
+            if (inventory != null && inventory)
             {
-                scalingInfos[0].WorkingContext.h = inventory.GetComponent<CharacterMaster>()?.GetBody()
+                ScalingInfos[0].WorkingContext.h = inventory.GetComponent<CharacterMaster>()?.GetBody()
                     ?.GetComponent<HealthComponent>()
                     ?.combinedHealthFraction ?? 1f / 500f;
             }
@@ -156,7 +156,7 @@ namespace BubbetsItems.Items
             var buffI = Mathf.RoundToInt(buff * 25);*/
             
             //_instance.Logger.LogInfo(buffI + " : " + buff);
-            var info = escapePlan.scalingInfos[0];
+            var info = escapePlan.ScalingInfos[0];
             info.WorkingContext.h = body.healthComponent.combinedHealthFraction;
             body.SetBuffCount(BuffDef!.buffIndex, Mathf.RoundToInt(info.ScalingFunction(amt) * Granularity.Value ));
         }

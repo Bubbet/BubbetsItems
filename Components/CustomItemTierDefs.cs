@@ -67,8 +67,7 @@ namespace BubbetsItems
 		public static void RebuildCustomTierRecyclerFucked(ILContext il)
 		{
 			var c = new ILCursor(il);
-			object refclass = null;
-			MethodReference call = null;
+			MethodReference? call = null;
 			/*c.GotoNext(MoveType.After,
 				x =>
 				{

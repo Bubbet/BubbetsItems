@@ -15,8 +15,8 @@ namespace BubbetsItems.Items
 {
 	public class ZealotryEmbrace : ItemBase
 	{
-		public static ConfigEntry<bool> onlyMyDots;
-		public static ConfigEntry<bool> onlyOneDot;
+		public static ConfigEntry<bool> OnlyMyDots = null!;
+		public static ConfigEntry<bool> OnlyOneDot = null!;
 		protected override void MakeTokens()
 		{
 			base.MakeTokens();
@@ -35,17 +35,17 @@ namespace BubbetsItems.Items
 			base.MakeConfigs();
 			AddScalingFunction("0.25", "Damage Increase");
 			AddScalingFunction("2 + [a]", "Debuff Amount");
-			onlyMyDots = sharedInfo.ConfigFile!.Bind(ConfigCategoriesEnum.General, "Zealotry Embrace: Only track my debuffs", true,
+			OnlyMyDots = sharedInfo.ConfigFile!.Bind(ConfigCategoriesEnum.General, "Zealotry Embrace: Only track my debuffs", true,
 				"Should only your dots track to the total");
-			onlyOneDot = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Zealotry Embrace: Only one dot stack", false,
+			OnlyOneDot = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Zealotry Embrace: Only one dot stack", false,
 				"Should each dot stack count towards the total, else treat all stacks as one buff.");
 		}
 
 		public override void MakeRiskOfOptions()
 		{
 			base.MakeRiskOfOptions();
-			ModSettingsManager.AddOption(new CheckBoxOption(onlyMyDots));
-			ModSettingsManager.AddOption(new CheckBoxOption(onlyOneDot));
+			ModSettingsManager.AddOption(new CheckBoxOption(OnlyMyDots));
+			ModSettingsManager.AddOption(new CheckBoxOption(OnlyOneDot));
 		}
 
 		protected override void FillVoidConversions(List<ItemDef.Pair> pairs)
@@ -79,23 +79,23 @@ namespace BubbetsItems.Items
 				var debuffCount = BuffCatalog.debuffBuffIndices.Sum(buffType => hc.body.GetBuffCount(buffType));
 				var dotController = DotController.FindDotController(hc.gameObject);
 				if (dotController)
-					if (onlyOneDot.Value)
+					if (OnlyOneDot.Value)
 					{
-						var list = from dotStack in onlyMyDots.Value ? dotController.dotStackList.Where(x => x.attackerObject == body.gameObject) : dotController.dotStackList select dotStack.dotIndex;
+						var list = from dotStack in OnlyMyDots.Value ? dotController.dotStackList.Where(x => x.attackerObject == body.gameObject) : dotController.dotStackList select dotStack.dotIndex;
 						debuffCount += list.Distinct().Count();
 					}
 					else
 					{
-						if (onlyMyDots.Value)
+						if (OnlyMyDots.Value)
 							debuffCount += dotController.dotStackList.Count(x => x.attackerObject == body.gameObject);
 						else
 							debuffCount += dotController.dotStackList.Count;
 					}
 
-				if (debuffCount < zealotryEmbrace.scalingInfos[1].ScalingFunction(count))
+				if (debuffCount < zealotryEmbrace.ScalingInfos[1].ScalingFunction(count))
 				{
 					damageInfo.damageColorIndex = DamageColorIndex.Void;
-					amount *= 1f + zealotryEmbrace.scalingInfos[0].ScalingFunction(count);
+					amount *= 1f + zealotryEmbrace.ScalingInfos[0].ScalingFunction(count);
 				}
 
 				return amount;

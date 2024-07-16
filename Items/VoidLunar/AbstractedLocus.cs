@@ -16,8 +16,8 @@ namespace BubbetsItems.Items.VoidLunar
 {
 	public class AbstractedLocus : ItemBase
 	{
-		public static ConfigEntry<bool> disableEnemyDamageInArena;
-		public static ConfigEntry<int> itemLimit;
+		public static ConfigEntry<bool> DisableEnemyDamageInArena = null!;
+		public static ConfigEntry<int> ItemLimit = null!;
 
 		protected override void MakeTokens()
 		{
@@ -38,23 +38,23 @@ namespace BubbetsItems.Items.VoidLunar
 			base.MakeConfigs();
 			AddScalingFunction("[r] * ([a] * 0.2 + 1.3)", "Teleporter Radius", desc: "[a] = item count; [r] = current radius;");
 			AddScalingFunction("[r] * ([a] * 0.6 * Max(0, [p]) + 1)", "Void Fog Charge Increase", desc: "[a] = item count; [p] = outside players; [r] = charging rate");
-			disableEnemyDamageInArena = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Abstracted Locus Disable Enemy Damage In Arena", false, "Should the void fog hurt the enemies in the Void Fields.");
-			itemLimit = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Abstracted Locus Item Limit", -1, "Limit of locus amongst team, -1 is infinite.");
+			DisableEnemyDamageInArena = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Abstracted Locus Disable Enemy Damage In Arena", false, "Should the void fog hurt the enemies in the Void Fields.");
+			ItemLimit = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Abstracted Locus Item Limit", -1, "Limit of locus amongst team, -1 is infinite.");
 		}
 
 		public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
 		{
-			scalingInfos[0].WorkingContext.r = 1;
-			scalingInfos[1].WorkingContext.p = 1;
-			scalingInfos[1].WorkingContext.r = 1;
+			ScalingInfos[0].WorkingContext.r = 1;
+			ScalingInfos[1].WorkingContext.p = 1;
+			ScalingInfos[1].WorkingContext.r = 1;
 			return base.GetFormattedDescription(inventory, token, forceHideExtended);
 		}
 
 		public override void MakeRiskOfOptions()
 		{
 			base.MakeRiskOfOptions();
-			ModSettingsManager.AddOption(new CheckBoxOption(disableEnemyDamageInArena));
-			ModSettingsManager.AddOption(new IntSliderOption(itemLimit, new IntSliderConfig {min = -1, max = 40}));
+			ModSettingsManager.AddOption(new CheckBoxOption(DisableEnemyDamageInArena));
+			ModSettingsManager.AddOption(new IntSliderOption(ItemLimit, new IntSliderConfig {min = -1, max = 40}));
 		}
 
 		protected override void FillVoidConversions(List<ItemDef.Pair> pairs)
@@ -75,21 +75,19 @@ namespace BubbetsItems.Items.VoidLunar
 
 	public class AbstractedLocusController : MonoBehaviour
 	{
-		private HoldoutZoneController holdoutZoneController;
-		private Run.FixedTimeStamp enabledTime;
+		private HoldoutZoneController _holdoutZoneController = null!;
+		private Run.FixedTimeStamp _enabledTime;
 		public int amount;
-		private float currentValue;
-		private readonly Color materialColor =  new Color( 3.9411764f, 0f, 5f, 1f);
-		private AbstractedLocus inst;
-		private FogDamageController fogController;
-		private bool added;
+		private float _currentValue;
+		private readonly Color _materialColor =  new Color( 3.9411764f, 0f, 5f, 1f);
+		private AbstractedLocus _inst = null!;
+		private FogDamageController _fogController = null!;
 
 		private void Awake()
 		{
-			inst = SharedBase.GetInstance<AbstractedLocus>()!;
-			holdoutZoneController = GetComponent<HoldoutZoneController>();
-
-			var got = false;
+			_inst = SharedBase.GetInstance<AbstractedLocus>()!;
+			_holdoutZoneController = GetComponent<HoldoutZoneController>();
+			
 			var parent = GameObject.Find("AbstractedLocusFog(Clone)");
 			if (parent == null)
 			{
@@ -101,49 +99,49 @@ namespace BubbetsItems.Items.VoidLunar
 				}
 			}
 			
-			fogController = parent.GetComponent<FogDamageController>();
-			fogController.AddSafeZone(holdoutZoneController);
+			_fogController = parent!.GetComponent<FogDamageController>();
+			_fogController.AddSafeZone(_holdoutZoneController);
 		}
 		private void OnEnable()
 		{
-			enabledTime = Run.FixedTimeStamp.now;
-			holdoutZoneController.calcRadius += ApplyRadius;
-			holdoutZoneController.calcChargeRate += ApplyRate;
-			holdoutZoneController.calcColor += ApplyColor;
+			_enabledTime = Run.FixedTimeStamp.now;
+			_holdoutZoneController.calcRadius += ApplyRadius;
+			_holdoutZoneController.calcChargeRate += ApplyRate;
+			_holdoutZoneController.calcColor += ApplyColor;
 		}
 		private void OnDisable()
 		{
-			holdoutZoneController.calcColor -= ApplyColor;
-			holdoutZoneController.calcChargeRate -= ApplyRate;
-			holdoutZoneController.calcRadius -= ApplyRadius;
+			_holdoutZoneController.calcColor -= ApplyColor;
+			_holdoutZoneController.calcChargeRate -= ApplyRate;
+			_holdoutZoneController.calcRadius -= ApplyRadius;
 		}
 
 		private void FixedUpdate()
 		{
-			amount = Util.GetItemCountForTeam(holdoutZoneController.chargingTeam, inst.ItemDef.itemIndex, true, false);
-			if (enabledTime.timeSince < HoldoutZoneController.FocusConvergenceController.startupDelay)
+			amount = Util.GetItemCountForTeam(_holdoutZoneController.chargingTeam, _inst.ItemDef.itemIndex, true, false);
+			if (_enabledTime.timeSince < HoldoutZoneController.FocusConvergenceController.startupDelay)
 			{
 				amount = 0;
 			}
 
-			if (AbstractedLocus.itemLimit.Value > -1)
+			if (AbstractedLocus.ItemLimit.Value > -1)
 			{
-				amount = Mathf.Min(amount, AbstractedLocus.itemLimit.Value);
+				amount = Mathf.Min(amount, AbstractedLocus.ItemLimit.Value);
 			}
 
 			var target = (float) amount > 0f ? 1f : 0f;
-			var num = Mathf.MoveTowards(currentValue, target, 5f * Time.fixedDeltaTime); // TODO replace 5 with configurable cap
-			if (currentValue <= 0f && num > 0f)
+			var num = Mathf.MoveTowards(_currentValue, target, 5f * Time.fixedDeltaTime); // TODO replace 5 with configurable cap
+			if (_currentValue <= 0f && num > 0f)
 			{
 				//Util.PlaySound("Play_item_lunar_focusedConvergence", gameObject);
 			}
-			currentValue = num;
+			_currentValue = num;
 		}
 
 		private void ApplyRadius(ref float radius)
 		{
 			if (amount <= 0) return;
-			var info = inst.scalingInfos[0];
+			var info = _inst.ScalingInfos[0];
 			var context = info.WorkingContext;
 			context.r = radius;
 			radius = info.ScalingFunction(amount);
@@ -152,13 +150,13 @@ namespace BubbetsItems.Items.VoidLunar
 		private void ApplyRate(ref float rate)
 		{
 			if (amount <= 0) return;
-			var living = HoldoutZoneController.CountLivingPlayers(holdoutZoneController.chargingTeam);
-			var charging = HoldoutZoneController.CountPlayersInRadius(holdoutZoneController, transform.position, holdoutZoneController.currentRadius * holdoutZoneController.currentRadius, holdoutZoneController.chargingTeam);
+			var living = HoldoutZoneController.CountLivingPlayers(_holdoutZoneController.chargingTeam);
+			var charging = HoldoutZoneController.CountPlayersInRadius(_holdoutZoneController, transform.position, _holdoutZoneController.currentRadius * _holdoutZoneController.currentRadius, _holdoutZoneController.chargingTeam);
 			var outside = living - charging;
 			
-			rate += Mathf.Pow((float)outside / living, holdoutZoneController.playerCountScaling) / holdoutZoneController.baseChargeDuration;
+			rate += Mathf.Pow((float)outside / living, _holdoutZoneController.playerCountScaling) / _holdoutZoneController.baseChargeDuration;
 			
-			var info = inst.scalingInfos[1];
+			var info = _inst.ScalingInfos[1];
 			var context = info.WorkingContext;
 			context.p = outside;
 			context.r = rate;
@@ -167,40 +165,40 @@ namespace BubbetsItems.Items.VoidLunar
 
 		private void ApplyColor(ref Color color)
 		{
-			color = Color.Lerp(color, materialColor, HoldoutZoneController.FocusConvergenceController.colorCurve.Evaluate(currentValue));
+			color = Color.Lerp(color, _materialColor, HoldoutZoneController.FocusConvergenceController.colorCurve.Evaluate(_currentValue));
 		}
 	}
 
 	public class AbstractedLocusFogController : MonoBehaviour
 	{
-		private FogDamageController fog;
+		private FogDamageController _fog = null!;
 
 		public void Awake()
 		{
-			fog = GetComponent<FogDamageController>();
-			fog.dangerBuffDef = RoR2Content.Buffs.VoidFogMild;
+			_fog = GetComponent<FogDamageController>();
+			_fog.dangerBuffDef = RoR2Content.Buffs.VoidFogMild;
 
-			if (AbstractedLocus.disableEnemyDamageInArena.Value && SceneManager.GetActiveScene().name == "arena")
+			if (AbstractedLocus.DisableEnemyDamageInArena.Value && SceneManager.GetActiveScene().name == "arena")
 			{
 				var filter = GetComponent<TeamFilter>();
 				filter.teamIndex = TeamIndex.Player;
-				fog.invertTeamFilter = false;
+				_fog.invertTeamFilter = false;
 			}
 		}
 
-		bool? lastEnabled;
+		private bool? _lastEnabled;
 		public void FixedUpdate()
 		{
-			var fogEnabled = fog.safeZones.Any(x =>
+			var fogEnabled = _fog.safeZones.Any(x =>
 			{
 				var hold = x as HoldoutZoneController;
 				if (!hold) return false;
 				var locus = hold!.GetComponent<AbstractedLocusController>();
 				return !hold.wasCharged && locus && locus.amount > 0;
 			});
-			if (fogEnabled == lastEnabled) return;
-			fog.enabled = fogEnabled;
-			lastEnabled = fogEnabled;
+			if (fogEnabled == _lastEnabled) return;
+			_fog.enabled = fogEnabled;
+			_lastEnabled = fogEnabled;
 		}
 	} 
 }

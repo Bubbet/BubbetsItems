@@ -9,14 +9,13 @@ namespace BubbetsItems.EntityStates
 {
 	public class ClayCatalystBaseState : EntityState
 	{
-		private HoldoutZoneController holdoutZone;
-		private float radius;
-		private TeamIndex teamIndex;
-		private BuffWard indicator;
-		private float stopwatch;
-		private float frequency;
-		private float barrierAdd;
-		private int pulseCount;
+		private HoldoutZoneController _holdoutZone = null!;
+		private float _radius;
+		private TeamIndex _teamIndex;
+		private BuffWard _indicator = null!;
+		private float _frequency;
+		private float _barrierAdd;
+		private int _pulseCount;
 
 		public override void OnEnter()
 		{
@@ -24,53 +23,50 @@ namespace BubbetsItems.EntityStates
 			Transform parent = transform.parent;
 			if (parent)
 			{
-				holdoutZone = parent.GetComponentInParent<HoldoutZoneController>();
+				_holdoutZone = parent.GetComponentInParent<HoldoutZoneController>();
 			}
 			TeamFilter teamFilter = GetComponent<TeamFilter>();
-			teamIndex = teamFilter ? teamFilter.teamIndex : TeamIndex.None;
+			_teamIndex = teamFilter ? teamFilter.teamIndex : TeamIndex.None;
 
 			if (NetworkServer.active)
 			{
 				var inst = SharedBase.GetInstance<ClayCatalyst>();
-				if (inst == null) return;
 
-				var amount = Util.GetItemCountForTeam(teamIndex, inst.ItemDef.itemIndex, false);
-				frequency = inst.scalingInfos[2].ScalingFunction(amount);
-				barrierAdd = inst.scalingInfos[3].ScalingFunction(amount);
-				radius = inst.scalingInfos[0].ScalingFunction(amount);
+				var amount = Util.GetItemCountForTeam(_teamIndex, inst.ItemDef.itemIndex, false);
+				_frequency = inst.ScalingInfos[2].ScalingFunction(amount);
+				_barrierAdd = inst.ScalingInfos[3].ScalingFunction(amount);
+				_radius = inst.ScalingInfos[0].ScalingFunction(amount);
 			} 
-			indicator = GetComponent<BuffWard>();
-			indicator.radius = radius;
+			_indicator = GetComponent<BuffWard>();
+			_indicator.radius = _radius;
 		}
 
 		public override void FixedUpdate()
 		{
 			base.FixedUpdate();
-			var inst = SharedBase.GetInstance<ClayCatalyst>();
-			if (inst == null) return;
-			if (pulseCount < Mathf.FloorToInt(holdoutZone.charge / frequency))
+			if (_pulseCount < Mathf.FloorToInt(_holdoutZone.charge / _frequency))
 			{
-				foreach (var teamComponent in TeamComponent.GetTeamMembers(indicator.teamFilter.teamIndex))
+				foreach (var component1 in TeamComponent.GetTeamMembers(_indicator.teamFilter.teamIndex))
 				{
-					var vector = teamComponent.transform.position - indicator.transform.position;
-					if (indicator.shape == BuffWard.BuffWardShape.VerticalTube)
+					var vector = component1.transform.position - _indicator.transform.position;
+					if (_indicator.shape == BuffWard.BuffWardShape.VerticalTube)
 					{
 						vector.y = 0f;
 					}
-					if (vector.sqrMagnitude <= indicator.calculatedRadius * indicator.calculatedRadius)
+					if (vector.sqrMagnitude <= _indicator.calculatedRadius * _indicator.calculatedRadius)
 					{
-						var component = teamComponent.GetComponent<CharacterBody>();
-						if (component && (!indicator.requireGrounded || !component.characterMotor || component.characterMotor.isGrounded))
+						var component = component1.GetComponent<CharacterBody>();
+						if (component && (!_indicator.requireGrounded || !component.characterMotor || component.characterMotor.isGrounded))
 						{
-							component.healthComponent.AddBarrier(barrierAdd);
+							component.healthComponent.AddBarrier(_barrierAdd);
 						}
 					}
 				}
-				pulseCount++;
+				_pulseCount++;
 				// TODO add vfx and sfx
 			}
 			if (!NetworkServer.active) return;
-			if (Math.Abs(holdoutZone.charge - 1f) < 0.01f)
+			if (Math.Abs(_holdoutZone.charge - 1f) < 0.01f)
 			{
 				Destroy(gameObject);
 			}
@@ -79,13 +75,13 @@ namespace BubbetsItems.EntityStates
 		public override void OnSerialize(NetworkWriter writer)
 		{
 			base.OnSerialize(writer);
-			writer.Write(radius);
+			writer.Write(_radius);
 		}
 
 		public override void OnDeserialize(NetworkReader reader)
 		{
 			base.OnDeserialize(reader);
-			radius = reader.ReadSingle();
+			_radius = reader.ReadSingle();
 		}
 	}
 }

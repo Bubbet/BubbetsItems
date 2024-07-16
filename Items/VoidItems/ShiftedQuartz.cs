@@ -17,8 +17,8 @@ namespace BubbetsItems.Items
 {
 	public class ShiftedQuartz : ItemBase
 	{
-		public static ConfigEntry<bool> visualOnlyForAuthority;
-		public static ConfigEntry<float> visualTransparency;
+		public static ConfigEntry<bool> VisualOnlyForAuthority = null!;
+		public static ConfigEntry<float> VisualTransparency = null!;
 
 		protected override void MakeTokens()
 		{
@@ -41,18 +41,18 @@ namespace BubbetsItems.Items
 
 		public override void MakeZioOptions()
 		{
-			visualOnlyForAuthority = sharedInfo.ConfigFile!.Bind(ConfigCategoriesEnum.General,
+			VisualOnlyForAuthority = sharedInfo.ConfigFile!.Bind(ConfigCategoriesEnum.General,
 				"Shifted quartz visual only for authority", false,
 				"Should shifted quartz visual effect only show for the player who has the item", networked: false);
-			visualTransparency = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Shifted quartz inside transparency",
+			VisualTransparency = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Shifted quartz inside transparency",
 				0.15f, "The transparency of the dome when enemies are inside it.", networked: false);
 		}
 
 		public override void MakeZioRiskOfOptions()
 		{
 			base.MakeZioRiskOfOptions();
-			ModSettingsManager.AddOption(new CheckBoxOption(visualOnlyForAuthority));
-			ModSettingsManager.AddOption(new SliderOption(visualTransparency, new SliderConfig {min = 0, max = 1, formatString = "{0:0.00%}"}));
+			ModSettingsManager.AddOption(new CheckBoxOption(VisualOnlyForAuthority));
+			ModSettingsManager.AddOption(new SliderOption(VisualTransparency, new SliderConfig {min = 0, max = 1, formatString = "{0:0.00%}"}));
 		}
 
 		protected override void FillVoidConversions(List<ItemDef.Pair> pairs)
@@ -82,7 +82,7 @@ namespace BubbetsItems.Items
 				if (count <= 0) return amount;
 				var inside = body.GetComponent<ShiftedQuartzBehavior>().inside; // TODO this might not exist in scope and may throw errors in multiplayer
 				if (!inside)
-					amount *= 1f + instance.scalingInfos[1].ScalingFunction(count); // 1f + count * 0.2f
+					amount *= 1f + instance.ScalingInfos[1].ScalingFunction(count); // 1f + count * 0.2f
 				return amount;
 			});
 			c.Emit(OpCodes.Stloc, num2);

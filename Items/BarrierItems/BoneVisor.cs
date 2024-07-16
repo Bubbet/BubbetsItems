@@ -51,7 +51,7 @@ namespace BubbetsItems.Items.BarrierItems
 
 		public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)
 		{
-			scalingInfos[2].WorkingContext.b = 1;
+			ScalingInfos[2].WorkingContext.b = 1;
 			return base.GetFormattedDescription(inventory, token, forceHideExtended);
 		}
 
@@ -77,7 +77,7 @@ namespace BubbetsItems.Items.BarrierItems
 			if (!inv) return;
 			var amount = inv.GetItemCount(ItemDef);
 			if (amount <= 0) return;
-			if (!Util.CheckRoll(scalingInfos[3].ScalingFunction(amount), obj.attackerMaster)) return;
+			if (!Util.CheckRoll(ScalingInfos[3].ScalingFunction(amount), obj.attackerMaster)) return;
 			var shard = Object.Instantiate(ShardPrefab, obj.victim.transform.position, Random.rotation);
 			if (!shard) return;
 			var teamFilter = shard!.GetComponent<TeamFilter>();
@@ -91,7 +91,7 @@ namespace BubbetsItems.Items.BarrierItems
 			if (count <= 0) count = 1;
 			var buffCount = obj.body.GetBuffCount(BuffDef);
 			if (buffCount <= 0) return;
-			var info = scalingInfos[2];
+			var info = ScalingInfos[2];
 			info.WorkingContext.b = buffCount;
 			info.WorkingContext.m = obj.body.maxBarrier;
 			obj.barrierDecayMult = 1f;
@@ -115,17 +115,18 @@ namespace BubbetsItems.Items.BarrierItems
 			var amt = inv.GetItemCount(inst.ItemDef);
 			if (amt <= 0) amt = 1;
 			alive = false;
-			component.healthComponent.AddBarrier(inst.scalingInfos[4].ScalingFunction(amt));
-			component.AddTimedBuff(BoneVisor.BuffDef, inst.scalingInfos[0].ScalingFunction(amt), Mathf.RoundToInt(inst.scalingInfos[1].ScalingFunction(amt)));
+			component.healthComponent.AddBarrier(inst.ScalingInfos[4].ScalingFunction(amt));
+			component.AddTimedBuff(BoneVisor.BuffDef, inst.ScalingInfos[0].ScalingFunction(amt), Mathf.RoundToInt(inst.ScalingInfos[1].ScalingFunction(amt)));
 			//EffectManager.SimpleEffect(this.pickupEffect, base.transform.position, Quaternion.identity, true);
 			Destroy(baseObject);
 		}
 		
 		[Tooltip("The base object to destroy when this pickup is consumed.")]
-		public GameObject baseObject;
+		public GameObject baseObject = null!;
 		[Tooltip("The team filter object which determines who can pick up this pack.")]
-		public TeamFilter teamFilter;
-		public GameObject pickupEffect;
+		public TeamFilter teamFilter = null!;
+		// ReSharper disable once NotAccessedField.Global
+		public GameObject pickupEffect = null!;
 
 		// Token: 0x040020E7 RID: 8423
 		private bool alive = true;

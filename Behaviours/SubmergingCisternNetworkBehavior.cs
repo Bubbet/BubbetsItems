@@ -12,16 +12,16 @@ namespace BubbetsItems.Behaviours
 	[RequireComponent(typeof(NetworkedBodyAttachment))]
 	public class SubmergingCisternNetworkBehavior : NetworkBehaviour
 	{
-		private NetworkedBodyAttachment networkedBodyAttachment;
-		private SphereSearch sphereSearch;
+		private NetworkedBodyAttachment _networkedBodyAttachment = null!;
+		private SphereSearch _sphereSearch = null!;
 		public float radius; // Do via scalingInfo
-		public TetherVfxOrigin tetherVfxOrigin;
-		private double clearTimer;
+		public TetherVfxOrigin tetherVfxOrigin = null!;
+		private double _clearTimer;
 
 		private void Awake()
 		{
-			networkedBodyAttachment = GetComponent<NetworkedBodyAttachment>();
-			sphereSearch = new SphereSearch();
+			_networkedBodyAttachment = GetComponent<NetworkedBodyAttachment>();
+			_sphereSearch = new SphereSearch();
 		}
 
 		private void OnEnable()
@@ -54,33 +54,33 @@ namespace BubbetsItems.Behaviours
 			var inv = body.inventory;
 			if (!inv) return;
 			var inst = SharedBase.GetInstance<SubmergingCistern>();
-			var amount = inv.GetItemCount(inst.ItemDef);
+			var amount = inv.GetItemCount(inst!.ItemDef);
 			if (amount <= 0) return;
-			var info = inst.scalingInfos[0];
+			var info = inst.ScalingInfos[0];
 			info.WorkingContext.d = damage;
 			var healing = info.ScalingFunction(amount);
-			var info1 = inst.scalingInfos[1];
+			var info1 = inst.ScalingInfos[1];
 			var teammateCount = Mathf.FloorToInt(info1.ScalingFunction(amount));
-			var info2 = inst.scalingInfos[2];
+			var info2 = inst.ScalingInfos[2];
 			var range = info2.ScalingFunction(amount);
-			HealNearby(healing, teammateCount, range, inst.ignoreHealNova.Value);
+			HealNearby(healing, teammateCount, range, inst.IgnoreHealNova.Value);
 		}
 
 		public void SearchForTargets(ref List<HurtBox> dest)
 		{
 			var mask = TeamMask.none;
-			mask.AddTeam(networkedBodyAttachment.attachedBody.teamComponent.teamIndex);
-			sphereSearch.mask = LayerIndex.entityPrecise.mask;
-			sphereSearch.origin = transform.position;
-			sphereSearch.radius = networkedBodyAttachment.attachedBody.radius + radius;
-			sphereSearch.queryTriggerInteraction = QueryTriggerInteraction.UseGlobal;
-			sphereSearch.RefreshCandidates();
-			sphereSearch.FilterCandidatesByHurtBoxTeam(mask);
-			sphereSearch.OrderCandidatesByDistance();
-			sphereSearch.FilterCandidatesByDistinctHurtBoxEntities();
-			sphereSearch.GetHurtBoxes(dest);
-			dest = dest.Where(x => x.healthComponent.gameObject != networkedBodyAttachment.attachedBody.gameObject && x.healthComponent.alive).ToList();
-			sphereSearch.ClearCandidates();
+			mask.AddTeam(_networkedBodyAttachment.attachedBody.teamComponent.teamIndex);
+			_sphereSearch.mask = LayerIndex.entityPrecise.mask;
+			_sphereSearch.origin = transform.position;
+			_sphereSearch.radius = _networkedBodyAttachment.attachedBody.radius + radius;
+			_sphereSearch.queryTriggerInteraction = QueryTriggerInteraction.UseGlobal;
+			_sphereSearch.RefreshCandidates();
+			_sphereSearch.FilterCandidatesByHurtBoxTeam(mask);
+			_sphereSearch.OrderCandidatesByDistance();
+			_sphereSearch.FilterCandidatesByDistinctHurtBoxEntities();
+			_sphereSearch.GetHurtBoxes(dest);
+			dest = dest.Where(x => x.healthComponent.gameObject != _networkedBodyAttachment.attachedBody.gameObject && x.healthComponent.alive).ToList();
+			_sphereSearch.ClearCandidates();
 		}
 
 		private void HealNearby(float amount, int teammateCount, float range, bool addProcMaskForHealNova)
@@ -122,7 +122,7 @@ namespace BubbetsItems.Behaviours
 			if (tetherVfxOrigin)
 			{
 				tetherVfxOrigin.SetTetheredTransforms(list3);
-				clearTimer = Time.time + 0.2;
+				_clearTimer = Time.time + 0.2;
 			}
 
 			CollectionPool<Transform, List<Transform>>.ReturnCollection(list3);
@@ -131,15 +131,15 @@ namespace BubbetsItems.Behaviours
 
 		private void FixedUpdate()
 		{
-			if (Time.time > clearTimer && tetherVfxOrigin.tetheredTransforms.Count > 0)
+			if (Time.time > _clearTimer && tetherVfxOrigin.tetheredTransforms.Count > 0)
 			{
 				for (var i = 0; i < tetherVfxOrigin.tetheredTransforms.Count; i++)
 					tetherVfxOrigin.RemoveTetherAt(0);
 			}
 		}
 	}
-	
-	struct HealInfo
+
+	internal struct HealInfo
 	{
 		public float fraction;
 		public HealthComponent hc;

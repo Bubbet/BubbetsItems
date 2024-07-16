@@ -27,59 +27,65 @@ namespace BubbetsItems.ItemBehaviors
 				allButNeutral.RemoveTeam(objectTeam);
 			}
 			var instance = SharedBase.GetInstance<ShiftedQuartz>();
-			search = new BullseyeSearch
+			_search = new BullseyeSearch
 			{
-				maxDistanceFilter = instance.scalingInfos[0].ScalingFunction(stack),
+				maxDistanceFilter = instance.ScalingInfos[0].ScalingFunction(stack),
 				teamMaskFilter = allButNeutral,
 				viewer = body
 			};
-			indicatorEnabled = true;
+			IndicatorEnabled = true;
 		}
 
 		private bool Search()
 		{
-			search.searchOrigin = gameObject.transform.position;
-			search.RefreshCandidates();
-			return search.GetResults()?.Any() ?? false;
+			if (_search == null) return false;
+			_search.searchOrigin = gameObject.transform.position;
+			_search.RefreshCandidates();
+			return _search.GetResults()?.Any() ?? false;
+
 		}
 		private void OnDisable()
 		{
-			indicatorEnabled = false;
-			search = null;
+			IndicatorEnabled = false;
+			_search = null;
 		}
 
 		private void FixedUpdate()
 		{
 			var instance = SharedBase.GetInstance<ShiftedQuartz>();
-			search.maxDistanceFilter = instance.scalingInfos[0].ScalingFunction(stack);
+			if (_search != null) _search.maxDistanceFilter = instance.ScalingInfos[0].ScalingFunction(stack);
 			inside = Search();
 		}
 
-		private bool indicatorEnabled
+		private bool IndicatorEnabled
 		{
-			get => nearbyDamageBonusIndicator;
+			get => _nearbyDamageBonusIndicator;
 			set
 			{
-				if (indicatorEnabled == value)
+				if (IndicatorEnabled == value)
 				{
 					return;
 				}
 				if (value)
 				{
 					var original = BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("FarDamageBonusIndicator");
-					nearbyDamageBonusIndicator = Instantiate(original, body.corePosition, Quaternion.identity);
-					var radius = search.maxDistanceFilter / 20f;
-					nearbyDamageBonusIndicator.transform.localScale *= radius;
-					nearbyDamageBonusIndicator.GetComponent<NetworkedBodyAttachment>().AttachToGameObjectAndSpawn(gameObject); // TODO figure out what the fuck this is doing and replace it with my own client and server ran code
+					_nearbyDamageBonusIndicator = Instantiate(original, body.corePosition, Quaternion.identity);
+					if (_search != null)
+					{
+						var radius = _search.maxDistanceFilter / 20f;
+						_nearbyDamageBonusIndicator.transform.localScale *= radius;
+					}
+
+					_nearbyDamageBonusIndicator.GetComponent<NetworkedBodyAttachment>().AttachToGameObjectAndSpawn(gameObject); // TODO figure out what the fuck this is doing and replace it with my own client and server ran code
 					return;
 				}
-				Destroy(nearbyDamageBonusIndicator);
-				nearbyDamageBonusIndicator = null;
+				Destroy(_nearbyDamageBonusIndicator);
+				_nearbyDamageBonusIndicator = null;
 			}
 		}
 		
-		private GameObject nearbyDamageBonusIndicator;
-		private BullseyeSearch search;
+		private GameObject? _nearbyDamageBonusIndicator;
+		private BullseyeSearch? _search;
 		public bool inside;
 	}
 }

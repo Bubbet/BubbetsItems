@@ -10,7 +10,7 @@ namespace BubbetsItems.Items.BarrierItems
 {
 	public class CeremonialProbe : ItemBase
 	{
-		public static ConfigEntry<bool> RegenOnStage;
+		public static ConfigEntry<bool> RegenOnStage = null!;
 
 		protected override void MakeTokens()
 		{
@@ -65,10 +65,10 @@ namespace BubbetsItems.Items.BarrierItems
 			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return;
 			if (body.healthComponent.combinedHealth / body.healthComponent.fullCombinedHealth <
-			    inst.scalingInfos[0].ScalingFunction(amount))
+			    inst.ScalingInfos[0].ScalingFunction(amount))
 			{
 				body.healthComponent.AddBarrier(body.healthComponent.fullCombinedHealth *
-				                                inst.scalingInfos[1].ScalingFunction(amount));
+				                                inst.ScalingInfos[1].ScalingFunction(amount));
 				var broke = GetInstance<BrokenCeremonialProbe>()!.ItemDef;
 				body.inventory.RemoveItem(inst.ItemDef);
 				body.inventory.GiveItem(broke);

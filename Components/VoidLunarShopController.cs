@@ -16,10 +16,10 @@ namespace BubbetsItems
     public static class VoidLunarShopController
     {
         //Only exists on server context
-        public static GameObject ShopInstance;
+        public static GameObject ShopInstance = null!;
         private static GameObject? _shopPrefab;
-        private static ExplicitPickupDropTable voidCoinTable;
-        private static InteractableSpawnCard voidBarrelSpawncard;
+        private static ExplicitPickupDropTable _voidCoinTable = null!;
+        private static InteractableSpawnCard _voidBarrelSpawncard = null!;
         private static GameObject? _rerollPrefab;
         private static GameObject? _terminalPrefab;
         private static GameObject? _returnPrefab;
@@ -156,15 +156,15 @@ namespace BubbetsItems
         {
             if (BubbetsItemsPlugin.Conf.VoidCoinBarrelDrop.Value)
             {
-                voidCoinTable = Addressables
+                _voidCoinTable = Addressables
                     .LoadAssetAsync<ExplicitPickupDropTable>("RoR2/DLC1/Common/DropTables/dtVoidCoin.asset")
                     .WaitForCompletion();
-                voidBarrelSpawncard = Addressables
+                _voidBarrelSpawncard = Addressables
                     .LoadAssetAsync<InteractableSpawnCard>("RoR2/DLC1/VoidCoinBarrel/iscVoidCoinBarrel.asset")
                     .WaitForCompletion();
-                voidBarrelSpawncard.prefab.GetComponent<ModelLocator>().gameObject.AddComponent<ChestBehavior>()
-                    .dropTable = voidCoinTable;
-                voidBarrelSpawncard.directorCreditCost = 7;
+                _voidBarrelSpawncard.prefab.GetComponent<ModelLocator>().gameObject.AddComponent<ChestBehavior>()
+                    .dropTable = _voidCoinTable;
+                _voidBarrelSpawncard.directorCreditCost = 7;
             }
 
             Run.onRunStartGlobal += _ => { voidCoinChances.Clear(); };

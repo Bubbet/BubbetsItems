@@ -9,23 +9,23 @@ namespace BubbetsItems
 		[SystemInitializer(typeof(GenericPickupController))]
 		public static void ModifyGenericPickup()
 		{
-			pickup = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/GenericPickup.prefab").WaitForCompletion();
+			_pickup = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/GenericPickup.prefab").WaitForCompletion();
 
-			var pickupDisplay = pickup.transform.Find("PickupDisplay").gameObject;
+			var pickupDisplay = _pickup.transform.Find("PickupDisplay").gameObject;
 			pickupDisplay.AddComponent<BubPickupDisplayCustom>();
 			
-			var voidSystem = pickup.transform.Find("VoidSystem");
+			var voidSystem = _pickup.transform.Find("VoidSystem");
 			var voidSystemLoops = voidSystem.Find("Loops");
-			var lunarSystem = pickup.transform.Find("LunarSystem");
+			var lunarSystem = _pickup.transform.Find("LunarSystem");
 			var lunarSystemLoops = lunarSystem.Find("Loops");
-			voidLunarSystem = new GameObject("VoidLunarSystem");
-			voidLunarSystem.SetActive(false);
-			DontDestroyOnLoad(voidLunarSystem);
+			_voidLunarSystem = new GameObject("VoidLunarSystem");
+			_voidLunarSystem.SetActive(false);
+			DontDestroyOnLoad(_voidLunarSystem);
 			
 
 			//Setup Loops
 			var voidLunarSystemLoops = new GameObject("Loops");
-			voidLunarSystemLoops.transform.SetParent(voidLunarSystem.transform);
+			voidLunarSystemLoops.transform.SetParent(_voidLunarSystem.transform);
 
 			var swirls = Instantiate(lunarSystemLoops.Find("Swirls").gameObject, voidLunarSystemLoops.transform);
 			var mainModule = swirls.GetComponent<ParticleSystem>().main;
@@ -37,29 +37,29 @@ namespace BubbetsItems
 			pointLight.GetComponent<Light>().color = ColorCatalogPatches.VoidLunarColor;
 
 			//Setup Bursts
-			Instantiate(lunarSystem.Find("Burst").gameObject, voidLunarSystem.transform).name = "LunarBurst";
-			Instantiate(voidSystem.Find("Burst").gameObject, voidLunarSystem.transform).name = "VoidBurst";
+			Instantiate(lunarSystem.Find("Burst").gameObject, _voidLunarSystem.transform).name = "LunarBurst";
+			Instantiate(voidSystem.Find("Burst").gameObject, _voidLunarSystem.transform).name = "VoidBurst";
 		}
 		
-		private static GameObject voidLunarSystem;
-		private static GameObject pickup;
-		private PickupDisplay display;
-		private bool set;
+		private static GameObject _voidLunarSystem = null!;
+		private static GameObject _pickup = null!;
+		private PickupDisplay _display = null!;
+		private bool _set;
 
 		private void Awake()
 		{
-			display = GetComponent<PickupDisplay>();
+			_display = GetComponent<PickupDisplay>();
 		}
 
 		public void Update()
 		{
-			var pickupDef = PickupCatalog.GetPickupDef(display.pickupIndex);
-			if (pickupDef == null || set) return;
-			set = true;
+			var pickupDef = PickupCatalog.GetPickupDef(_display.pickupIndex);
+			if (pickupDef == null || _set) return;
+			_set = true;
 			var itemIndex = pickupDef.itemIndex;
 			var tier = ItemCatalog.GetItemDef(itemIndex)?.tier ?? ItemTier.NoTier;
 			if (tier == BubbetsItemsPlugin.VoidLunarTier.tier)
-				Instantiate(voidLunarSystem, transform.parent).SetActive(true);
+				Instantiate(_voidLunarSystem, transform.parent).SetActive(true);
 		}
 	}
 }

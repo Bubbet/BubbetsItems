@@ -57,7 +57,7 @@ namespace BubbetsItems.Items
 			var amount = inv.GetItemCount(ItemDef);
 			if (amount <= 0) return;
 			
-			var chance = scalingInfos[0].ScalingFunction(amount);
+			var chance = ScalingInfos[0].ScalingFunction(amount);
 			var leftover = chance - Mathf.Floor(chance);
 			var guarenteed = Mathf.FloorToInt(chance - leftover);
 

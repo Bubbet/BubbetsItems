@@ -6,6 +6,7 @@ using RoR2;
 using RoR2.UI;
 using RoR2.UI.LogBook;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace BubbetsItems
@@ -13,18 +14,10 @@ namespace BubbetsItems
     [HarmonyPatch]
     public class LogBookPageScalingGraph : MonoBehaviour //Graphic
     {
-        public RectTransform RectTransform;
-        private ItemBase _item;
-        public ManagerGraphic LineRenderer;
+        [FormerlySerializedAs("RectTransform")] public RectTransform rectTransform = null!;
+        [FormerlySerializedAs("LineRenderer")] public ManagerGraphic lineRenderer = null!;
 
-        public ItemBase Item
-        {
-            get => _item;
-            set
-            {
-                _item = value;
-            }
-        }
+        public ItemBase Item { get; set; } = null!;
 
         private void FillWidthAndHeight()
         {
@@ -33,11 +26,11 @@ namespace BubbetsItems
             //width = RectTransform.sizeDelta.x * 5;
             //height = RectTransform.sizeDelta.y * 5;
             //var rect = transform.parent.GetComponent<RectTransform>().rect;
-            var rect = RectTransform.rect;
-            width = rect.width;
-            height = rect.height;
+            var rect = rectTransform.rect;
+            _width = rect.width;
+            _height = rect.height;
             //Debug.Log(width);
-            LineRenderer.size = new Vector2(width, height);
+            lineRenderer.size = new Vector2(_width, _height);
         }
 
         public bool built;
@@ -54,6 +47,7 @@ namespace BubbetsItems
             built = true;
             //if (Item.scalingFunction == null) return;
             FillWidthAndHeight();
+            // ReSharper disable once CollectionNeverUpdated.Local
             var points = new List<float>();
             /*
             for (var i = 0; i < 50; i++)
@@ -64,11 +58,11 @@ namespace BubbetsItems
             var max = Mathf.Ceil(points.Max());
             for (var i = 0; i < 50; i++)
             {
-                var pos = new Vector2(Mathf.Clamp01((float) (i) / 49f) * width - 0.5f * width,
-                    Mathf.Clamp01(points[i] / max) * height - 0.5f * height);
+                var pos = new Vector2(Mathf.Clamp01((float) (i) / 49f) * _width - 0.5f * _width,
+                    Mathf.Clamp01(points[i] / max) * _height - 0.5f * _height);
                 
                 GameObject go = new GameObject();
-                go.transform.SetParent(LineRenderer.transform, false);
+                go.transform.SetParent(lineRenderer.transform, false);
 
                 var img = go.AddComponent<Image>();
                 img.rectTransform.sizeDelta = new Vector2(8.0f, 8.0f);
@@ -77,21 +71,21 @@ namespace BubbetsItems
                 var tooltip = go.AddComponent<TooltipProvider>();
                 tooltip.SetContent(new TooltipContent {overrideTitleText = "Scaling Value", overrideBodyText = $"Amount: {i+1}, Value: {points[i]}", titleColor = Color.grey});
                 
-                LineRenderer.lineStrip.Add(pos);
+                lineRenderer.lineStrip.Add(pos);
             }
 
-            LineRenderer.gridSize.y = (int) max;
+            lineRenderer.gridSize.y = (int) max;
             
-            LineRenderer.SetVerticesDirty();
+            lineRenderer.SetVerticesDirty();
         }
         
-        public int Granularity = 50;
+        [FormerlySerializedAs("Granularity")] public int granularity = 50;
 
-        public Vector2Int gridSize = new Vector2Int(1, 1);
+        public Vector2Int gridSize = new(1, 1);
         public float thickness = 10f;
 
-        private float width;
-        private float height;
+        private float _width;
+        private float _height;
 
 
 
@@ -122,11 +116,13 @@ namespace BubbetsItems
         }*/
 
         //[HarmonyPostfix, HarmonyPatch(typeof(PageBuilder), nameof(PageBuilder.AddSimplePickup))] //TODO
+        // ReSharper disable once InconsistentNaming
         public static void AddGraph(PageBuilder __instance, PickupIndex pickupIndex)
         {
             if (!SharedBase.PickupIndexes.ContainsKey(pickupIndex)) return;
             var item = SharedBase.PickupIndexes[pickupIndex] as ItemBase;
             //if (item?.scalingFunction == null) return;
+            if (item == null) return;
             __instance.AddSimpleTextPanel("Scaling Function:");
             var obj = __instance.managedObjects[__instance.managedObjects.Count - 1];
             var graph = Instantiate(BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("LogBookGraph"), obj.transform);
