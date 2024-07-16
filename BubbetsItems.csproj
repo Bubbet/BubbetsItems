@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>BubbetsItems</RootNamespace>
         <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="BepInEx.Core" Version="5.4.19" />
