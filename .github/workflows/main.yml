@@ -7,11 +7,25 @@ jobs:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
     steps:
       - uses: actions/checkout@v4
+      - name: Setup GitVersion
+        uses: gittools/actions/gitversion/setup@v0.9.7
+        with:
+          versionSpec: '5.x'
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0.9.7
+      - name: Update Version
+        run: sed -i "s/public const string Version = \".*\"/public const string Version = \"${{ steps.gitversion.outputs.MajorMinorPatch }}.${{ github.run_number }}\"/" BubbetsItemsPlugin.cs
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 6.x
           cache: true
-        run: dotnet restore --locked-mode
       - name: Execute dotnet
-        run: dotnet build
+        run: dotnet restore --locked-mode
+      - name: Build
+        run: dotnet build --no-restore -c Release
+      - name: Install TCLI
+        run: dotnet tool install --global tcli --version 0.2.4
+      - name: Release
+        run: tcli publish --token ${{ secrets.THUNDERSTORE_TOKEN }} --package-version ${{ steps.gitversion.outputs.MajorMinorPatch }} --config-path ./Thunderstore/thunderstore.toml

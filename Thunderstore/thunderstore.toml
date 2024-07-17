@@ -6,7 +6,7 @@ namespace = "BubbetsItems"
 name = "BubbetsItemsPlugin"
 versionNumber = "1.8.9"
 description = "An expansion item mod. Currently has 13 regular items, 9 Void Lunar items, 4 equipment, and 8 void items"
-websiteUrl = "https://github.com/xoxfaby/BetterUI"
+websiteUrl = "https://github.com/Bubbet"
 containsNsfwContent = false
 
 [package.dependencies]
@@ -27,10 +27,14 @@ source = "../bin/Release/netstandard2.0/BubbetsItems.dll"
 target = "plugins/BubbetsItems/BubbetsItems.dll"
 
 [[build.copy]]
-source = "../Languages"
-target = "plugins/BubbetsItems/Languages"
+source = "../BuiltObjects/BubbetsItems.bnk"
+target = "plugins/BubbetsItems/BubbetsItems.bnk"
+
+[[build.copy]]
+source = "../BuiltObjects/mainassetbundle"
+target = "plugins/BubbetsItems/mainassetbundle"
 
 [publish]
 repository = "https://thunderstore.io"
 communities = ["riskofrain2"]
-categories = ["mods", "tweaks", "client-side"]
+categories = ["mods", "tweaks", "items"]
