@@ -15,7 +15,7 @@ RiskofThunder-R2API_RecalculateStats = "1.0.0"
 
 [build]
 icon = "./icon.png"
-readme = "../README.md"
+readme = "../Readme.md"
 outdir = "../zip"
 
 [[build.copy]]
