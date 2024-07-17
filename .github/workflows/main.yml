@@ -7,6 +7,8 @@ jobs:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Setup GitVersion
         uses: gittools/actions/gitversion/setup@v0.9.7
         with:
