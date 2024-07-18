@@ -1,4 +1,8 @@
-on: push
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -29,5 +33,10 @@ jobs:
         run: dotnet build --no-restore -c Release
       - name: Install TCLI
         run: dotnet tool install --global tcli --version 0.2.4
-      - name: Release
-        run: tcli publish --token ${{ secrets.THUNDERSTORE_TOKEN }} --package-version ${{ steps.gitversion.outputs.MajorMinorPatch }} --config-path ./Thunderstore/thunderstore.toml
+      - name: Release Github
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: ./zip/*
+          token: ${{ secrets.GITHUB_TOKEN }}        
+      - name: Release Thunderstore
+        run: tcli publish --token ${{ secrets.THUNDERSTORE_TOKEN }} --package-version ${{ steps.gitversion.outputs.MajorMinorPatch }} --config-path ./Thunderstore/thunderstore.toml1
