@@ -42,7 +42,7 @@ namespace BubbetsItems
     [BepInDependency("com.KingEnderBrine.InLobbyConfig", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("bubbet.zioriskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("bubbet.zioconfigfile", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("bubbet.zioconfigfile")]
     [BepInDependency("com.Moffein.ItemStats", BepInDependency.DependencyFlags.SoftDependency)] // Required to make sure my pickup description hook runs after
     public class BubbetsItemsPlugin : BaseUnityPlugin
     {
