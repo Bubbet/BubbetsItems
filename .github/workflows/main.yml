@@ -34,5 +34,6 @@ jobs:
       - name: Release Github
         uses: ncipollo/release-action@v1
         with:
+          tag: ${{ steps.previoustag.outputs.tag }}
           artifacts: ./zip/*
           token: ${{ secrets.GITHUB_TOKEN }}
