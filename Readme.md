@@ -73,6 +73,7 @@ Patience is key~
 # Changelog
 * v1.8.11 Mod Changes:
     * Made Zio Config File a dependency
+    * Wrapped some stuff around tooltips in try/catch
 
 * v1.8.10 Mod Changes:
     * reworked a lot of the barrier items

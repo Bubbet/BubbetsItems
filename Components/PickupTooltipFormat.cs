@@ -52,7 +52,11 @@ namespace BubbetsItems
                             $"ItemDef is null for {x} in tooltipProvider, this will throw errors.");
                         return false;
                     }
-                    return __instance.bodyToken == x.ItemDef.descriptionToken || __instance.bodyToken == x.ItemDef.pickupToken || __instance.titleToken == x.ItemDef.nameToken || Language.GetString(x.ItemDef.descriptionToken) == s;
+
+                    return __instance.bodyToken == x.ItemDef.descriptionToken ||
+                           __instance.bodyToken == x.ItemDef.pickupToken ||
+                           __instance.titleToken == x.ItemDef.nameToken ||
+                           Language.GetString(x.ItemDef.descriptionToken) == s;
                 });
                 var equipment = EquipmentBase.Equipments.FirstOrDefault(x =>
                 {
@@ -63,12 +67,16 @@ namespace BubbetsItems
                         return false;
                     }
 
-                    return __instance.bodyToken == x.EquipmentDef.descriptionToken || __instance.bodyToken == x.EquipmentDef.pickupToken || __instance.titleToken == x.EquipmentDef.nameToken || Language.GetString(x.EquipmentDef.descriptionToken) == s;
+                    return __instance.bodyToken == x.EquipmentDef.descriptionToken ||
+                           __instance.bodyToken == x.EquipmentDef.pickupToken ||
+                           __instance.titleToken == x.EquipmentDef.nameToken ||
+                           Language.GetString(x.EquipmentDef.descriptionToken) == s;
                 });
                 var titleEquipment = EquipmentBase.Equipments.FirstOrDefault(x =>
                 {
                     if (x?.EquipmentDef == null)
-                        BubbetsItemsPlugin.Log.LogWarning($"EquipmentDef is null for {x} in tooltipProvider, this will throw errors.");
+                        BubbetsItemsPlugin.Log.LogWarning(
+                            $"EquipmentDef is null for {x} in tooltipProvider, this will throw errors.");
                     return __instance.titleToken == x?.EquipmentDef.nameToken;
                 });
 
@@ -88,7 +96,7 @@ namespace BubbetsItems
                 }
 
                 if (titleEquipment != null
-                ) // This is only a half measure for betterui if the advanced tooltips for equipment is turned off this will fuck up and i dont care
+                   ) // This is only a half measure for betterui if the advanced tooltips for equipment is turned off this will fuck up and i dont care
                 {
                     // TODO this also doesnt work very well without betterui, infact it probably throws an exception
                     __result = titleEquipment.GetFormattedDescription(inventoryDisplay?.inventory) +
@@ -107,10 +115,10 @@ namespace BubbetsItems
         public static void PagebuilderPatch(ILContext il)
         {
             var c = new ILCursor(il);
-            c.GotoNext( MoveType.After,
+            c.GotoNext(MoveType.After,
                 x => x.MatchLdfld<ItemDef>("descriptionToken")
             );
-            c.Index-=1;
+            c.Index -= 1;
             c.Emit(OpCodes.Dup);
             c.Index += 2;
             c.EmitDelegate<Func<ItemDef, string, string>>((def, str) =>
@@ -118,11 +126,11 @@ namespace BubbetsItems
                 var item = ItemBase.Items.FirstOrDefault(x => x.ItemDef == def);
                 return item != null ? item.GetFormattedDescription(null) : str;
             });
-            
-            c.GotoNext( MoveType.After,
+
+            c.GotoNext(MoveType.After,
                 x => x.MatchLdfld<EquipmentDef>("descriptionToken")
             );
-            c.Index-=1;
+            c.Index -= 1;
             c.Emit(OpCodes.Dup);
             c.Index += 2;
             c.EmitDelegate<Func<EquipmentDef, string, string>>((def, str) =>
@@ -135,17 +143,32 @@ namespace BubbetsItems
         [HarmonyPostfix, HarmonyPatch(typeof(GenericNotification), nameof(GenericNotification.SetItem))]
         public static void NotifItemPostfix(GenericNotification __instance, ItemDef itemDef)
         {
-            var item = ItemBase.Items.FirstOrDefault(x => x.ItemDef == itemDef);
-            if (item != null && item.sharedInfo.DescInPickup.Value)
-                __instance.descriptionText.token = item.GetFormattedDescription(null, forceHideExtended: item.sharedInfo.ForceHideScalingInfoInPickup.Value);
+            try
+            {
+                var item = ItemBase.Items.FirstOrDefault(x => x.ItemDef == itemDef);
+                if (item != null && item.sharedInfo.DescInPickup.Value)
+                    __instance.descriptionText.token = item.GetFormattedDescription(null,
+                        forceHideExtended: item.sharedInfo.ForceHideScalingInfoInPickup.Value);
+            }
+            catch (Exception e)
+            {
+                BubbetsItemsPlugin.Log.LogError(e);
+            }
         }
-        
+
         [HarmonyPostfix, HarmonyPatch(typeof(GenericNotification), nameof(GenericNotification.SetEquipment))]
         public static void NotifEquipmentPostfix(GenericNotification __instance, EquipmentDef equipmentDef)
         {
-            var equipment = EquipmentBase.Equipments.FirstOrDefault(x => x.EquipmentDef == equipmentDef);
-            if (equipment != null && equipment.sharedInfo.DescInPickup.Value)
-                __instance.descriptionText.token = equipment.GetFormattedDescription();
+            try
+            {
+                var equipment = EquipmentBase.Equipments.FirstOrDefault(x => x.EquipmentDef == equipmentDef);
+                if (equipment != null && equipment.sharedInfo.DescInPickup.Value)
+                    __instance.descriptionText.token = equipment.GetFormattedDescription();
+            }
+            catch (Exception e)
+            {
+                BubbetsItemsPlugin.Log.LogError(e);
+            }
         }
 
         /*
