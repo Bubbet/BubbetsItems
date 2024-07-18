@@ -52,7 +52,7 @@ namespace BubbetsItems
         public static AssetBundle AssetBundle = null!;
         public List<SharedBase> ForwardTest => SharedBase.Instances;
 
-        public const string Version = "1.8.9";
+        public const string Version = "1.8.10";
 
         public static PickupIndex[] VoidLunarItems => _voidLunarItems ??= ItemCatalog.allItemDefs
             .Where(x => x.tier == VoidLunarTier.tier)
