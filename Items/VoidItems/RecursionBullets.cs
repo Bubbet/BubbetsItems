@@ -84,7 +84,7 @@ namespace BubbetsItems.Items
 			
 			var buffAmount = __instance.GetBuffCount(BuffDef);
 			//var baseAttack = __instance.baseAttackSpeed + __instance.levelAttackSpeed * (__instance.level - 1f);
-			args.attackSpeedMultAdd += 1f + buffAmount * inst.ScalingInfos[0].ScalingFunction(amount); 
+			args.attackSpeedMultAdd += buffAmount * inst.ScalingInfos[0].ScalingFunction(amount); 
 			//__instance.attackSpeed /= baseAttack;
 			//__instance.attackSpeed *= baseAttack;
 		}
