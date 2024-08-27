@@ -89,7 +89,7 @@ namespace BubbetsItems.Items.VoidLunar
 		{
 			var inv = __instance.inventory;
 			if (!inv) return true;
-			var inst = GetInstance<Circlet>();
+			if (!TryGetInstance(out Circlet inst)) return true;
 			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return true;
 			var change = (int)value - (int)__instance.money;

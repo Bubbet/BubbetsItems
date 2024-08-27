@@ -86,7 +86,7 @@ namespace BubbetsItems.Items
 		public static void SkillActivated(CharacterBody __instance, GenericSkill skill)
 		{
 			if (!_skillDefWhitelist.Contains(skill.baseSkill) && (skill.baseSkill.baseRechargeInterval <= 0.001 || skill.baseSkill.stockToConsume == 0) || _skillDefBlacklist.Contains(skill.baseSkill)) return;
-			var inst = GetInstance<DecreaseBarrierDecay>();
+			if (!TryGetInstance(out DecreaseBarrierDecay inst)) return;
 			var inv = __instance.inventory;
 			var amt = inv.GetItemCount(inst!.ItemDef);
 			if (amt <= 0) return;
@@ -109,7 +109,7 @@ namespace BubbetsItems.Items
 
 		public static void RecalcStats(CharacterBody characterBody, RecalculateStatsAPI.StatHookEventArgs args)
 		{
-			var inst = GetInstance<DecreaseBarrierDecay>();
+			if (!TryGetInstance(out DecreaseBarrierDecay inst)) return;
 			var inv = characterBody.inventory;
 			if (!inv) return;
 			var amt = inv.GetItemCount(inst!.ItemDef);

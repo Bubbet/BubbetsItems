@@ -101,14 +101,13 @@ namespace BubbetsItems.Items
 		}
 		
 		
+		// ReSharper disable once InconsistentNaming
 		public static void RecalcStats(CharacterBody __instance, RecalculateStatsAPI.StatHookEventArgs args)
 		{
-			if (!__instance) return;
-			if (!__instance.inventory) return;
-			var instance = GetInstance<ScintillatingJet>();
-			var info = instance.ScalingInfos[0];
+			if (!__instance || !__instance.inventory || !TryGetInstance<ScintillatingJet>(out var inst)) return;
+			var info = inst.ScalingInfos[0];
 			info.WorkingContext.b = __instance.GetBuffCount(BuffDef);
-			args.armorAdd += info.ScalingFunction(__instance.inventory.GetItemCount(instance.ItemDef));
+			args.armorAdd += info.ScalingFunction(__instance.inventory.GetItemCount(inst.ItemDef));
 		}
 	}
 }

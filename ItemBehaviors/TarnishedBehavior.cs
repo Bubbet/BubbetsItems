@@ -12,8 +12,7 @@ namespace BubbetsItems.ItemBehaviors
         [ItemDefAssociationAttribute(useOnServer = true, useOnClient = true)]
         private static ItemDef? GetItemDef()
         {
-            var instance = SharedBase.GetInstance<Tarnished>();
-            return instance?.ItemDef;
+            return SharedBase.TryGetInstance(out Tarnished inst) ? inst.ItemDef : null;
         }
 
         private int _oldStack;
@@ -35,7 +34,8 @@ namespace BubbetsItems.ItemBehaviors
                 var toAdd = Mathf.FloorToInt(_instance!.ScalingInfos[0].ScalingFunction(stack) -
                                              _instance.ScalingInfos[0].ScalingFunction(_oldStack));
                 if (NetworkServer.active)
-                    body.SetBuffCount(Tarnished.BuffDef!.buffIndex, body.GetBuffCount(Tarnished.BuffDef!.buffIndex) + toAdd);
+                    body.SetBuffCount(Tarnished.BuffDef!.buffIndex,
+                        body.GetBuffCount(Tarnished.BuffDef!.buffIndex) + toAdd);
                 body.master.OnInventoryChanged();
             }
         }
@@ -43,7 +43,8 @@ namespace BubbetsItems.ItemBehaviors
         private new void Awake()
         {
             base.Awake();
-            _instance = SharedBase.GetInstance<Tarnished>();
+            if (SharedBase.TryGetInstance(out Tarnished inst))
+                _instance = inst;
         }
 
         private void OnDisable()
@@ -51,7 +52,7 @@ namespace BubbetsItems.ItemBehaviors
             if (body.HasBuff(Tarnished.BuffDef)) body.SetBuffCount(Tarnished.BuffDef!.buffIndex, 0);
             if (body.HasBuff(Tarnished.BuffDef2))
                 body.RemoveOldestTimedBuff(Tarnished.BuffDef2);
-            
+
             if (body && body.master)
                 body.master.OnInventoryChanged();
         }

@@ -53,7 +53,7 @@ namespace BubbetsItems.Behaviours
 			if (!body) return;
 			var inv = body.inventory;
 			if (!inv) return;
-			var inst = SharedBase.GetInstance<SubmergingCistern>();
+			if (!SharedBase.TryGetInstance<SubmergingCistern>(out var inst)) return;
 			var amount = inv.GetItemCount(inst!.ItemDef);
 			if (amount <= 0) return;
 			var info = inst.ScalingInfos[0];

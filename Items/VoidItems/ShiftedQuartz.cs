@@ -77,7 +77,7 @@ namespace BubbetsItems.Items
 			c.Emit(OpCodes.Ldloc, num2);
 			c.EmitDelegate<Func<CharacterBody, float, float>>((body, amount) =>
 			{
-				var instance = GetInstance<ShiftedQuartz>();
+				if (!TryGetInstance(out ShiftedQuartz instance)) return amount;
 				var count = body.inventory.GetItemCount(instance.ItemDef);
 				if (count <= 0) return amount;
 				var inside = body.GetComponent<ShiftedQuartzBehavior>().inside; // TODO this might not exist in scope and may throw errors in multiplayer

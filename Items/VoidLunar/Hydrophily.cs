@@ -58,7 +58,7 @@ namespace BubbetsItems.Items.VoidLunar
 				if (!body) return false;
 				var inv = body.inventory;
 				if (!inv) return false;
-				var inst = GetInstance<Hydrophily>();
+				if (!TryGetInstance<Hydrophily>(out var inst)) return false;
 				var amount = inv.GetItemCount(inst.ItemDef);
 				return amount > 0;
 			});
@@ -74,7 +74,7 @@ namespace BubbetsItems.Items.VoidLunar
 			if (!body) return true;
 			var inv = body.inventory;
 			if (!inv) return true;
-			var inst = GetInstance<Hydrophily>();
+			if (!TryGetInstance<Hydrophily>(out var inst)) return true;
 			var iamount = inv.GetItemCount(inst.ItemDef);
 			if (iamount <= 0) return true;
 			if (!nonRegen) return __instance.barrier <= 0.01;

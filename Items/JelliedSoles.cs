@@ -124,7 +124,7 @@ namespace BubbetsItems.Items
 			{
 				var inv = body.inventory;
 				if (!inv) return amount;
-				var instance = GetInstance<JelliedSoles>();
+				if (!TryGetInstance(out JelliedSoles instance)) return amount;
 				var count = inv.GetItemCount(instance.ItemDef);
 				if (count <= 0) return amount;
 				var behavior = inv.GetComponent<JelliedSolesBehavior>(); // potential future incompat with holydll
@@ -171,7 +171,7 @@ namespace BubbetsItems.Items
 			if (damage <= 0f) return;
 			var inv = body.inventory;
 			if (!inv) return;
-			var instance = GetInstance<JelliedSoles>();
+			if (!TryGetInstance(out JelliedSoles instance)) return;
 			var count = inv.GetItemCount(instance.ItemDef);
 			if (count <= 0) return;
 			var behavior = inv.GetComponent<JelliedSolesBehavior>();
@@ -189,7 +189,7 @@ namespace BubbetsItems.Items
 		{
 			var inv = component.body.inventory;
 			if (!inv) return info;
-			var instance = GetInstance<JelliedSoles>();
+			if (!TryGetInstance(out JelliedSoles instance)) return info;
 			var count = inv.GetItemCount(instance.ItemDef);
 			if (count <= 0) return info;
 			var frac = instance.ScalingInfos[0].ScalingFunction(count);

@@ -58,12 +58,13 @@ namespace BubbetsItems.Items
 		}
 
 		[HarmonyPrefix, HarmonyPatch(typeof(CharacterMaster), nameof(CharacterMaster.GetDeployableSameSlotLimit))]
+		// ReSharper disable twice InconsistentNaming
 		public static bool GetDeployableLimit(CharacterMaster __instance, DeployableSlot slot, ref int __result)
 		{
+			if (!TryGetInstance(out VoidBlindfold inst)) return true;
 			if (slot != Slot) return true;
 			var inv = __instance.inventory;
 			if (!inv) return true;
-			var inst = GetInstance<VoidBlindfold>();
 			var stack = inv.GetItemCount(inst.ItemDef);
 			if (stack <= 0) return true;
 			var maxCount = inst.ScalingInfos[0].ScalingFunction(stack);

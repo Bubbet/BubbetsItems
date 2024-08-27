@@ -66,8 +66,7 @@ namespace BubbetsItems.Items.BarrierItems
 			if (body.GetBuffCount(BoneVisor.BuffDef) > 0) return previous;
 			var inv = body.inventory;
 			if (!inv) return previous;
-			var inst = GetInstance<EternalSlug>();
-			if (inst == null) return previous;
+			if (!TryGetInstance(out EternalSlug inst)) return previous;
 			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return previous;
 			var info = inst.ScalingInfos[1];
@@ -116,7 +115,8 @@ namespace BubbetsItems.Items.BarrierItems
 			{
 				base.CheckInventory(ref info, inv, characterBody, healthComponent);
 
-				var inst = GetInstance<EternalSlug>();
+				if (!TryGetInstance(out EternalSlug inst)) return;
+				if (inst == null) return;
 				var amount = inv.GetItemCount(inst.ItemDef);
 				if (amount <= 0)
 				{

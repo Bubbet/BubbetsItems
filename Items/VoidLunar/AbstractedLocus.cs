@@ -85,7 +85,7 @@ namespace BubbetsItems.Items.VoidLunar
 
 		private void Awake()
 		{
-			_inst = SharedBase.GetInstance<AbstractedLocus>()!;
+			SharedBase.TryGetInstance(out _inst);
 			_holdoutZoneController = GetComponent<HoldoutZoneController>();
 			
 			var parent = GameObject.Find("AbstractedLocusFog(Clone)");

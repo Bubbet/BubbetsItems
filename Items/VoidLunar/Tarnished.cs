@@ -112,7 +112,7 @@ namespace BubbetsItems.Items.VoidLunar
             {
                 foreach (var genericSkill in contains)
                     genericSkill.UnsetSkillOverride(this, SkillDef, GenericSkill.SkillOverridePriority.Contextual);
-                var instance = GetInstance<Tarnished>();
+                if (!TryGetInstance(out Tarnished instance)) return;
                 var stack = sender.inventory.GetItemCount(instance!.ItemDef);
                 var toAdd = Mathf.FloorToInt(ScalingInfos[0].ScalingFunction(stack));
                 if (NetworkServer.active)
@@ -175,7 +175,7 @@ namespace BubbetsItems.Items.VoidLunar
             if (!body.wasLucky) return;
             var inv = effectOriginMaster!.inventory;
             if (!inv) return;
-            var inst = GetInstance<Tarnished>();
+            if (!TryGetInstance(out Tarnished inst)) return;
             var amount = inv.GetItemCount(inst!.ItemDef);
             if (amount <= 0) return;
             var count = body.GetBuffCount(BuffDef!.buffIndex);
@@ -194,7 +194,7 @@ namespace BubbetsItems.Items.VoidLunar
         [HarmonyPostfix, HarmonyPatch(typeof(CharacterMaster), nameof(CharacterMaster.OnInventoryChanged))]
         public static void ApplyLuck(CharacterMaster __instance)
         {
-            var instance = GetInstance<Tarnished>();
+            if (!TryGetInstance(out Tarnished instance)) return;
             if (instance == null) return;
             var stack = __instance.inventory.GetItemCount(instance.ItemDef);
             if (stack > 0)

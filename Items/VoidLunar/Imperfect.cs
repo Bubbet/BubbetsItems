@@ -44,7 +44,7 @@ namespace BubbetsItems.Items.VoidLunar
 			if (!__instance) return;
 			var inv = __instance.inventory;
 			if (!inv) return;
-			var inst = GetInstance<Imperfect>();
+			if (!TryGetInstance<Imperfect>(out var inst)) return;
 			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return;
 			__instance.maxShield *= 1 + inst.ScalingInfos[0].ScalingFunction(amount);
@@ -68,7 +68,7 @@ namespace BubbetsItems.Items.VoidLunar
 		{
 			var inv = sender.inventory;
 			if (!inv) return;
-			var inst = GetInstance<Imperfect>()!;
+			if (!TryGetInstance(out Imperfect inst)) return;
 			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return;
 			args.armorAdd += inst.ScalingInfos[1].ScalingFunction(amount);
@@ -86,7 +86,7 @@ namespace BubbetsItems.Items.VoidLunar
 			{
 				var inv = cb.inventory;
 				if (!inv) return;
-				var inst = GetInstance<Imperfect>()!;
+				if (!TryGetInstance(out Imperfect inst)) return;
 				var amount = inv.GetItemCount(inst.ItemDef);
 				if (amount <= 0) return;
 				cb.maxHealth += cb.maxShield - 1;
@@ -98,8 +98,9 @@ namespace BubbetsItems.Items.VoidLunar
 		[HarmonyPostfix, HarmonyPatch(typeof(CharacterBody), nameof(CharacterBody.RecalculateStats))]
 		public static void UsedToBePatchIL(CharacterBody __instance)
 		{
+			if (!TryGetInstance(out Imperfect inst)) return;
 			var inv = __instance.inventory;
-			if (inv && inv.GetItemCount(GetInstance<Imperfect>().ItemDef) > 0 && __instance.maxShield > 1)
+			if (inv && inv.GetItemCount(inst.ItemDef) > 0 && __instance.maxShield > 1)
 			{
 				__instance.maxHealth += __instance.maxShield - 1;
 				__instance.maxShield = 1;

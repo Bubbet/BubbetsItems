@@ -121,12 +121,14 @@ The cost of purchase and production associated with Mk2 is considerably higher t
             RecalculateStatsAPI.GetStatCoefficients -= RecalcStats;
         }
 
+        // ReSharper disable once InconsistentNaming
         public static void RecalcStats(CharacterBody __instance, RecalculateStatsAPI.StatHookEventArgs args)
         {
+            if (!TryGetInstance(out RepulsionPlateMk2 repulsionPlateMk2)) return;
+            if (repulsionPlateMk2 == null) return;
             if (ReductionOnTrue.Value) return;
             var inv = __instance.inventory;
             if (!inv) return;
-            var repulsionPlateMk2 = GetInstance<RepulsionPlateMk2>();
             var amount = inv.GetItemCount(repulsionPlateMk2.ItemDef);
             if (amount <= 0) return;
             
@@ -142,7 +144,7 @@ The cost of purchase and production associated with Mk2 is considerably higher t
             if (hc == null) return false;
             if (hc.body == null) return false;
             if (hc.body.inventory == null) return false;
-            var repulsionPlateMk2 = GetInstance<RepulsionPlateMk2>();
+            if (!TryGetInstance(out RepulsionPlateMk2 repulsionPlateMk2)) return false;
             var amount = hc.body.inventory.GetItemCount(repulsionPlateMk2.ItemDef);
             if (amount <= 0) return false;
             var plateAmount = hc.body.inventory.GetItemCount(RoR2Content.Items.ArmorPlate);

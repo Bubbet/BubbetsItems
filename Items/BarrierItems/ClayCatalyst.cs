@@ -66,7 +66,7 @@ namespace BubbetsItems.Items.BarrierItems
 
 		public static void FixBarrier(CharacterBody __instance, RecalculateStatsAPI.StatHookEventArgs args)
 		{
-			var instance = GetInstance<ClayCatalyst>();
+			if (!TryGetInstance(out ClayCatalyst instance)) return;
 			if (instance == null) return;
 			var teamIndex = __instance.teamComponent.teamIndex;
 			if (__instance.GetBuffCount(BuffDef) <= 0) return;
@@ -79,7 +79,7 @@ namespace BubbetsItems.Items.BarrierItems
 		[HarmonyPostfix, HarmonyPatch(typeof(HoldoutZoneController), nameof(HoldoutZoneController.UpdateHealingNovas))]
 		public static void UpdateClayCatalyst(HoldoutZoneController __instance, bool isCharging)
 		{
-			var inst = GetInstance<ClayCatalyst>();
+			if (!TryGetInstance(out ClayCatalyst inst)) return;
 			if (inst == null) return;
 
 			ZoneInstances.TryGetValue(__instance, out var zones);

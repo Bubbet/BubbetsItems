@@ -110,14 +110,14 @@ namespace BubbetsItems.Items
 
         public static float DoDurationPatch(CharacterBody cb, BuffDef def, float duration)
         {
+            if (!TryGetInstance<Hourglass>(out var inst)) return duration;
             if (def.isDebuff) return duration;
-            var hourglass = GetInstance<Hourglass>();
-            if (hourglass._buffDefBlacklist.Contains(def)) return duration;
+            if (inst._buffDefBlacklist.Contains(def)) return duration;
             var inv = cb.inventory;
             if (!inv) return duration;
-            var amount = cb.inventory.GetItemCount(hourglass.ItemDef);
+            var amount = cb.inventory.GetItemCount(inst.ItemDef);
             if (amount <= 0) return duration;
-            duration *= hourglass.ScalingInfos[0].ScalingFunction(amount);
+            duration *= inst.ScalingInfos[0].ScalingFunction(amount);
             return duration;
         }
     }

@@ -15,8 +15,7 @@ namespace BubbetsItems.ItemBehaviors
 		[ItemDefAssociation(useOnServer = true, useOnClient = false)]
 		private static ItemDef? GetItemDef()
 		{
-			var instance = SharedBase.GetInstance<SubmergingCistern>();
-			return instance?.ItemDef;
+			return SharedBase.TryGetInstance<SubmergingCistern>(out var inst) ? inst.ItemDef : null;
 		}
 		
 		public void OnDisable()

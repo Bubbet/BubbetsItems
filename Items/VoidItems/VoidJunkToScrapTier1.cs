@@ -77,7 +77,7 @@ namespace BubbetsItems.Items
 				var highPriority = new WeightedSelection<ItemIndex>();
 				var normalPriority = new WeightedSelection<ItemIndex>();
 
-				var voidJunkToScrapTier1 = GetInstance<VoidJunkToScrapTier1>();
+				if (!TryGetInstance(out VoidJunkToScrapTier1 voidJunkToScrapTier1)) return;
 				var voidAmount = Math.Max(0, inv.GetItemCount(voidJunkToScrapTier1!.ItemDef) - (CanConsumeLastStack!.Value ? 0 : 1));
 				if (voidAmount > 0) highestPriority.AddChoice(voidJunkToScrapTier1.ItemDef.itemIndex, voidAmount);
 
@@ -118,7 +118,7 @@ namespace BubbetsItems.Items
 			{
 				if (typeDef.itemTier != ItemTier.Tier1) return false;
 				var inv = context.activator.GetComponent<CharacterBody>().inventory;
-				var voidJunkToScrapTier1 = GetInstance<VoidJunkToScrapTier1>();
+				if (!TryGetInstance(out VoidJunkToScrapTier1 voidJunkToScrapTier1)) return false;
 				var voidAmount = Math.Max(0, inv.GetItemCount(voidJunkToScrapTier1!.ItemDef) - (CanConsumeLastStack!.Value ? 0 : 1));
 				return inv.GetTotalItemCountOfTier(ItemTier.Tier1) + voidAmount >= context.cost;
 			}

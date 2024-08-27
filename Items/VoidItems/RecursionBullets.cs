@@ -76,15 +76,15 @@ namespace BubbetsItems.Items
 		
 		public static void RecalcStats(CharacterBody __instance, RecalculateStatsAPI.StatHookEventArgs args)
 		{
+			if (!TryGetInstance<RecursionBullets>(out var inst)) return;
 			var inv = __instance!.inventory;
 			if (!inv) return;
-			var recursionBullets = GetInstance<RecursionBullets>()!;
-			var amount = inv.GetItemCount(recursionBullets.ItemDef);
+			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return;
 			
 			var buffAmount = __instance.GetBuffCount(BuffDef);
 			//var baseAttack = __instance.baseAttackSpeed + __instance.levelAttackSpeed * (__instance.level - 1f);
-			args.attackSpeedMultAdd += 1f + buffAmount * recursionBullets.ScalingInfos[0].ScalingFunction(amount); 
+			args.attackSpeedMultAdd += 1f + buffAmount * inst.ScalingInfos[0].ScalingFunction(amount); 
 			//__instance.attackSpeed /= baseAttack;
 			//__instance.attackSpeed *= baseAttack;
 		}

@@ -42,7 +42,7 @@ namespace BubbetsItems.Items
 		public static void HealServer(HealthComponent __instance)
 		{
 			if (!__instance || !__instance.body || !__instance.body.inventory) return;
-			var voidSlug = GetInstance<VoidSlug>()!;
+			if (!TryGetInstance(out VoidSlug voidSlug)) return;
 			var count = __instance.body.inventory.GetItemCount(voidSlug.ItemDef);
 			if (count <= 0 || __instance.missingCombinedHealth < 0.1f) return;
 			__instance.body.statsDirty = true;
@@ -61,7 +61,8 @@ namespace BubbetsItems.Items
 
 		public static void RecalcStats(CharacterBody __instance, RecalculateStatsAPI.StatHookEventArgs args)
 		{
-			var voidSlug = GetInstance<VoidSlug>();
+			if (!TryGetInstance(out VoidSlug voidSlug)) return;
+			if (voidSlug == null) return;
 			var count = __instance.inventory?.GetItemCount(voidSlug.ItemDef) ?? 0;
 			if (count <= 0 || __instance.outOfDanger) return;
 			var info = voidSlug.ScalingInfos[0];

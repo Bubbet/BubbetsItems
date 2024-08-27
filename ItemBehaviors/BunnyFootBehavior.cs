@@ -16,8 +16,7 @@ namespace BubbetsItems.ItemBehaviors
 		[ItemDefAssociation(useOnServer = true, useOnClient = true)]
 		private static ItemDef? GetItemDef()
 		{
-			var instance = SharedBase.GetInstance<BunnyFoot>();
-			return instance.ItemDef;
+			return SharedBase.TryGetInstance<BunnyFoot>(out var inst) ? inst.ItemDef : null;
 		}
 
 		private void OnEnable()
@@ -35,10 +34,11 @@ namespace BubbetsItems.ItemBehaviors
 
 		private void HitGround(ref CharacterMotor.HitGroundInfo hitgroundinfo)
 		{
+			if (!SharedBase.TryGetInstance<BunnyFoot>(out var inst)) return;
 			hitGroundVelocity = hitgroundinfo.velocity;
 			hitGroundTime = Time.time;
 			if (body.hasEffectiveAuthority && body.inputBank.jump.down &&
-			    stack >= SharedBase.GetInstance<BunnyFoot>()?.ScalingInfos[4].ScalingFunction(stack))
+			    stack >= inst.ScalingInfos[4].ScalingFunction(stack))
 				shouldJump = true;
 		}
 

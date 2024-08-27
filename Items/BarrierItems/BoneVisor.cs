@@ -106,12 +106,11 @@ namespace BubbetsItems.Items.BarrierItems
 		private void OnTriggerStay(Collider other)
 		{
 			if (!NetworkServer.active || !alive ||
-			    TeamComponent.GetObjectTeam(other.gameObject) != teamFilter.teamIndex) return;
+			    TeamComponent.GetObjectTeam(other.gameObject) != teamFilter.teamIndex || !SharedBase.TryGetInstance<BoneVisor>(out var inst)) return;
 			var component = other.GetComponent<CharacterBody>();
 			if (!component) return;
 			var inv = component.inventory;
 			if (!inv) return;
-			var inst = SharedBase.GetInstance<BoneVisor>()!;
 			var amt = inv.GetItemCount(inst.ItemDef);
 			if (amt <= 0) amt = 1;
 			alive = false;

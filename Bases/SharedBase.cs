@@ -20,47 +20,69 @@ namespace BubbetsItems
 {
     public abstract class SharedBase
     {
-        protected virtual void MakeConfigs() {}
-        protected virtual void MakeTokens(){}
-        protected virtual void MakeBehaviours(){} 
-        protected virtual void DestroyBehaviours(){}
+        protected virtual void MakeConfigs()
+        {
+        }
+
+        protected virtual void MakeTokens()
+        {
+        }
+
+        protected virtual void MakeBehaviours()
+        {
+        }
+
+        protected virtual void DestroyBehaviours()
+        {
+        }
 
         //public virtual void MakeInLobbyConfig(ModConfigEntry modConfigEntry){}
-        public virtual void MakeInLobbyConfig(Dictionary<ConfigCategoriesEnum, List<object>> dict){} // Has to be list of object because this class cannot have reference to inlobbyconfig, incase its not loaded
-        
+        public virtual void MakeInLobbyConfig(Dictionary<ConfigCategoriesEnum, List<object>> dict)
+        {
+        } // Has to be list of object because this class cannot have reference to inlobbyconfig, incase its not loaded
+
         public virtual void MakeRiskOfOptions()
         {
             sharedInfo.MakeRiskOfOptions();
             ModSettingsManager.AddOption(new CheckBoxOption(Enabled, true));
         }
 
-        public static readonly MethodInfo? MemberwiseCloneRef = typeof(object).GetMethod(nameof(MemberwiseClone), BindingFlags.Instance | BindingFlags.NonPublic);
+        public static readonly MethodInfo? MemberwiseCloneRef =
+            typeof(object).GetMethod(nameof(MemberwiseClone), BindingFlags.Instance | BindingFlags.NonPublic);
+
         public ConfigEntry<bool>? Enabled;
         public static readonly List<SharedBase> Instances = new List<SharedBase>();
-        public static readonly Dictionary<PickupIndex, SharedBase> PickupIndexes = new Dictionary<PickupIndex, SharedBase>();
+
+        public static readonly Dictionary<PickupIndex, SharedBase> PickupIndexes =
+            new Dictionary<PickupIndex, SharedBase>();
+
         private static readonly Dictionary<Type, SharedBase> InstanceDict = new();
         private static List<SharedInfo> SharedInfos = new();
         public PickupIndex PickupIndex;
-        
+
         protected PatchClassProcessor? PatchProcessor;
         protected static readonly List<ContentPack> ContentPacks = new List<ContentPack>();
 
         // ReSharper disable once InconsistentNaming
         public SharedInfo sharedInfo = null!;
-        
-        
+
+
         private static ExpansionDef? _sotvExpansion;
-        public static ExpansionDef? SotvExpansion => _sotvExpansion ??= Addressables.LoadAssetAsync<ExpansionDef>("RoR2/DLC1/Common/DLC1.asset").WaitForCompletion();
+
+        public static ExpansionDef? SotvExpansion => _sotvExpansion ??=
+            Addressables.LoadAssetAsync<ExpansionDef>("RoR2/DLC1/Common/DLC1.asset").WaitForCompletion();
 
         //This is probably bad practice
         public virtual bool RequiresSotv => false;
-        
-        public virtual string GetFormattedDescription(Inventory? inventory = null, string? token = null, bool forceHideExtended = false)
+
+        public virtual string GetFormattedDescription(Inventory? inventory = null, string? token = null,
+            bool forceHideExtended = false)
         {
             return "Not Implemented";
         }
 
-        public static void Initialize(ManualLogSource manualLogSource, ConfigFile configFile, out SharedInfo info, SerializableContentPack? serializableContentPack = null, Harmony? harmony = null, string tokenPrefix = "")
+        public static void Initialize(ManualLogSource manualLogSource, ConfigFile configFile, out SharedInfo info,
+            SerializableContentPack? serializableContentPack = null, Harmony? harmony = null, string tokenPrefix = "")
         {
             var sharedInfo = new SharedInfo(manualLogSource, configFile, harmony, tokenPrefix);
             info = sharedInfo;
@@ -69,7 +91,8 @@ namespace BubbetsItems
             foreach (var type in Assembly.GetCallingAssembly().GetTypes())
             {
                 //if(type == typeof(SharedBase) || type == typeof(ItemBase) || type == typeof(EquipmentBase)) continue;
-                if (!typeof(SharedBase).IsAssignableFrom(type)) continue; // || typeof(SharedBase) == type || typeof(ItemBase) == type || typeof(EquipmentBase) == type) continue;
+                if (!typeof(SharedBase).IsAssignableFrom(type))
+                    continue; // || typeof(SharedBase) == type || typeof(ItemBase) == type || typeof(EquipmentBase) == type) continue;
                 if (type.IsAbstract) continue;
                 var shared = Activator.CreateInstance(type) as SharedBase;
                 if (shared == null)
@@ -80,7 +103,7 @@ namespace BubbetsItems
 
                 shared!.sharedInfo = sharedInfo;
                 shared.MakeConfigs();
-                
+
                 if (!shared.Enabled?.Value ?? false) continue;
                 shared.MakeBehaviours();
                 if (harmony != null)
@@ -99,19 +122,31 @@ namespace BubbetsItems
                 sharedInfo.Instances.Add(shared);
                 Instances.Add(shared);
                 InstanceDict[type] = shared;
-                if(serializableContentPack)
+                if (serializableContentPack)
                     shared.FillDefsFromSerializableCP(serializableContentPack!);
             }
 
             if (!serializableContentPack) return;
-            serializableContentPack!.itemDefs = serializableContentPack.itemDefs.Where(x => ItemBase.Items.Any(y => MatchName(x.name, y.GetType().Name))).ToArray();
+            serializableContentPack!.itemDefs = serializableContentPack.itemDefs
+                .Where(x => ItemBase.Items.Any(y => MatchName(x.name, y.GetType().Name))).ToArray();
             var eliteEquipments = serializableContentPack.eliteDefs.Select(x => x.eliteEquipmentDef);
-            serializableContentPack.equipmentDefs = serializableContentPack.equipmentDefs.Where(x => EquipmentBase.Equipments.Any(y => x is not null && MatchName(x.name, y.GetType().Name))).Union(eliteEquipments).ToArray();
+            serializableContentPack.equipmentDefs = serializableContentPack.equipmentDefs
+                .Where(x => EquipmentBase.Equipments.Any(y => x is not null && MatchName(x.name, y.GetType().Name)))
+                .Union(eliteEquipments).ToArray();
         }
-        public static T GetInstance<T>() where T : SharedBase
+
+        public static T? GetInstance<T>() where T : SharedBase
         {
             InstanceDict.TryGetValue(typeof(T), out var t);
-            return (t as T)!;
+            return t as T;
+        }
+
+        public static bool TryGetInstance<T>(out T instance) where T : SharedBase
+        {
+            var result = InstanceDict.TryGetValue(typeof(T), out var i);
+            instance = null!;
+            if (result) instance = (T)i!;
+            return result;
         }
 
         public static void ResetConfigs()
@@ -121,6 +156,7 @@ namespace BubbetsItems
                 sharedInfo.ConfigFile.Clear();
                 sharedInfo.ConfigFile.Save();
             }
+
             foreach (var sharedBase in Instances)
             {
                 sharedBase.MakeConfigs();
@@ -134,6 +170,7 @@ namespace BubbetsItems
             {
                 instance.FillDefsFromContentPack();
             }
+
             foreach (var instance in Instances)
             {
                 instance.FillPickupIndex();
@@ -142,7 +179,8 @@ namespace BubbetsItems
 
         protected static bool MatchName(string scriptableObject, string sharedBase)
         {
-            return scriptableObject.StartsWith(sharedBase) || scriptableObject.StartsWith("ItemDef" + sharedBase) || scriptableObject.StartsWith("EquipmentDef" + sharedBase);
+            return scriptableObject.StartsWith(sharedBase) || scriptableObject.StartsWith("ItemDef" + sharedBase) ||
+                   scriptableObject.StartsWith("EquipmentDef" + sharedBase);
         }
 
         public static void AddContentPack(ContentPack contentPack)
@@ -150,16 +188,17 @@ namespace BubbetsItems
             if (!ContentPacks.Contains(contentPack))
                 ContentPacks.Add(contentPack);
         }
-        
+
         ~SharedBase()
         {
             DestroyBehaviours();
         }
-        
+
         public void CheatForItem(Vector3? rotationUniform = null)
         {
             var master = PlayerCharacterMasterController.instances[0].master;
-            PickupDropletController.CreatePickupDroplet(PickupIndex, master.GetBody().corePosition + Vector3.up * 1.5f,  rotationUniform ?? Vector3.one * 25f);
+            PickupDropletController.CreatePickupDroplet(PickupIndex, master.GetBody().corePosition + Vector3.up * 1.5f,
+                rotationUniform ?? Vector3.one * 25f);
             //master.inventory.GiveItem(ItemDef.itemIndex);
         }
 
@@ -215,19 +254,20 @@ namespace BubbetsItems
         }
 
         protected virtual void FillItemDisplayRules()
-        { /*TODO remove method body, as this is just debug placement rules
-            foreach (var key in IDRHelper.enumToBodyObjName.Keys)
-            {
-                AddDisplayRules(key, new ItemDisplayRule()
-                {
-                    childName = "Chest",
-                    localScale = Vector3.one
-                });
-            }//*/
+        {
+            /*TODO remove method body, as this is just debug placement rules
+                       foreach (var key in IDRHelper.enumToBodyObjName.Keys)
+                       {
+                           AddDisplayRules(key, new ItemDisplayRule()
+                           {
+                               childName = "Chest",
+                               localScale = Vector3.one
+                           });
+                       }//*/
         }
 
 
-        [SystemInitializer( typeof(ItemCatalog), typeof(EquipmentCatalog))]
+        [SystemInitializer(typeof(ItemCatalog), typeof(EquipmentCatalog))]
         public static void MakeAllTokens()
         {
             foreach (var item in Instances)
@@ -249,13 +289,16 @@ namespace BubbetsItems
             Language.english.SetStringByToken(sharedInfo.TokenPrefix + key, value);
             //sharedInfo.Logger.LogInfo($"\"{sharedInfo.TokenPrefix + key}\": \"{value}\"");
         }
-        
+
         /* other languages get unloaded on language change, and these keys would be discarded
         protected void AddToken(string language, string key, string value)
         {
             Language.languagesByName[language].SetStringByToken(_tokenPrefix + key, value);
         }*/
-        protected virtual void FillDefsFromSerializableCP(SerializableContentPack serializableContentPack) {}
+        protected virtual void FillDefsFromSerializableCP(SerializableContentPack serializableContentPack)
+        {
+        }
+
         protected abstract void FillDefsFromContentPack();
         protected abstract void FillPickupIndex();
         protected abstract void FillRequiredExpansions();
@@ -276,10 +319,12 @@ namespace BubbetsItems
             public ExpansionDef? Expansion;
             public ExpansionDef? SotVExpansion;
             public List<SharedBase> Instances = new();
+
             private bool _zioRiskOfOptionsMade;
             //public ZioConfigFile.ZioConfigFile zioConfigFile;
 
-            public SharedInfo(ManualLogSource manualLogSource, ConfigFile configFile, Harmony? harmony, string tokenPrefix)
+            public SharedInfo(ManualLogSource manualLogSource, ConfigFile configFile, Harmony? harmony,
+                string tokenPrefix)
             {
                 Logger = manualLogSource;
                 ConfigFile = configFile;
@@ -296,17 +341,25 @@ namespace BubbetsItems
             public void MakeZioOptions(ConfigFile configFile)
             {
                 //zioConfigFile = configFile;
-                ExpandedTooltips = configFile.Bind(ConfigCategoriesEnum.General, "Expanded Tooltips", true, "Enables the scaling function in the tooltip.", networked: false);
-                DescInPickup = configFile.Bind(ConfigCategoriesEnum.General, "Description In Pickup", true, "Used the description in the pickup for my items.", networked: false);
-                ForceHideScalingInfoInPickup = configFile.Bind(ConfigCategoriesEnum.General, "Disable Scaling Info In Pickup", true, "Should the scaling infos be hidden from pickups.", networked: false);
-                UseSimpleDescIfApplicable = configFile.Bind(ConfigCategoriesEnum.General, "Use Simple Descriptions If Applicable", true, "Should the description be closer to vanilla if you haven't changed the scaling function.", networked: false);
-                ItemStatsInSimpleDesc = configFile.Bind(ConfigCategoriesEnum.General, "Show Item Stats For Simple Desc", true, "Display the solved value under the simple description.", networked: false);
+                ExpandedTooltips = configFile.Bind(ConfigCategoriesEnum.General, "Expanded Tooltips", true,
+                    "Enables the scaling function in the tooltip.", networked: false);
+                DescInPickup = configFile.Bind(ConfigCategoriesEnum.General, "Description In Pickup", true,
+                    "Used the description in the pickup for my items.", networked: false);
+                ForceHideScalingInfoInPickup = configFile.Bind(ConfigCategoriesEnum.General,
+                    "Disable Scaling Info In Pickup", true, "Should the scaling infos be hidden from pickups.",
+                    networked: false);
+                UseSimpleDescIfApplicable = configFile.Bind(ConfigCategoriesEnum.General,
+                    "Use Simple Descriptions If Applicable", true,
+                    "Should the description be closer to vanilla if you haven't changed the scaling function.",
+                    networked: false);
+                ItemStatsInSimpleDesc = configFile.Bind(ConfigCategoriesEnum.General, "Show Item Stats For Simple Desc",
+                    true, "Display the solved value under the simple description.", networked: false);
 
                 foreach (var instance in Instances)
                 {
                     instance.MakeZioOptions();
                 }
-                
+
                 if (Chainloader.PluginInfos.ContainsKey("bubbet.zioriskofoptions"))
                     MakeZioRiskOfOptions();
             }
@@ -328,25 +381,35 @@ namespace BubbetsItems
             }
         }
 
-        public virtual void MakeZioOptions() {}
-        public virtual void MakeZioRiskOfOptions() {}
+        public virtual void MakeZioOptions()
+        {
+        }
+
+        public virtual void MakeZioRiskOfOptions()
+        {
+        }
 
         public abstract void AddDisplayRules(ModdedIDRS which, ItemDisplayRule[] displayRules);
         public abstract void AddDisplayRules(VanillaIDRS which, ItemDisplayRule[] displayRules);
 
         public virtual void AddDisplayRules(ModdedIDRS which, ItemDisplayRule displayRule)
         {
-            var prefab = ((this as ItemBase)?.ItemDef as BubItemDef)?.displayModelPrefab ? ((this as ItemBase)?.ItemDef as BubItemDef)?.displayModelPrefab : ((this as EquipmentBase)?.EquipmentDef as BubEquipmentDef)?.displayModelPrefab;
+            var prefab = ((this as ItemBase)?.ItemDef as BubItemDef)?.displayModelPrefab
+                ? ((this as ItemBase)?.ItemDef as BubItemDef)?.displayModelPrefab
+                : ((this as EquipmentBase)?.EquipmentDef as BubEquipmentDef)?.displayModelPrefab;
             if (!prefab) return;
             displayRule.followerPrefab = prefab;
-            AddDisplayRules(which, new []{displayRule});
+            AddDisplayRules(which, new[] { displayRule });
         }
+
         public virtual void AddDisplayRules(VanillaIDRS which, ItemDisplayRule displayRule)
         {
-            var prefab = ((this as ItemBase)?.ItemDef as BubItemDef)?.displayModelPrefab ? ((this as ItemBase)?.ItemDef as BubItemDef)?.displayModelPrefab : ((this as EquipmentBase)?.EquipmentDef as BubEquipmentDef)?.displayModelPrefab;
+            var prefab = ((this as ItemBase)?.ItemDef as BubItemDef)?.displayModelPrefab
+                ? ((this as ItemBase)?.ItemDef as BubItemDef)?.displayModelPrefab
+                : ((this as EquipmentBase)?.EquipmentDef as BubEquipmentDef)?.displayModelPrefab;
             if (!prefab) return;
             displayRule.followerPrefab = prefab;
-            AddDisplayRules(which, new []{displayRule});
+            AddDisplayRules(which, new[] { displayRule });
         }
     }
 }
