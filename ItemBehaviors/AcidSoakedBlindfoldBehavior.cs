@@ -17,7 +17,7 @@ namespace BubbetsItems.ItemBehaviors
         [ItemDefAssociation(useOnServer = true, useOnClient = false)]
         private static ItemDef? GetItemDef()
         {
-            return SharedBase.TryGetInstance(out AcidSoakedBlindfold inst) ? null : inst.ItemDef;
+            return SharedBase.TryGetInstance(out AcidSoakedBlindfold inst) ? inst.ItemDef : null;
         }
 
         private void FixedUpdate()
