@@ -1,7 +1,7 @@
 {
   "version": 1,
   "dependencies": {
-    ".NETStandard,Version=v2.0": {
+    ".NETStandard,Version=v2.1": {
       "BepInEx.Core": {
         "type": "Direct",
         "requested": "[5.4.19, )",
@@ -20,9 +20,9 @@
       },
       "KingEnderBrine-InLobbyConfig": {
         "type": "Direct",
-        "requested": "[1.4.0, )",
-        "resolved": "1.4.0",
-        "contentHash": "6bTw3P5VU93VZrg1HIKJfknXNO5a0YqqdhYNlKIE1WVX0PSHliTapnGPU+0ehQcCppD07GAk4gc1K2s4qexBVg=="
+        "requested": "[1.4.1, )",
+        "resolved": "1.4.1",
+        "contentHash": "F7v/YXuPTglL4fiQLcbvHbuqum1dulgKZw6i6F+FJwLJalBLW9S5unB4nLKk2tn4SayX4RYJvgObcTttVxZJcQ=="
       },
       "KomradeSpectre-Aetherium": {
         "type": "Direct",
@@ -32,50 +32,21 @@
       },
       "Moffein-ItemStats": {
         "type": "Direct",
-        "requested": "[1.2.1, )",
-        "resolved": "1.2.1",
-        "contentHash": "rhShnhhJ6kpmUvt/BJ3G7jr5RCqgHFbQugCivANOPoEPwiYqL8MEGc+ier/cAZvQIscNTc6HwaReMMn26+4EYQ=="
-      },
-      "NETStandard.Library": {
-        "type": "Direct",
-        "requested": "[2.0.3, )",
-        "resolved": "2.0.3",
-        "contentHash": "st47PosZSHrjECdjeIzZQbzivYBJFv6P2nv4cj2ypdI204DO+vZ7l5raGMiX4eXMJ53RfOIg+/s4DHVZ54Nu2A==",
-        "dependencies": {
-          "Microsoft.NETCore.Platforms": "1.1.0"
-        }
-      },
-      "R2API.RecalculateStats": {
-        "type": "Direct",
-        "requested": "[1.3.0, )",
-        "resolved": "1.3.0",
-        "contentHash": "f/c6hufZHTnannDCXOj7NEMKFFIBgXheowwRwS3W1JEXRsWvj+VcNh6ZW7ccP9YT64RJPOKQ5aeeg68LZRw5RQ==",
-        "dependencies": {
-          "BepInEx.Core": "5.4.19",
-          "MMHOOK.RoR2": "2022.4.19",
-          "R2API.Core": "5.0.11",
-          "RiskOfRain2.GameLibs": "1.2.4-r.0",
-          "RoR2BepInExPack": "1.7.0",
-          "UnityEngine.Modules": "2019.4.26"
-        }
-      },
-      "RiskOfRain2.GameLibs": {
-        "type": "Direct",
-        "requested": "[1.2.4.4-r.1, )",
-        "resolved": "1.2.4.4-r.1",
-        "contentHash": "8RhNXK2ElQrCxGtmX8HSHEnSb9CL07R1d17s2mtM90iBRZH2DDv7RyGoAxHxniVnJq0uePmyDKScUKSlzSXtQA=="
+        "requested": "[1.3.1, )",
+        "resolved": "1.3.1",
+        "contentHash": "r9uHktQaZoZGtoAGoK5Hq6AIPYHa+bST2Lw5z9NaXRenDczcWhh8xCGtrFfVCxyJf1z0oIFX92ZwMrZPz6g2BQ=="
       },
       "Rune580-Risk_Of_Options": {
         "type": "Direct",
-        "requested": "[2.5.3, )",
-        "resolved": "2.5.3",
-        "contentHash": "GNWMUshPZsIjoHNtHpQ7Cgz2n2TzVjzwysTvZAElTyC1H388a7EGZE7FizoxsFADelPJ72h26QesvgnynMLWKg=="
+        "requested": "[2.8.0, )",
+        "resolved": "2.8.0",
+        "contentHash": "X879fu5fQsCvSmNsji0KcVdlKg1txRuKkccYsC36/MJ4NffQkF/rrOhrkzwt/UdfrMEugRNE1pIy5ov+tM9fmw=="
       },
       "UnityEngine.Modules": {
         "type": "Direct",
-        "requested": "[2019.4.26, )",
-        "resolved": "2019.4.26",
-        "contentHash": "2d73AOFATaE0xsSY4qsK65CwT55e7g1myM7C5LMTdVRM57nAWpLWv8x/39uNHYjJQBnXqsQwsadk2H0xsyBsKA=="
+        "requested": "[2021.3.33, )",
+        "resolved": "2021.3.33",
+        "contentHash": "7NtoEnLcehfJIW+DL9awtXAHj3SJcQBWOTPePwA6LmeWVz9YbHoSzs2uEOCt5meWokUqCWMVmqBT1Heu5ouWDw=="
       },
       "Zio": {
         "type": "Direct",
@@ -106,11 +77,6 @@
         "type": "Transitive",
         "resolved": "1.1.0",
         "contentHash": "aOZA3BWfz9RXjpzt0sRJJMjAscAUm3Hoa4UWAfceV9UTYxgwZ1lZt5nO2myFf+/jetYQo4uTP7zS8sJY67BBxg=="
-      },
-      "MMHOOK.RoR2": {
-        "type": "Transitive",
-        "resolved": "2022.4.19",
-        "contentHash": "tUTJHikXhVAqg/+zXqsTQoRvPXVzpTOh8kQXpvQWG9fvu6rQnbxdbkYHffxva3/tCjf/TntyNFXKAnvT4xHpMg=="
       },
       "Mono.Cecil": {
         "type": "Transitive",
@@ -144,28 +110,6 @@
           "System.Reflection.Emit.ILGeneration": "4.7.0",
           "System.Reflection.Emit.Lightweight": "4.7.0",
           "System.Reflection.TypeExtensions": "4.7.0"
-        }
-      },
-      "R2API.Core": {
-        "type": "Transitive",
-        "resolved": "5.0.11",
-        "contentHash": "keP5lCLItRhGZ2LVPu7XIaVJO4Fk3wLKA7WnMkyEjob/5rqz6t8idciWJuSnqiXxY0jZOGBtjVM/bpESff7/BQ==",
-        "dependencies": {
-          "BepInEx.Core": "5.4.19",
-          "MMHOOK.RoR2": "2022.4.19",
-          "RiskOfRain2.GameLibs": "1.2.4-r.0",
-          "RoR2BepInExPack": "1.7.0",
-          "UnityEngine.Modules": "2019.4.26"
-        }
-      },
-      "RoR2BepInExPack": {
-        "type": "Transitive",
-        "resolved": "1.7.0",
-        "contentHash": "7Y3RLqQQL57Qt4IbprQ5NPHWVdcxPIJCJlazF+ajMWF8pjnwj49kzDvcBxb+nmlYWXiPvx+tL9KzYwoUGcZabA==",
-        "dependencies": {
-          "BepInEx.Core": "5.4.19",
-          "RiskOfRain2.GameLibs": "1.2.4-r.0",
-          "UnityEngine.Modules": "2019.4.26"
         }
       },
       "System.Collections": {
@@ -325,10 +269,7 @@
       "System.Reflection.Emit": {
         "type": "Transitive",
         "resolved": "4.7.0",
-        "contentHash": "VR4kk8XLKebQ4MZuKuIni/7oh+QGFmZW3qORd1GvBq/8026OpW501SzT/oypwiQl4TvT8ErnReh/NzY9u+C6wQ==",
-        "dependencies": {
-          "System.Reflection.Emit.ILGeneration": "4.7.0"
-        }
+        "contentHash": "VR4kk8XLKebQ4MZuKuIni/7oh+QGFmZW3qORd1GvBq/8026OpW501SzT/oypwiQl4TvT8ErnReh/NzY9u+C6wQ=="
       },
       "System.Reflection.Emit.ILGeneration": {
         "type": "Transitive",
@@ -338,10 +279,7 @@
       "System.Reflection.Emit.Lightweight": {
         "type": "Transitive",
         "resolved": "4.7.0",
-        "contentHash": "a4OLB4IITxAXJeV74MDx49Oq2+PsF6Sml54XAFv+2RyWwtDBcabzoxiiJRhdhx+gaohLh4hEGCLQyBozXoQPqA==",
-        "dependencies": {
-          "System.Reflection.Emit.ILGeneration": "4.7.0"
-        }
+        "contentHash": "a4OLB4IITxAXJeV74MDx49Oq2+PsF6Sml54XAFv+2RyWwtDBcabzoxiiJRhdhx+gaohLh4hEGCLQyBozXoQPqA=="
       },
       "System.Reflection.Extensions": {
         "type": "Transitive",

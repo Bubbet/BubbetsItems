@@ -6,7 +6,7 @@ namespace BubbetsItems
 {
 	public class BubPickupDisplayCustom : MonoBehaviour
 	{
-		[SystemInitializer(typeof(GenericPickupController))]
+		//[SystemInitializer(typeof(GenericPickupController))]
 		public static void ModifyGenericPickup()
 		{
 			_pickup = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/GenericPickup.prefab").WaitForCompletion();

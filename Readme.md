@@ -71,6 +71,9 @@ Patience is key~
     - `Conq#1738` for the item stats descriptions
 
 # Changelog
+* v1.8.12 Mod Changes:
+    * Support dlc2
+
 * v1.8.11 Mod Changes:
     * Made Zio Config File a dependency
     * Wrapped some stuff around tooltips in try/catch

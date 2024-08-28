@@ -2,7 +2,7 @@
 using System.Linq;
 using BubbetsItems.Helpers;
 using HarmonyLib;
-using R2API;
+
 using RoR2;
 using RoR2.ContentManagement;
 using UnityEngine;

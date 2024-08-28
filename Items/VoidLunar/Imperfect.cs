@@ -4,7 +4,7 @@ using BubbetsItems.Helpers;
 using HarmonyLib;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using R2API;
+
 using RoR2;
 
 namespace BubbetsItems.Items.VoidLunar

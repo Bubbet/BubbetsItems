@@ -163,7 +163,7 @@ namespace BubbetsItems
             }
         }
 
-        [SystemInitializer(typeof(EquipmentCatalog), typeof(PickupCatalog))]
+        //[SystemInitializer(typeof(EquipmentCatalog), typeof(PickupCatalog))]
         public static void InitializePickups()
         {
             foreach (var instance in Instances)
@@ -202,7 +202,7 @@ namespace BubbetsItems
             //master.inventory.GiveItem(ItemDef.itemIndex);
         }
 
-        [SystemInitializer]
+        //[SystemInitializer]
         public static void FillAllExpansionDefs()
         {
             foreach (var instance in Instances)
@@ -218,7 +218,7 @@ namespace BubbetsItems
             }
         }
 
-        [SystemInitializer(typeof(BodyCatalog))]
+        //[SystemInitializer(typeof(BodyCatalog))]
         public static void FillIDRS()
         {
 /*
@@ -267,7 +267,7 @@ namespace BubbetsItems
         }
 
 
-        [SystemInitializer(typeof(ItemCatalog), typeof(EquipmentCatalog))]
+        //[SystemInitializer(typeof(ItemCatalog), typeof(EquipmentCatalog))]
         public static void MakeAllTokens()
         {
             foreach (var item in Instances)

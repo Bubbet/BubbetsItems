@@ -13,9 +13,9 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using BubbetsItems.Behaviours;
 using BubbetsItems.Components;
+using BubbetsItems.Helpers;
 using EntityStates;
 using HarmonyLib;
-using R2API;
 using RiskOfOptions.OptionConfigs;
 using RiskOfOptions.Options;
 using RoR2;
@@ -36,7 +36,7 @@ using SearchableAttribute = HG.Reflection.SearchableAttribute;
 namespace BubbetsItems
 {
     [BepInPlugin("bubbet.bubbetsitems", "Bubbets Items", Version)]
-    [BepInDependency(RecalculateStatsAPI.PluginGUID)]
+    [BepInDependency("com.bepis.r2api.recalculatestats", BepInDependency.DependencyFlags.SoftDependency)]
     //[BepInDependency(R2API.R2API.PluginGUID, BepInDependency.DependencyFlags.SoftDependency)]//, R2API.Utils.R2APISubmoduleDependency(nameof(R2API.RecalculateStatsAPI))]
     [BepInDependency(AetheriumPlugin.ModGuid, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.KingEnderBrine.InLobbyConfig", BepInDependency.DependencyFlags.SoftDependency)]
@@ -85,7 +85,8 @@ namespace BubbetsItems
                 if (_bubSotvExpansion is null)
                 {
                     _bubSotvExpansion = ContentPack.expansionDefs.First(x => x.nameToken == "BUB_EXPANSION_VOID");
-                    var sotv = Addressables.LoadAssetAsync<ExpansionDef>("RoR2/DLC1/Common/DLC1.asset").WaitForCompletion();//ExpansionCatalog.expansionDefs.First(x => x.nameToken == "DLC1_NAME");
+                    var sotv = LegacyResourcesAPI.Load<ExpansionDef>("ExpansionDefs/DLC1");
+                    //var sotv = Addressables.LoadAssetAsync<ExpansionDef>("RoR2/DLC1/Common/DLC1.asset").WaitForCompletion();//ExpansionCatalog.expansionDefs.First(x => x.nameToken == "DLC1_NAME");
                     _bubSotvExpansion.requiredEntitlement = sotv.requiredEntitlement;
                     _bubSotvExpansion.disabledIconSprite = sotv.disabledIconSprite;
                 }
@@ -118,6 +119,13 @@ namespace BubbetsItems
             new PatchClassProcessor(harm, typeof(ModdedDamageColors)).Patch();
             new PatchClassProcessor(harm, typeof(CustomItemTierDefs)).Patch();
             new PatchClassProcessor(harm, typeof(ColorCatalogPatches)).Patch();
+
+            if (!Chainloader.PluginInfos.ContainsKey("com.bepin.r2api.recalculatestats"))
+            {
+                Log.LogInfo("R2Api RecalcStats not present, patching myself.");
+                new PatchClassProcessor(harm, typeof(RecalculateStatsAPI)).Patch();
+            }
+            
             ColorCatalogPatches.AddNewColors();
             
             // Do not use SystemInitializers in PatchClassProcessors, because patch triggers the static constructor of SearchableAttribute breaking mods that load after
@@ -204,7 +212,7 @@ namespace BubbetsItems
             }
         }
 
-        [SystemInitializer]
+        //[SystemInitializer]
         public static void ExtraTokens()
         {
             Language.english.SetStringByToken("BUB_HOLD_TOOLTIP", "Hold Capslock for more.");

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using BubbetsItems.Helpers;
 using HarmonyLib;
-using R2API;
+
 using RoR2;
 
 namespace BubbetsItems.Items.VoidLunar
@@ -38,7 +38,7 @@ namespace BubbetsItems.Items.VoidLunar
 
 
 		public static DamageInfo? mostRecentInfo;
-		[HarmonyPrefix, HarmonyPatch(typeof(HealthComponent), nameof(HealthComponent.TakeDamage))]
+		[HarmonyPrefix, HarmonyPatch(typeof(HealthComponent), nameof(HealthComponent.TakeDamageProcess))]
 		public static void DuplicateDamage(HealthComponent __instance, DamageInfo damageInfo)
 		{
 			if (mostRecentInfo == null)

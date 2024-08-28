@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using BubbetsItems.Helpers;
 using HarmonyLib;
-using R2API;
+
 using RoR2;
 
 namespace BubbetsItems.Items

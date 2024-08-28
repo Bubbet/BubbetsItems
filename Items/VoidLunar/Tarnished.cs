@@ -4,7 +4,7 @@ using BepInEx.Configuration;
 using BubbetsItems.Helpers;
 using BubbetsItems.ItemBehaviors;
 using HarmonyLib;
-using R2API;
+
 using RiskOfOptions;
 using RiskOfOptions.Options;
 using RoR2;

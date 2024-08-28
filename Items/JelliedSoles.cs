@@ -103,7 +103,7 @@ namespace BubbetsItems.Items
 
 		
 		// body.damage/body.basedamage * storedDamage
-		[HarmonyILManipulator, HarmonyPatch(typeof(HealthComponent), nameof(HealthComponent.TakeDamage))]
+		[HarmonyILManipulator, HarmonyPatch(typeof(HealthComponent), nameof(HealthComponent.TakeDamageProcess))]
 		public static void IlTakeDamage(ILContext il)
 		{
 			var c = new ILCursor(il);

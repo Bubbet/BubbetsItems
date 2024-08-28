@@ -6,7 +6,7 @@ using InLobbyConfig.Fields;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using R2API;
+
 using RiskOfOptions;
 using RiskOfOptions.Options;
 using RoR2;
@@ -158,7 +158,7 @@ The cost of purchase and production associated with Mk2 is considerably higher t
 
         private delegate bool ArmorPlateDele(HealthComponent hc, ref float damage);
 
-        [HarmonyILManipulator, HarmonyPatch(typeof(HealthComponent), nameof(HealthComponent.TakeDamage))]
+        [HarmonyILManipulator, HarmonyPatch(typeof(HealthComponent), nameof(HealthComponent.TakeDamageProcess))]
         public static void TakeDamageHook(ILContext il)
         {
             if (!ReductionOnTrue.Value) return;

@@ -3,7 +3,7 @@ using System.Linq;
 using BepInEx.Configuration;
 using BubbetsItems.Helpers;
 using HarmonyLib;
-using R2API;
+
 using RiskOfOptions.Options;
 using RoR2;
 using RoR2.ContentManagement;

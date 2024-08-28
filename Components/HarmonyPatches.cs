@@ -13,6 +13,20 @@ namespace BubbetsItems
     [HarmonyPatch]
     public static class HarmonyPatches
     {
+        [HarmonyPrefix, HarmonyPatch(typeof(LocalUserManager), nameof(LocalUserManager.Init))]
+        public static void InitSystemInitializers()
+        {
+            // SystemInitializer busting my balls again so it can just never be used again.
+            BubbetsItemsPlugin.ExtraTokens();
+            
+            BubPickupDisplayCustom.ModifyGenericPickup();
+            SharedBase.MakeAllTokens();
+            SharedBase.FillIDRS();
+            SharedBase.FillAllExpansionDefs();
+            SharedBase.InitializePickups();
+            EquipmentBase.ApplyPostEquipments();
+        }
+        
         [HarmonyPrefix, HarmonyPatch(typeof(NetworkSoundEventCatalog), nameof(NetworkSoundEventCatalog.Init))]
         public static void LoadSoundbank()
         {
