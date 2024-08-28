@@ -23,7 +23,7 @@ source = "./NCalc.dll"
 target = "plugins/BubbetsItems/NCalc.dll"
 
 [[build.copy]]
-source = "../bin/Release/netstandard2.0/BubbetsItems.dll"
+source = "../bin/Release/netstandard2.1/BubbetsItems.dll"
 target = "plugins/BubbetsItems/BubbetsItems.dll"
 
 [[build.copy]]
