@@ -9,6 +9,7 @@ using MonoMod.Cil;
 using RoR2;
 
 namespace BubbetsItems.Helpers;
+
 [HarmonyPatch]
 public static class RecalculateStatsAPI
 {
@@ -82,7 +83,7 @@ public static class RecalculateStatsAPI
     public static void R2ApiHandler(CharacterBody characterBody, object args)
     {
         _statMods = new StatHookEventArgs();
-        
+
         foreach (var (key, value) in _r2StatHookEventArgsFields)
         {
             if (_statHookFields.TryGetValue(key, out var field))
@@ -130,32 +131,15 @@ public static class RecalculateStatsAPI
                     {
                         _r2StatHookEventArgsFields[field.Name] = field;
                     }
-
                     foreach (var field in typeof(StatHookEventArgs).GetFields())
                     {
                         _statHookFields[field.Name] = field;
                     }
-                    //BubbetsItemsPlugin.Log.LogInfo(handlerType.GetMethod("Invoke").GetParameters()
-                    //    .Select(x => x.ParameterType.Name).Join());
                     _r2Delegate = Delegate.CreateDelegate(handlerType,
                         typeof(RecalculateStatsAPI).GetMethod(nameof(R2ApiHandler),
                             BindingFlags.Static | BindingFlags.Public)!);
-                    //var addMethod = _recalcStatsEvent.GetAddMethod();
-                    //BubbetsItemsPlugin.Log.LogInfo("AddMethod " + addMethod.Name);
-
-                    //addMethod.Invoke(null, parameters: new object[] { _r2Delegate });
-                    //BubbetsItemsPlugin.Log.LogInfo(recalc.GetMethods().Select(x => x.Name).Join());
-                    /*
-                     * recalc.GetMethod("add_" + nameof(GetStatCoefficients), BindingFlags.Static | BindingFlags.Public)
-                    
-                        !.Invoke(null, new object[]
-                        {
-                            _r2Delegate
-                        });
-                        */
 
                     _recalcStatsEvent.AddEventHandler(null, _r2Delegate);
-                    //recalc!.GetMethod("SetHooks", BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
                     _r2Hooked = true;
                 }
                 else
@@ -415,9 +399,9 @@ public static class RecalculateStatsAPI
         bool ILFound = c.TryGotoNext(
             x => x.MatchLdfld<CharacterBody>(nameof(CharacterBody.baseArmor))
         ) && c.TryGotoNext(
-                x => x.MatchCallOrCallvirt(typeof(CharacterBody).GetProperty(nameof(CharacterBody.armor),
-                    BindingFlags.Public | BindingFlags.NonPublic |
-                    BindingFlags.Static | BindingFlags.Instance)!.GetSetMethod(true)));
+            x => x.MatchCallOrCallvirt(typeof(CharacterBody).GetProperty(nameof(CharacterBody.armor),
+                BindingFlags.Public | BindingFlags.NonPublic |
+                BindingFlags.Static | BindingFlags.Instance)!.GetSetMethod(true)));
 
         if (ILFound)
         {
