@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using BepInEx.Bootstrap;
@@ -9,7 +10,7 @@ using RoR2;
 
 namespace BubbetsItems.Helpers;
 [HarmonyPatch]
-public class RecalculateStatsAPI
+public static class RecalculateStatsAPI
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     public class StatHookEventArgs
@@ -78,46 +79,103 @@ public class RecalculateStatsAPI
 
     public delegate void StatHookEventHandler(CharacterBody sender, StatHookEventArgs args);
 
+    public static void R2ApiHandler(CharacterBody characterBody, object args)
+    {
+        _statMods = new StatHookEventArgs();
+        
+        foreach (var (key, value) in _r2StatHookEventArgsFields)
+        {
+            if (_statHookFields.TryGetValue(key, out var field))
+                field.SetValue(_statMods, value.GetValue(args));
+        }
+
+        if (_getStatCoefficients == null) return;
+        foreach (var @delegate in _getStatCoefficients.GetInvocationList())
+        {
+            var @event = (StatHookEventHandler)@delegate;
+            try
+            {
+                @event(characterBody, _statMods);
+            }
+            catch (Exception e)
+            {
+                BubbetsItemsPlugin.Log.LogError(
+                    $"Exception thrown by : {@event.Method.DeclaringType?.Name}.{@event.Method.Name}:\n{e}");
+            }
+        }
+
+        foreach (var (key, value) in _statHookFields)
+        {
+            if (_r2StatHookEventArgsFields.TryGetValue(key, out var field))
+                field.SetValue(args, value.GetValue(_statMods));
+        }
+    }
+
     public static event StatHookEventHandler GetStatCoefficients
     {
         add
         {
-            if (Chainloader.PluginInfos.TryGetValue("com.bepis.r2api.recalculatestats", out var pluginInfo))
+            if (!_r2Hooked &&
+                Chainloader.PluginInfos.TryGetValue(BubbetsItemsPlugin.RecalcStatsGuid, out var pluginInfo))
             {
-                var assembly = Assembly.GetAssembly(pluginInfo.Instance.GetType());
-                var statCoeff = assembly.GetType(nameof(RecalculateStatsAPI)).GetEvent(nameof(GetStatCoefficients));
-                if (statCoeff is null)
+                var pluginType = pluginInfo.Instance.GetType();
+                var assembly = Assembly.GetAssembly(pluginType);
+                var recalc = assembly.GetType(pluginType.Namespace + "." + nameof(RecalculateStatsAPI));
+                _recalcStatsEvent = recalc?.GetEvent(nameof(GetStatCoefficients));
+                if (_recalcStatsEvent != null)
+                {
+                    var handlerType = _recalcStatsEvent.EventHandlerType;
+                    _r2StatHookEventArgs = handlerType.GetMethod("Invoke")!.GetParameters()[1].ParameterType;
+                    foreach (var field in _r2StatHookEventArgs.GetFields())
+                    {
+                        _r2StatHookEventArgsFields[field.Name] = field;
+                    }
+
+                    foreach (var field in typeof(StatHookEventArgs).GetFields())
+                    {
+                        _statHookFields[field.Name] = field;
+                    }
+                    //BubbetsItemsPlugin.Log.LogInfo(handlerType.GetMethod("Invoke").GetParameters()
+                    //    .Select(x => x.ParameterType.Name).Join());
+                    _r2Delegate = Delegate.CreateDelegate(handlerType,
+                        typeof(RecalculateStatsAPI).GetMethod(nameof(R2ApiHandler),
+                            BindingFlags.Static | BindingFlags.Public)!);
+                    //var addMethod = _recalcStatsEvent.GetAddMethod();
+                    //BubbetsItemsPlugin.Log.LogInfo("AddMethod " + addMethod.Name);
+
+                    //addMethod.Invoke(null, parameters: new object[] { _r2Delegate });
+                    //BubbetsItemsPlugin.Log.LogInfo(recalc.GetMethods().Select(x => x.Name).Join());
+                    /*
+                     * recalc.GetMethod("add_" + nameof(GetStatCoefficients), BindingFlags.Static | BindingFlags.Public)
+                    
+                        !.Invoke(null, new object[]
+                        {
+                            _r2Delegate
+                        });
+                        */
+
+                    _recalcStatsEvent.AddEventHandler(null, _r2Delegate);
+                    //recalc!.GetMethod("SetHooks", BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
+                    _r2Hooked = true;
+                }
+                else
                 {
                     BubbetsItemsPlugin.Log.LogError("R2API RecalcStats event not found.");
-                    return;
                 }
+            }
 
-                // TODO we probably need to generate a r2api type stathookeventargs/stathookeventhandler instead of mine
-                statCoeff.AddEventHandler(assembly, value);
-            }
-            else
-            {
-                _getStatCoefficients += value;
-            }
+            _getStatCoefficients += value;
         }
 
         remove
         {
-            if (Chainloader.PluginInfos.TryGetValue("com.bepis.r2api.recalculatestats", out var pluginInfo))
+            _getStatCoefficients -= value;
+            if (_r2Hooked &&
+                (_getStatCoefficients == null || _getStatCoefficients.GetInvocationList().Length == 0) &&
+                Chainloader.PluginInfos.TryGetValue(BubbetsItemsPlugin.RecalcStatsGuid, out var pluginInfo))
             {
-                var assembly = Assembly.GetAssembly(pluginInfo.Instance.GetType());
-                var statCoeff = assembly.GetType(nameof(RecalculateStatsAPI)).GetEvent(nameof(GetStatCoefficients));
-                if (statCoeff is null)
-                {
-                    BubbetsItemsPlugin.Log.LogError("R2API RecalcStats event not found.");
-                    return;
-                }
-
-                statCoeff.RemoveEventHandler(assembly, value);
-            }
-            else
-            {
-                _getStatCoefficients -= value;
+                _r2Hooked = false;
+                _recalcStatsEvent?.RemoveEventHandler(null, _r2Delegate);
             }
         }
     }
@@ -126,6 +184,12 @@ public class RecalculateStatsAPI
     private static event StatHookEventHandler? _getStatCoefficients;
 
     private static StatHookEventArgs? _statMods;
+    private static bool _r2Hooked;
+    private static Delegate? _r2Delegate;
+    private static EventInfo? _recalcStatsEvent;
+    private static Type? _r2StatHookEventArgs;
+    private static Dictionary<string, FieldInfo> _r2StatHookEventArgsFields = new Dictionary<string, FieldInfo>();
+    private static Dictionary<string, FieldInfo> _statHookFields = new Dictionary<string, FieldInfo>();
 
     private static void GetStatMods(CharacterBody characterBody)
     {
@@ -169,7 +233,6 @@ public class RecalculateStatsAPI
     [HarmonyILManipulator, HarmonyPatch(typeof(CharacterBody), nameof(CharacterBody.RecalculateStats))]
     public static void HookRecalculateStats(ILContext il)
     {
-        BubbetsItemsPlugin.Log.LogInfo("Starting hook");
         ILCursor c = new ILCursor(il);
 
         c.Emit(OpCodes.Ldarg_0);

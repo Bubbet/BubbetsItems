@@ -36,7 +36,7 @@ using SearchableAttribute = HG.Reflection.SearchableAttribute;
 namespace BubbetsItems
 {
     [BepInPlugin("bubbet.bubbetsitems", "Bubbets Items", Version)]
-    [BepInDependency("com.bepis.r2api.recalculatestats", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(RecalcStatsGuid, BepInDependency.DependencyFlags.SoftDependency)]
     //[BepInDependency(R2API.R2API.PluginGUID, BepInDependency.DependencyFlags.SoftDependency)]//, R2API.Utils.R2APISubmoduleDependency(nameof(R2API.RecalculateStatsAPI))]
     [BepInDependency(AetheriumPlugin.ModGuid, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.KingEnderBrine.InLobbyConfig", BepInDependency.DependencyFlags.SoftDependency)]
@@ -47,6 +47,7 @@ namespace BubbetsItems
     public class BubbetsItemsPlugin : BaseUnityPlugin
     {
         private const string AssetBundleName = "MainAssetBundle";
+        public const string RecalcStatsGuid = "com.bepis.r2api.recalculatestats";
         
         public static ContentPack ContentPack = null!;
         public static AssetBundle AssetBundle = null!;
@@ -120,7 +121,7 @@ namespace BubbetsItems
             new PatchClassProcessor(harm, typeof(CustomItemTierDefs)).Patch();
             new PatchClassProcessor(harm, typeof(ColorCatalogPatches)).Patch();
 
-            if (!Chainloader.PluginInfos.ContainsKey("com.bepin.r2api.recalculatestats"))
+            if (!Chainloader.PluginInfos.ContainsKey(RecalcStatsGuid))
             {
                 Log.LogInfo("R2Api RecalcStats not present, patching myself.");
                 new PatchClassProcessor(harm, typeof(RecalculateStatsAPI)).Patch();
