@@ -71,6 +71,9 @@ Patience is key~
     - `Conq#1738` for the item stats descriptions
 
 # Changelog
+* v1.8.13 Mod Changes:
+    * Actually add reflection to support r2api when it updates
+
 * v1.8.12 Mod Changes:
     * Support dlc2
 
