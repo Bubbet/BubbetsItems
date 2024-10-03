@@ -71,6 +71,12 @@ Patience is key~
     - `Conq#1738` for the item stats descriptions
 
 # Changelog
+* v1.8.14 Mod Changes: 
+    * Fix void lunar shop on command.
+    * Fix some of the prefabs not loading down at the shop
+    * Networked the return to top shrine
+    * Fixed a scaling issue with Escape Plan
+
 * v1.8.13 Mod Changes:
     * Actually add reflection to support r2api when it updates
 

@@ -162,6 +162,7 @@ namespace BubbetsItems
                     Conf.MakeRiskOfOptionsZio();
             }
             ConfigCategories.Init();
+            BubEventFunctions.Init();
         }
 
         private void ZioConfigSetup()

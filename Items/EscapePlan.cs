@@ -180,7 +180,7 @@ namespace BubbetsItems.Items
         public static void RecalcStats(CharacterBody __instance, RecalculateStatsAPI.StatHookEventArgs args)
         {
             var amt = __instance.GetBuffCount(BuffDef);
-            if (amt > 0) args.moveSpeedMultAdd += 1f + amt / Granularity.Value;
+            if (amt > 0) args.moveSpeedMultAdd += amt / Granularity.Value;
         }
 
         /*

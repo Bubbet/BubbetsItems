@@ -32,7 +32,7 @@ namespace BubbetsItems.Items
 		public override void MakeRiskOfOptions()
 		{
 			base.MakeRiskOfOptions();
-			ModSettingsManager.AddOption(new CheckBoxOption(CanConsumeLastStack));
+			ModSettingsManager.AddOption(new CheckBoxOption(CanConsumeLastStack!));
 		}
 
 		public override string GetFormattedDescription(Inventory? inventory, string? token = null, bool forceHideExtended = false)

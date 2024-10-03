@@ -2,6 +2,7 @@
 using System.Linq;
 using BepInEx.Bootstrap;
 using HarmonyLib;
+using MaterialHud;
 using MonoMod.Cil;
 using RoR2;
 using RoR2.EntityLogic;
@@ -9,6 +10,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using ZedMod;
 
 namespace BubbetsItems
 {
@@ -24,17 +26,64 @@ namespace BubbetsItems
         private static GameObject? _terminalPrefab;
         private static GameObject? _returnPrefab;
 
-        public static GameObject ShopPrefab =>
-            _shopPrefab ??= BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("LunarVoidShop");
+        public static GameObject ShopPrefab
+        {
+            get
+            {
+                if (_shopPrefab is null)
+                {
+                    _shopPrefab = BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("LunarVoidShop");
+                    var transform = _shopPrefab.transform.Find("Counter/Misc");
+                    transform.Find("BazaarBoulder").GetComponent<PrefabChildLoader>().prefabAddress = "RoR2/Base/arena/BBBoulderMediumRound1.prefab";
+                    transform.Find("BazaarBoulder (1)").GetComponent<PrefabChildLoader>().prefabAddress = "RoR2/Base/arena/BBBoulderMediumRound1.prefab";
+                    transform.Find("BazaarBoulder (2)").GetComponent<PrefabChildLoader>().prefabAddress = "RoR2/Base/arena/BBBoulderMediumRound1.prefab";
+                    transform.Find("Infection").GetComponent<PrefabChildLoader>().prefabAddress =
+                        "RoR2/Base/bazaar/Bazaar_LunarInfectionLarge.prefab";
+                    transform.Find("Infection (1)").GetComponent<PrefabChildLoader>().prefabAddress =
+                        "RoR2/Base/bazaar/Bazaar_LunarInfectionLarge.prefab";
+                    transform.Find("Infection (2)").GetComponent<PrefabChildLoader>().prefabAddress =
+                        "RoR2/Base/bazaar/Bazaar_LunarInfectionLarge.prefab";
+                    transform.Find("Infection (3)").GetComponent<PrefabChildLoader>().prefabAddress =
+                        "RoR2/Base/bazaar/Bazaar_LunarInfectionLarge.prefab";
+                    transform.Find("CrabFoam (3)").GetComponent<PrefabChildLoader>().prefabAddress =
+                        "RoR2/Base/arena/Arena_CrabFoam.prefab";
+                }
+
+                return _shopPrefab;
+            }
+        }
 
         public static GameObject RerollPrefab =>
             _rerollPrefab ??= BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("Reroll");
 
-        public static GameObject TerminalPrefab => _terminalPrefab ??=
-            BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("LunarVoidTerminal");
+        public static GameObject TerminalPrefab
+        {
+            get
+            {
+                if (_terminalPrefab is null)
+                {
+                    _terminalPrefab = BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("LunarVoidTerminal");
+                    _terminalPrefab.transform.Find("Display/voidPod/voidEffect").GetComponent<SkinnedMeshRenderer>()
+                        .material = Addressables.LoadAssetAsync<Material>("RoR2/DLC1/VoidMegaCrab/matVoidCrabMatterOpaque.mat").WaitForCompletion();
+                }
 
-        public static GameObject ReturnPrefab =>
-            _returnPrefab ??= BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("VoidShopWarpReturn");
+                return _terminalPrefab;
+            }
+        }
+
+        public static GameObject ReturnPrefab
+        {
+            get
+            {
+                if (_returnPrefab is null)
+                {
+                    _returnPrefab = BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("VoidShopWarpReturn");
+                    _returnPrefab.GetComponentInChildren<PrefabLoader>().prefabAddress = "RoR2/Base/bazaar/Bazaar_NewtStatue.prefab";
+                }
+
+                return _returnPrefab;
+            }
+        }
 
         public static void Init()
         {
