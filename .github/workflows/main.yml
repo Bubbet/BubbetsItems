@@ -24,9 +24,9 @@ jobs:
           dotnet-version: 6.x
           cache: true
       - name: Execute dotnet
-        run: dotnet restore --locked-mode
+        run: dotnet restore --locked-mode --force-evaluate
       - name: Build
-        run: dotnet build --no-restore --force-evaluate -c Release
+        run: dotnet build --no-restore -c Release
       - name: Install TCLI
         run: dotnet tool install --global tcli --version 0.2.4    
       - name: Release Thunderstore
