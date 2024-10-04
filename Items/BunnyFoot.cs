@@ -216,22 +216,27 @@ namespace BubbetsItems.Items
         public static void PatchMovement(ILContext il)
         {
             var c = new ILCursor(il);
-            c.GotoNext(
-                x => x.MatchMul(),
-                x => x.MatchCall<Vector3>(nameof(Vector3.MoveTowards))
-            );
-            c.RemoveRange(2);
+            c.GotoNext(MoveType.After, x => x.MatchLdfld<CharacterMotor>("velocity"));
+            c.Emit(OpCodes.Dup);
+            var target = -1;
+            var num = -1;
+            var deltaTime = -1;
+            c.GotoNext(x => x.MatchLdloc(out target), x => x.MatchLdloc(out num), x => x.MatchLdarg(out deltaTime));
+            c.GotoNext(x => x.MatchStfld<CharacterMotor>("velocity"));
+            c.Emit(OpCodes.Ldloc, target);
+            c.Emit(OpCodes.Ldloc, num);
+            c.Emit(OpCodes.Ldarg, deltaTime);
             c.Emit(OpCodes.Ldarg_0);
-            c.EmitDelegate<Func<Vector3, Vector3, float, float, CharacterMotor, Vector3>>(DoAirMovement);
+            c.EmitDelegate<Func<Vector3, Vector3, Vector3, float, float, CharacterMotor, Vector3>>(DoAirMovement);
         }
 
-        public static Vector3 DoAirMovement(Vector3 velocity, Vector3 target, float num, float deltaTime,
+        public static Vector3 DoAirMovement(Vector3 originalVelocity, Vector3 oldSolvedVelocity, Vector3 target, float num, float deltaTime,
             CharacterMotor motor)
         {
-            if (!TryGetInstance(out BunnyFoot bunnyFoot)) return Vector3.MoveTowards(velocity, target, num * deltaTime);
+            if (!TryGetInstance(out BunnyFoot bunnyFoot)) return oldSolvedVelocity;
             var count = motor.body?.inventory?.GetItemCount(bunnyFoot.ItemDef) ?? 0;
             if (count <= 0 || motor.disableAirControlUntilCollision || motor.Motor.GroundingStatus.IsStableOnGround)
-                return Vector3.MoveTowards(velocity, target, num * deltaTime);
+                return oldSolvedVelocity;
 
             var newTarget = target;
             if (!motor.isFlying)
@@ -240,7 +245,7 @@ namespace BubbetsItems.Items
             var wishDir = newTarget.normalized;
             var wishSpeed = motor.walkSpeed * wishDir.magnitude;
 
-            return Accelerate(velocity, wishDir, wishSpeed, bunnyFoot.ScalingInfos[0].ScalingFunction(count),
+            return Accelerate(originalVelocity, wishDir, wishSpeed, bunnyFoot.ScalingInfos[0].ScalingFunction(count),
                 motor.acceleration, deltaTime, target, num);
         }
 

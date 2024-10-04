@@ -198,29 +198,27 @@ namespace BubbetsItems.Items.VoidLunar
         public static void ApplyLuck(CharacterMaster __instance)
         {
             if (!TryGetInstance(out Tarnished instance)) return;
-            if (instance == null) return;
             var stack = __instance.inventory.GetItemCount(instance.ItemDef);
-            if (stack > 0)
+            if (stack <= 0) return;
+            var luckDifference = 0;
+            var body = __instance.GetBody();
+            if (!body) return;
+            if (body.GetBuffCount(BuffDef) <= 0)
             {
-                var luckDifference = 0;
-                var body = __instance.GetBody();
-                if (body.GetBuffCount(BuffDef) <= 0)
-                {
-                    if (Tarnished.OldTarnished.Value)
-                        luckDifference = Mathf.FloorToInt(instance.ScalingInfos[1].ScalingFunction(stack));
-                    //if(NetworkServer.active && !body.HasBuff(Tarnished.BuffDef))
-                    //body.AddBuff(Tarnished.BuffDef);
-                }
-                else
-                {
-                    luckDifference = Mathf.RoundToInt(instance.ScalingInfos[3].ScalingFunction(stack));
-                    body.statsDirty = true;
-                    //if(NetworkServer.active && body.HasBuff(Tarnished.BuffDef))
-                    //body.RemoveBuff(Tarnished.BuffDef);
-                }
-
-                __instance.luck += luckDifference;
+                if (OldTarnished.Value)
+                    luckDifference = Mathf.FloorToInt(instance.ScalingInfos[1].ScalingFunction(stack));
+                //if(NetworkServer.active && !body.HasBuff(Tarnished.BuffDef))
+                //body.AddBuff(Tarnished.BuffDef);
             }
+            else
+            {
+                luckDifference = Mathf.RoundToInt(instance.ScalingInfos[3].ScalingFunction(stack));
+                body.statsDirty = true;
+                //if(NetworkServer.active && body.HasBuff(Tarnished.BuffDef))
+                //body.RemoveBuff(Tarnished.BuffDef);
+            }
+
+            __instance.luck += luckDifference;
         }
     }
 }

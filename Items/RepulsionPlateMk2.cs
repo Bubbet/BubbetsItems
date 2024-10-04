@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using BepInEx.Configuration;
 using BubbetsItems.Helpers;
 using HarmonyLib;
@@ -124,9 +125,8 @@ The cost of purchase and production associated with Mk2 is considerably higher t
         // ReSharper disable once InconsistentNaming
         public static void RecalcStats(CharacterBody __instance, RecalculateStatsAPI.StatHookEventArgs args)
         {
-            if (!TryGetInstance(out RepulsionPlateMk2 repulsionPlateMk2)) return;
-            if (repulsionPlateMk2 == null) return;
             if (ReductionOnTrue.Value) return;
+            if (!TryGetInstance(out RepulsionPlateMk2 repulsionPlateMk2)) return;
             var inv = __instance.inventory;
             if (!inv) return;
             var amount = inv.GetItemCount(repulsionPlateMk2.ItemDef);
@@ -139,52 +139,33 @@ The cost of purchase and production associated with Mk2 is considerably higher t
             args.armorAdd += info.ScalingFunction(amount);
         }
         
-        public static bool DoMk2ArmorPlates(HealthComponent hc, ref float damage)
+        public static float DoMk2ArmorPlates(float damage, HealthComponent hc)
         {
-            if (hc == null) return false;
-            if (hc.body == null) return false;
-            if (hc.body.inventory == null) return false;
-            if (!TryGetInstance(out RepulsionPlateMk2 repulsionPlateMk2)) return false;
+            if (!ReductionOnTrue.Value) return damage;
+            if (hc == null) return damage;
+            if (hc.body == null) return damage;
+            if (hc.body.inventory == null) return damage;
+            if (!TryGetInstance(out RepulsionPlateMk2 repulsionPlateMk2)) return damage;
             var amount = hc.body.inventory.GetItemCount(repulsionPlateMk2.ItemDef);
-            if (amount <= 0) return false;
+            if (amount <= 0) return damage;
             var plateAmount = hc.body.inventory.GetItemCount(RoR2Content.Items.ArmorPlate);
             //damage = Mathf.Max(1f, damage - (20 + plateAmount * (4 + amount)));
             var info = repulsionPlateMk2.ScalingInfos[0];
             info.WorkingContext.p = plateAmount;
             info.WorkingContext.d = damage;
-            damage = Mathf.Max(1f, info.ScalingFunction(amount));
-            return true;
+            return info.ScalingFunction(amount);
         }
-
-        private delegate bool ArmorPlateDele(HealthComponent hc, ref float damage);
 
         [HarmonyILManipulator, HarmonyPatch(typeof(HealthComponent), nameof(HealthComponent.TakeDamageProcess))]
         public static void TakeDamageHook(ILContext il)
         {
-            if (!ReductionOnTrue.Value) return;
             var c = new ILCursor(il);
-            ILLabel? jumpInstruction = null;
-            int damageNum = -1;
             c.GotoNext(
-                x => x.MatchLdcR4(out _),
-                x => x.MatchLdloc(out damageNum),
-                x => x.MatchLdcR4(out _),
-                x => x.MatchLdarg(0),
-                x => x.MatchLdflda<HealthComponent>("itemCounts"),
-                x => x.OpCode == OpCodes.Ldfld && ((FieldReference) x.Operand).Name == "armorPlate"
+                x => x.MatchCallOrCallvirt(typeof(CharacterBody).GetProperty(nameof(CharacterBody.armor))!.GetGetMethod())
             );
-            c.GotoPrev(
-                x => x.MatchLdarg(0),
-                x => x.MatchLdflda<HealthComponent>("itemCounts"),
-                x => x.OpCode == OpCodes.Ldfld && ((FieldReference) x.Operand).Name == "armorPlate",
-                x => x.MatchLdcI4(0),
-                x => x.MatchBle(out jumpInstruction)
-            );
-            if (damageNum == -1 || jumpInstruction == null) return;
+            c.GotoNext(x => x.MatchCallOrCallvirt(typeof(Mathf), nameof(Mathf.Max)));
             c.Emit(OpCodes.Ldarg_0);
-            c.Emit(OpCodes.Ldloca, damageNum);
-            c.EmitDelegate<ArmorPlateDele>(DoMk2ArmorPlates);
-            c.Emit(OpCodes.Brfalse, jumpInstruction.Target);
+            c.EmitDelegate<Func<float, HealthComponent, float>>(DoMk2ArmorPlates);
         }
     }
 }

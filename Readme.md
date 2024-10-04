@@ -71,6 +71,13 @@ Patience is key~
     - `Conq#1738` for the item stats descriptions
 
 # Changelog
+* v1.8.15 Mod Changes:
+    * Fix a potential nre on tarnished if inventory changes when there is no body.
+    * Updated repulsion armor mk2 to have a cleaner hook.
+    * Repulsion armor mk2 can change from reduction to armor mode at runtime now.
+    * Fix incompatibility with bunny foot and unlock momentum
+        * The code i wrote for this should use unlock momentum's code when you dont have a bunny foot, and bunny foots when you have one.
+
 * v1.8.14 Mod Changes: 
     * Fix void lunar shop on command.
     * Fix some of the prefabs not loading down at the shop
