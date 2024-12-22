@@ -71,6 +71,9 @@ Patience is key~
     - `Conq#1738` for the item stats descriptions
 
 # Changelog
+* v1.8.16 Mod Changes:
+    * Fix Shifted Quarts, Zealotry Embrace and Jellied Soles for the dlc2 phase 1.
+
 * v1.8.15 Mod Changes:
     * Fix a potential nre on tarnished if inventory changes when there is no body.
     * Updated repulsion armor mk2 to have a cleaner hook.

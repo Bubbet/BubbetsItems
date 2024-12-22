@@ -66,35 +66,30 @@ namespace BubbetsItems.Items
         public static void IlTakeDamage(ILContext il)
         {
             var c = new ILCursor(il);
-            c.GotoNext(MoveType.Before,
-                x => x.OpCode == OpCodes.Ldsfld &&
-                     (x.Operand as FieldReference)?.Name == nameof(RoR2Content.Items.NearbyDamageBonus),
-                x => x.MatchCallOrCallvirt(out _),
-                x => x.MatchStloc(out _));
-            var where = c.Index;
-            int num2 = -1;
-            c.GotoNext(x => x.MatchLdloc(out num2),
-                x => x.MatchLdcR4(1f),
-                x => x.MatchLdloc(out _));
-            c.Index = where;
+            if (!c.MatchNearbyDamage(out var masterNum, out var num2))
+            {
+                BubbetsItemsPlugin.Log.LogError("Failed to match nearby damage.");
+                return;
+            }
             c.Emit(OpCodes.Ldarg_0);
-            c.Emit(OpCodes.Ldloc_1); // Body; 0 is master
+            c.Emit(OpCodes.Ldloc, masterNum);
             c.Emit(OpCodes.Ldarg_1);
             c.Emit(OpCodes.Ldloc, num2);
-            c.EmitDelegate<Func<HealthComponent, CharacterBody, DamageInfo, float, float>>(
-                (hc, body, damageInfo, amount) =>
+            c.EmitDelegate<Func<HealthComponent, CharacterMaster, DamageInfo, float, float>>(
+                (hc, master, damageInfo, amount) =>
                 {
                     if (!TryGetInstance<ZealotryEmbrace>(out var inst)) return amount;
-                    var count = body.inventory.GetItemCount(inst.ItemDef);
+                    var count = master.inventory.GetItemCount(inst.ItemDef);
                     if (count <= 0) return amount;
-
+                    
+                    var bo = master.GetBodyObject();
                     var debuffCount = BuffCatalog.debuffBuffIndices.Sum(buffType => hc.body.GetBuffCount(buffType));
                     var dotController = DotController.FindDotController(hc.gameObject);
                     if (dotController)
                         if (OnlyOneDot.Value)
                         {
                             var list = from dotStack in OnlyMyDots.Value
-                                    ? dotController.dotStackList.Where(x => x.attackerObject == body.gameObject)
+                                    ? dotController.dotStackList.Where(x => x.attackerObject == bo)
                                     : dotController.dotStackList
                                 select dotStack.dotIndex;
                             debuffCount += list.Distinct().Count();
@@ -103,7 +98,7 @@ namespace BubbetsItems.Items
                         {
                             if (OnlyMyDots.Value)
                                 debuffCount +=
-                                    dotController.dotStackList.Count(x => x.attackerObject == body.gameObject);
+                                    dotController.dotStackList.Count(x => x.attackerObject == bo);
                             else
                                 debuffCount += dotController.dotStackList.Count;
                         }

@@ -64,22 +64,20 @@ namespace BubbetsItems.Items
 		public static void IlTakeDamage(ILContext il)
 		{
 			var c = new ILCursor(il);
-			c.GotoNext(MoveType.Before, x => x.OpCode == OpCodes.Ldsfld && (x.Operand as FieldReference)?.Name == nameof(RoR2Content.Items.NearbyDamageBonus),
-				x => x.MatchCallOrCallvirt(out _),
-				x => x.MatchStloc(out _));
-			var where = c.Index;
-			int num2 = -1;
-			c.GotoNext(x => x.MatchLdloc(out num2),
-				x => x.MatchLdcR4(1f),
-				x => x.MatchLdloc(out _));
-			c.Index = where;
-			c.Emit(OpCodes.Ldloc_1); // Body; 0 is master
+			if (!c.MatchNearbyDamage(out var masterNum, out var num2))
+			{
+				BubbetsItemsPlugin.Log.LogError("Failed to match nearby damage.");
+				return;
+			}
+			c.Emit(OpCodes.Ldloc, masterNum);
 			c.Emit(OpCodes.Ldloc, num2);
-			c.EmitDelegate<Func<CharacterBody, float, float>>((body, amount) =>
+			c.EmitDelegate<Func<CharacterMaster, float, float>>((master, amount) =>
 			{
 				if (!TryGetInstance(out ShiftedQuartz instance)) return amount;
-				var count = body.inventory.GetItemCount(instance.ItemDef);
+				var count = master.inventory.GetItemCount(instance.ItemDef);
 				if (count <= 0) return amount;
+				var body = master.GetBody();
+				if (!body) return amount;
 				var inside = body.GetComponent<ShiftedQuartzBehavior>().inside; // TODO this might not exist in scope and may throw errors in multiplayer
 				if (!inside)
 					amount *= 1f + instance.ScalingInfos[1].ScalingFunction(count); // 1f + count * 0.2f

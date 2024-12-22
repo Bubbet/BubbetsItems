@@ -107,22 +107,18 @@ namespace BubbetsItems.Items
 		public static void IlTakeDamage(ILContext il)
 		{
 			var c = new ILCursor(il);
-			c.GotoNext(MoveType.Before, x => x.OpCode == OpCodes.Ldsfld && (x.Operand as FieldReference)?.Name == nameof(RoR2Content.Items.NearbyDamageBonus),
-				x => x.MatchCallOrCallvirt(out _),
-				x => x.MatchStloc(out _));
-			var where = c.Index;
-			int num2 = -1;
-			c.GotoNext(x => x.MatchLdloc(out num2),
-				x => x.MatchLdcR4(1f),
-				x => x.MatchLdloc(out _));
-			c.Index = where;
+			if (!c.MatchNearbyDamage(out var masterNum, out var num2))
+			{
+				BubbetsItemsPlugin.Log.LogError("Failed to match nearby damage.");
+				return;
+			}
 			c.Emit(OpCodes.Ldarg_0);
-			c.Emit(OpCodes.Ldloc_1); // Body; 0 is master
+			c.Emit(OpCodes.Ldloc, masterNum);
 			c.Emit(OpCodes.Ldarg_1);
 			c.Emit(OpCodes.Ldloc, num2);
-			c.EmitDelegate<Func<HealthComponent, CharacterBody, DamageInfo, float, float>>((hc, body, damageInfo, amount) =>
+			c.EmitDelegate<Func<HealthComponent, CharacterMaster, DamageInfo, float, float>>((hc, master, damageInfo, amount) =>
 			{
-				var inv = body.inventory;
+				var inv = master.inventory;
 				if (!inv) return amount;
 				if (!TryGetInstance(out JelliedSoles instance)) return amount;
 				var count = inv.GetItemCount(instance.ItemDef);
@@ -136,6 +132,7 @@ namespace BubbetsItems.Items
 				// Initial setup
 				var info = instance.ScalingInfos[1];
 				var context = info.WorkingContext;
+				var body = master.GetBody();
 				context.d = body.damage / body.baseDamage;
 				context.h = hc.combinedHealth;
 				
