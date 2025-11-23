@@ -268,12 +268,17 @@ namespace BubbetsItems.Equipments
             {
                 reversing = false;
                 AkSoundEngine.PostEvent("BrokenClock_Break", Body.gameObject);
-                byte i = 0;
-                foreach (var equipmentState in Body.inventory.equipmentStateSlots)
+                byte slot = 0;
+                foreach (var equipmentSlot in Body.inventory._equipmentStateSlots)
                 {
-                    if (equipmentState.equipmentDef == BrokenClock.Instance.EquipmentDef)
-                        Body.inventory.DeductEquipmentCharges(i, 1);
-                    i++;
+                    byte set = 0;
+                    foreach (var state in equipmentSlot)
+                    {
+                        if (state.equipmentDef == BrokenClock.Instance.EquipmentDef)
+                            Body.inventory.DeductEquipmentCharges(slot, set, 1);
+                        set++;
+                    }
+                    slot++;
                 }
                 //characterMotor.velocity = _lastVelocity;
                 return;

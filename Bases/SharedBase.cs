@@ -198,7 +198,7 @@ namespace BubbetsItems
         {
             var master = PlayerCharacterMasterController.instances[0].master;
             PickupDropletController.CreatePickupDroplet(PickupIndex, master.GetBody().corePosition + Vector3.up * 1.5f,
-                rotationUniform ?? Vector3.one * 25f);
+                rotationUniform ?? Vector3.one);
             //master.inventory.GiveItem(ItemDef.itemIndex);
         }
 

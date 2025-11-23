@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using BubbetsItems.Helpers;
 using HarmonyLib;
 using RoR2;
@@ -36,6 +37,68 @@ namespace BubbetsItems.Items.VoidLunar
             AddScalingFunction("[a] * 0.04", "Void Lunar Chance", oldDefault: "[a] * 0.01");
         }
 
+        protected override void MakeBehaviours()
+        {
+            base.MakeBehaviours();
+            new PatchClassProcessor(sharedInfo.Harmony, typeof(GenericPatches)).Patch();
+        }
+
+        [HarmonyPatch]
+        public static class GenericPatches
+        {
+            public static MethodBase TargetMethod()
+            {
+                var generic = typeof(RandomlyLunarUtils)
+                    .GetMethods().First(x =>
+                        x.IsGenericMethodDefinition &&
+                        x.Name == nameof(RandomlyLunarUtils.CheckForLunarReplacementUniqueArray))
+                    .MakeGenericMethod(typeof(IList<UniquePickup>));
+                return generic;
+            }
+
+            public static bool Prefix(object pickups, Xoroshiro128Plus rng)
+            {
+                var uniquePickups = (IList<UniquePickup>)pickups;
+                if (!TryGetInstance<SeepingOcean>(out var inst)) return true;
+                var itemCountGlobal = Util.GetItemCountGlobal(inst.ItemDef.itemIndex, false, false);
+                if (itemCountGlobal <= 0) return true;
+                List<PickupIndex>? list = null;
+                var any = false;
+                for (var i = 0; i < uniquePickups.Count; i++)
+                {
+                    PickupDef? pickupDef = PickupCatalog.GetPickupDef(uniquePickups[i].pickupIndex);
+                    if (pickupDef == null || !CanReplace(pickupDef) ||
+                        !(rng.nextNormalizedFloat < inst.ScalingInfos[0].ScalingFunction(itemCountGlobal))) continue;
+                    List<PickupIndex>? list3 = null;
+                    if (pickupDef.itemIndex != ItemIndex.None)
+                    {
+                        if (list == null)
+                        {
+                            list = BubbetsItemsPlugin.VoidLunarItems.ToList();
+                            Util.ShuffleList(list, rng);
+                        }
+
+                        list3 = list;
+                    }
+                    else if (pickupDef.equipmentIndex != EquipmentIndex.None)
+                    {
+                        if (list3 == null)
+                        {
+                            list3 = new List<PickupIndex>(Run.instance.availableLunarEquipmentDropList);
+                            Util.ShuffleList(list3, rng);
+                        }
+                    }
+
+                    if (list3 == null || list3.Count <= 0) continue;
+
+                    uniquePickups[i] = uniquePickups[i].WithPickupIndex(list3[i % list3.Count]);
+                    any = true;
+                }
+
+                return !any;
+            }
+        }
+
         protected override void FillVoidConversions(List<ItemDef.Pair> pairs)
         {
             base.FillVoidConversions(pairs);
@@ -48,20 +111,22 @@ namespace BubbetsItems.Items.VoidLunar
                    ItemCatalog.GetItemDef(def.itemIndex).tier != BubbetsItemsPlugin.VoidLunarTier.tier;
         }
 
-        [HarmonyPrefix, HarmonyPatch(typeof(RandomlyLunarUtils), nameof(RandomlyLunarUtils.CheckForLunarReplacement))]
-        public static bool CheckForVoidReplacement(PickupIndex pickupIndex, Xoroshiro128Plus rng,
+        [HarmonyPrefix,
+         HarmonyPatch(typeof(RandomlyLunarUtils), nameof(RandomlyLunarUtils.CheckForLunarReplacement),
+             typeof(UniquePickup), typeof(Xoroshiro128Plus))]
+        public static bool CheckForVoidReplacement(UniquePickup uniquePickup, Xoroshiro128Plus rng,
             // ReSharper disable once InconsistentNaming
-            ref PickupIndex __result)
+            ref UniquePickup __result)
         {
             if (!TryGetInstance(out SeepingOcean inst)) return true;
-            var pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
+            var pickupDef = PickupCatalog.GetPickupDef(uniquePickup.pickupIndex);
             if (pickupDef == null || !CanReplace(pickupDef)) return true;
             var itemCountGlobal = Util.GetItemCountGlobal(inst.ItemDef.itemIndex, false, false);
             if (itemCountGlobal <= 0) return true;
-            List<PickupIndex>? list = null;
+            List<UniquePickup>? list = null;
             if (pickupDef.itemIndex != ItemIndex.None)
             {
-                list = BubbetsItemsPlugin.VoidLunarItems.ToList();
+                list = BubbetsItemsPlugin.VoidLunarItems.Select(x => new UniquePickup {pickupIndex = x}).ToList();
             }
 
             if (list is not { Count: > 0 } ||
@@ -69,41 +134,6 @@ namespace BubbetsItems.Items.VoidLunar
             var index = rng.RangeInt(0, list.Count);
             __result = list[index];
             return false;
-        }
-
-        [HarmonyPrefix,
-         HarmonyPatch(typeof(RandomlyLunarUtils), nameof(RandomlyLunarUtils.CheckForLunarReplacementUniqueArray))]
-        public static bool CheckForVoidReplacementUniqueArray(PickupIndex[] pickupIndices, Xoroshiro128Plus rng)
-        {
-            if (!TryGetInstance<SeepingOcean>(out var inst)) return true;
-            var itemCountGlobal = Util.GetItemCountGlobal(inst.ItemDef.itemIndex, false, false);
-            if (itemCountGlobal <= 0) return true;
-            List<PickupIndex>? list = null;
-            var any = false;
-            for (var i = 0; i < pickupIndices.Length; i++)
-            {
-                PickupDef? pickupDef = PickupCatalog.GetPickupDef(pickupIndices[i]);
-                if (pickupDef == null || !CanReplace(pickupDef) ||
-                    !(rng.nextNormalizedFloat < inst.ScalingInfos[0].ScalingFunction(itemCountGlobal))) continue;
-                List<PickupIndex>? list3 = null;
-                if (pickupDef.itemIndex != ItemIndex.None)
-                {
-                    if (list == null)
-                    {
-                        list = BubbetsItemsPlugin.VoidLunarItems.ToList();
-                        Util.ShuffleList<PickupIndex>(list, rng);
-                    }
-
-                    list3 = list;
-                }
-
-                if (list3 == null || list3.Count <= 0) continue;
-
-                pickupIndices[i] = list3[i % list3.Count];
-                any = true;
-            }
-
-            return !any;
         }
     }
 }

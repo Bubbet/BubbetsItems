@@ -22,7 +22,8 @@ namespace BubbetsItems
         {
             var name = GetType().Name;
             Enabled = sharedInfo.ConfigFile.Bind("Disable Equipments", name, true, "Should this equipment be enabled.");
-            Cooldown = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.EquipmentCooldowns, name, EquipmentDef ? EquipmentDef.cooldown : 15f, "Cooldown for this equipment.");
+            Cooldown = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.EquipmentCooldowns, name,
+                EquipmentDef ? EquipmentDef.cooldown : 15f, "Cooldown for this equipment.");
             Cooldown.SettingChanged += CooldownChanged;
         }
 
@@ -40,28 +41,43 @@ namespace BubbetsItems
         public override void MakeRiskOfOptions()
         {
             base.MakeRiskOfOptions();
-            var config = new SliderConfig() { min = 0, max = 80};
+            var config = new SliderConfig() { min = 0, max = 80 };
             ModSettingsManager.AddOption(new SliderOption(Cooldown, config));
         }
 
-        public virtual void AuthorityEquipmentPress(EquipmentSlot equipmentSlot) {}
-        public virtual void PerformClientAction(EquipmentSlot equipmentSlot, EquipmentActivationState state) { }
+        public virtual void AuthorityEquipmentPress(EquipmentSlot equipmentSlot)
+        {
+        }
+
+        public virtual void PerformClientAction(EquipmentSlot equipmentSlot, EquipmentActivationState state)
+        {
+        }
 
         public virtual EquipmentActivationState PerformEquipment(EquipmentSlot equipmentSlot)
         {
             return EquipmentActivationState.DidNothing;
         }
-        public virtual void OnUnEquip(Inventory inventory, EquipmentState newEquipmentState) {}
-        public virtual void OnEquip(Inventory inventory, EquipmentState? oldEquipmentState) {}
-        public virtual bool UpdateTargets(EquipmentSlot equipmentSlot) { return false; }
+
+        public virtual void OnUnEquip(Inventory inventory, EquipmentState newEquipmentState)
+        {
+        }
+
+        public virtual void OnEquip(Inventory inventory, EquipmentState? oldEquipmentState)
+        {
+        }
+
+        public virtual bool UpdateTargets(EquipmentSlot equipmentSlot)
+        {
+            return false;
+        }
 
         protected virtual void PostEquipmentDef()
         {
             EquipmentDef.cooldown = Cooldown.Value;
         }
-        
+
         public EquipmentDef EquipmentDef = null!;
-        
+
         private static IEnumerable<EquipmentBase>? _equipments;
         internal ConfigEntry<float> Cooldown = null!;
         public static IEnumerable<EquipmentBase> Equipments => _equipments ??= Instances.OfType<EquipmentBase>();
@@ -72,10 +88,10 @@ namespace BubbetsItems
             DontConsume,
             DidNothing
         }
-        
+
         //Can manually call CallRpcOnClientEquipmentActivationRecieved maybe?
 
-        
+
         /*
         [HarmonyPrefix, HarmonyPatch(typeof(EquipmentSlot), nameof(EquipmentSlot.RpcOnClientEquipmentActivationRecieved))]
         public static void PerformEquipmentActionRpc(EquipmentSlot __instance) // third, all clients except host and authority, only on successful equipmentAction(second)
@@ -85,17 +101,21 @@ namespace BubbetsItems
             var boo = false;
             PerformEquipmentAction(__instance, EquipmentCatalog.GetEquipmentDef(__instance.equipmentIndex), ref boo);
         }*/
-        
-        [HarmonyPrefix, HarmonyPatch(typeof(EquipmentSlot), nameof(EquipmentSlot.InvokeRpcRpcOnClientEquipmentActivationRecieved))]
+
+        [HarmonyPrefix,
+         HarmonyPatch(typeof(EquipmentSlot), nameof(EquipmentSlot.InvokeRpcRpcOnClientEquipmentActivationRecieved))]
         public static bool NetReceive(NetworkBehaviour obj, NetworkReader reader) // 2.5
         {
             EquipmentActivationState state = EquipmentActivationState.ConsumeStock;
             try
             {
-                state = (EquipmentActivationState) reader.ReadByte();
-            } catch (IndexOutOfRangeException){}
+                state = (EquipmentActivationState)reader.ReadByte();
+            }
+            catch (IndexOutOfRangeException)
+            {
+            }
 
-            var __instance = (EquipmentSlot) obj;
+            var __instance = (EquipmentSlot)obj;
             var equipmentDef = EquipmentCatalog.GetEquipmentDef(__instance.equipmentIndex);
             var equipment = Equipments.FirstOrDefault(x => x.EquipmentDef == equipmentDef);
             if (equipment != null)
@@ -119,13 +139,14 @@ namespace BubbetsItems
             equipment?.AuthorityEquipmentPress(__instance);
         }
         //OnEquipmentExecuted runs EquipmentSlot.onServerEquipmentActivated and it runs on server right after calling the rpc so somewhere between second and third, maybe after third
-        
+
         [HarmonyPrefix, HarmonyPatch(typeof(EquipmentSlot), nameof(EquipmentSlot.PerformEquipmentAction))]
-        public static bool PerformEquipmentAction(EquipmentSlot __instance, EquipmentDef equipmentDef, ref bool __result) // second, server
+        public static bool PerformEquipmentAction(EquipmentSlot __instance, EquipmentDef equipmentDef,
+            ref bool __result) // second, server
         {
             var equipment = Equipments.FirstOrDefault(x => x.EquipmentDef == equipmentDef);
             if (equipment == null) return true;
-            
+
             try
             {
                 var state = equipment.PerformEquipment(__instance);
@@ -136,12 +157,12 @@ namespace BubbetsItems
                     networkWriter.StartMessage(2); // 2 being rpc
                     networkWriter.WritePackedUInt32((uint)EquipmentSlot.kRpcRpcOnClientEquipmentActivationRecieved);
                     networkWriter.Write(__instance.GetComponent<NetworkIdentity>().netId);
-                    networkWriter.Write((byte) state); // this may end up breaking other mods, maybe.
+                    networkWriter.Write((byte)state); // this may end up breaking other mods, maybe.
                     // if that happens use my own packeduint32 and hook static constructor of equipmentslot and call NetworkBehaviour.RegisterRpcDelegate with my id and point it to a static method here
                     // NetworkBehaviour.RegisterRpcDelegate(typeof(EquipmentSlot), myID, new NetworkBehaviour.CmdDelegate(EquipmentBase.InvokeRpcEquipment));
                     // rpcName is unused, not sure why it even exists
                     __instance.SendRPCInternal(networkWriter, 0, "RpcOnClientEquipmentActivationRecieved");
-                } 
+                }
             }
             catch (Exception e)
             {
@@ -156,7 +177,7 @@ namespace BubbetsItems
         {
             var c = new ILCursor(il);
             var activeFlag = -1;
-            c.GotoNext( MoveType.After,
+            c.GotoNext(MoveType.After,
                 x => x.MatchLdarg(0),
                 x => x.MatchLdfld<EquipmentSlot>("targetIndicator"),
                 x => x.MatchLdloc(out activeFlag)
@@ -168,11 +189,14 @@ namespace BubbetsItems
             c.Emit(OpCodes.Or);
             c.Emit(OpCodes.Stloc, activeFlag);
         }
-        public static bool UpdateTargetsHook(EquipmentSlot __instance) // this is probably the most expensive function in my mod, its mostly because of the linq inside a update function which is pretty ew but im not smart enough to change it
+
+        public static bool
+            UpdateTargetsHook(
+                EquipmentSlot __instance) // this is probably the most expensive function in my mod, its mostly because of the linq inside a update function which is pretty ew but im not smart enough to change it
         {
             var equipment = Equipments.FirstOrDefault(x => x.EquipmentDef.equipmentIndex == __instance.equipmentIndex);
             if (equipment == null) return false;
-            
+
             try
             {
                 return equipment.UpdateTargets(__instance);
@@ -185,17 +209,24 @@ namespace BubbetsItems
             return false;
         }
 
-        public override string GetFormattedDescription(Inventory? inventory = null, string? token = null, bool forceHideExtended = false)
+        public override string GetFormattedDescription(Inventory? inventory = null, string? token = null,
+            bool forceHideExtended = false)
         {
             return Language.GetString(token ?? EquipmentDef.descriptionToken);
         }
 
-        [HarmonyPrefix, HarmonyPatch(typeof(Inventory), nameof(Inventory.SetEquipmentInternal))]
-        public static void OnEquipmentSwap(Inventory __instance, EquipmentState equipmentState, uint slot)
+        [HarmonyPrefix, HarmonyPatch(typeof(Inventory), nameof(Inventory.SetEquipmentInternal), typeof(EquipmentState), typeof(uint), typeof(uint))]
+        public static void OnEquipmentSwap(Inventory __instance, EquipmentState equipmentState, uint slot, uint set)
         {
             EquipmentState? oldState = null;
-            if (__instance.equipmentStateSlots.Length > slot)
-                oldState = __instance.equipmentStateSlots[(int) slot];
+            try
+            {
+                oldState = __instance._equipmentStateSlots[slot][set];
+            }
+            catch (IndexOutOfRangeException)
+            {
+            }
+
             if (oldState.Equals(equipmentState)) return;
             if (oldState?.equipmentIndex == equipmentState.equipmentIndex) return;
 
@@ -223,24 +254,25 @@ namespace BubbetsItems
                 newEquip?.sharedInfo.Logger.LogError(e);
             }
         }
-        
+
         public override void AddDisplayRules(VanillaIDRS which, ItemDisplayRule[] displayRules)
         {
             var set = IDRHelper.GetRuleSet(which);
             if (set is null) return;
             set.keyAssetRuleGroups = set.keyAssetRuleGroups.AddItem(new ItemDisplayRuleSet.KeyAssetRuleGroup
             {
-                displayRuleGroup = new DisplayRuleGroup {rules = displayRules},
+                displayRuleGroup = new DisplayRuleGroup { rules = displayRules },
                 keyAsset = EquipmentDef
             }).ToArray();
         }
+
         public override void AddDisplayRules(ModdedIDRS which, ItemDisplayRule[] displayRules)
         {
             var set = IDRHelper.GetRuleSet(which);
             if (set is null) return;
             set.keyAssetRuleGroups = set.keyAssetRuleGroups.AddItem(new ItemDisplayRuleSet.KeyAssetRuleGroup
             {
-                displayRuleGroup = new DisplayRuleGroup {rules = displayRules},
+                displayRuleGroup = new DisplayRuleGroup { rules = displayRules },
                 keyAsset = EquipmentDef
             }).ToArray();
         }
@@ -260,9 +292,11 @@ namespace BubbetsItems
                 if (equipmentDef is null) continue;
                 if (MatchName(equipmentDef.name, name)) EquipmentDef = equipmentDef;
             }
+
             if (EquipmentDef == null)
             {
-                sharedInfo.Logger?.LogWarning($"Could not find EquipmentDef for item {this} in serializableContentPack, class/equipmentdef name are probably mismatched. This will throw an exception later.");
+                sharedInfo.Logger?.LogWarning(
+                    $"Could not find EquipmentDef for item {this} in serializableContentPack, class/equipmentdef name are probably mismatched. This will throw an exception later.");
             }
         }
 
@@ -276,8 +310,8 @@ namespace BubbetsItems
                     if (MatchName(equipmentDef.name, name))
                         EquipmentDef = equipmentDef;
             }
-            
-            if (EquipmentDef == null) 
+
+            if (EquipmentDef == null)
                 sharedInfo.Logger?.LogWarning(
                     $"Could not find EquipmentDef for item {this}, class/equipmentdef name are probably mismatched. This will throw an exception later.");
         }

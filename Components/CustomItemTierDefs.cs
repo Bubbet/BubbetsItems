@@ -128,6 +128,7 @@ namespace BubbetsItems
 
 			foreach (var itemTierDef in bubsItemsContentPackProvider.itemTierDefs)
 			{
+				itemTierDef.tier = ItemTier.AssignedAtRuntime;
 				itemTierDef.highlightPrefab = old.highlightPrefab;
 				itemTierDef.dropletDisplayPrefab = old.dropletDisplayPrefab;
 				recyclerTiers.Add(itemTierDef);

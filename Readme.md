@@ -71,6 +71,15 @@ Patience is key~
     - `Conq#1738` for the item stats descriptions
 
 # Changelog
+* v1.8.17 Mod Changes:
+    * Updated for Alloyed Collective
+        * Fix void scrap cost pay
+        * Fix void lunar pickup display effects
+        * Fix broken clocks deduction on finishing effect
+        * Fix onEquip and onUnequip for equipments
+        * Fix seeping oceans lunar converting
+
+
 * v1.8.16 Mod Changes:
     * Fix Shifted Quarts, Zealotry Embrace and Jellied Soles for the dlc2 phase 1.
 

@@ -53,7 +53,7 @@ namespace BubbetsItems
 
 		public void Update()
 		{
-			var pickupDef = PickupCatalog.GetPickupDef(_display.pickupIndex);
+			var pickupDef = PickupCatalog.GetPickupDef(_display.GetPickupIndex());
 			if (pickupDef == null || _set) return;
 			_set = true;
 			var itemIndex = pickupDef.itemIndex;

@@ -20,8 +20,8 @@ namespace BubbetsItems.Items.BarrierItems
 			AddToken("ETERNALSLUG_NAME","Eternal Slug");
 			//AddToken("ETERNALSLUG_DESC", "Stops " + "temporary barrier ".Style(StyleEnum.Heal) + "from decaying naturally past " + "{0:0%}".Style(StyleEnum.Heal) + ".");
 			//AddToken("ETERNALSLUG_DESC_SIMPLE", "Stops " + "temporary barrier ".Style(StyleEnum.Heal) + "from decaying naturally past " + "36% ".Style(StyleEnum.Heal) + "(stacks logarithmically, caps at 80%)".Style(StyleEnum.Stack) + ".");
-			AddToken("ETERNALSLUG_DESC", "Prevents temporary barrier decay at a low amount, and reduces barrier decay."); //
-            AddToken("ETERNALSLUG_DESC_SIMPLE", "Prevents " + "temporary barrier decay".Style(StyleEnum.Heal) + " at " + "{1:0%} maximum health".Style(StyleEnum.Heal) + ". Reduces " + "temporary barrier decay".Style(StyleEnum.Heal) + " by " + "{0:0%}".Style(StyleEnum.Heal) + "(+10% hyperbolically per stack)".Style(StyleEnum.Stack) + ".");
+			AddToken("ETERNALSLUG_DESC_SIMPLE", "Prevents " + "temporary barrier ".Style(StyleEnum.Heal) + "from decaying naturally past " + "36% ".Style(StyleEnum.Heal) + "(stacks logarithmically, caps at 80%)".Style(StyleEnum.Stack) + ".");
+            AddToken("ETERNALSLUG_DESC", "Prevents " + "temporary barrier decay".Style(StyleEnum.Heal) + " at " + "{1:0%} maximum health".Style(StyleEnum.Heal) + ". Reduces " + "temporary barrier decay".Style(StyleEnum.Heal) + " by " + "{0:0%}".Style(StyleEnum.Heal) + "(+10% hyperbolically per stack)".Style(StyleEnum.Stack) + ".");
 			SimpleDescriptionToken = "ETERNALSLUG_DESC_SIMPLE";
 			//AddToken("ETERNALSLUG_PICKUP", "Stops barrier decay at a certain point.");
 			AddToken("ETERNALSLUG_PICKUP", "Prevents temporary barrier decay at a low amount, and reduces barrier decay."); //

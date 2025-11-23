@@ -6,15 +6,12 @@ using HarmonyLib;
 using RiskOfOptions;
 using RiskOfOptions.Options;
 using RoR2;
-using RoR2.Items;
 
 namespace BubbetsItems.Items
 {
 	public class VoidJunkToScrapTier1 : ItemBase
 	{
 		public static ConfigEntry<bool>? CanConsumeLastStack;
-		private static CostTypeDef.IsAffordableDelegate? _oldCan;
-		private static CostTypeDef.PayCostDelegate? _oldCost;
 		protected override void MakeTokens()
 		{
 			base.MakeTokens();
@@ -43,110 +40,28 @@ namespace BubbetsItems.Items
 		{
 			AddVoidPairing("FragileDamageBonusConsumed HealingPotionConsumed ExtraLifeVoidConsumed ExtraLifeConsumed MysticsItems_LimitedArmorBroken DRUMSTICKCONSUMED ITEM_CARTRIDGECONSUMED ITEM_SINGULARITYCONSUMED ITEM_BROKEN_MESS ConsumedGlassShield_ItemDef TreasureCacheConsumed TreasureCacheVoidConsumed", oldDefault: "FragileDamageBonusConsumed HealingPotionConsumed ExtraLifeVoidConsumed ExtraLifeConsumed");
 		}
-		[HarmonyPostfix, HarmonyPatch(typeof(CostTypeCatalog), nameof(CostTypeCatalog.Init))]
-		public static void FixBuying()
+
+		[HarmonyPrefix, HarmonyPatch(typeof(CostTypeCatalog), "<Init>g__PayCostItems|5_1")]
+		public static void PrefixItemPayCost(CostTypeDef.PayCostContext context, CostTypeDef.PayCostResults result)
 		{
-			try
+			if (context.costTypeDef.itemTier != ItemTier.Tier1) return;
+			if (!TryGetInstance(out VoidJunkToScrapTier1 voidJunkToScrapTier1)) return;
+			var inv = context.activatorBody.inventory;
+			var voidAmount = Math.Min(context.cost, Math.Max(0, inv.GetItemCountPermanent(voidJunkToScrapTier1.ItemDef) - (CanConsumeLastStack!.Value ? 0 : 1)));
+			for (var i = 0; i < voidAmount; i++)
 			{
-				var def = CostTypeCatalog.GetCostTypeDef(CostTypeIndex.WhiteItem);
-				_oldCan = def.isAffordable;
-				def.isAffordable = IsAffordable;
-				_oldCost = def.payCost;
-				def.payCost = PayCost;
-			}
-			catch (Exception e)
-			{
-				BubbetsItemsPlugin.Log.LogError(e);
-			}
-		}
-
-		public static void PayCost(CostTypeDef typeDef, CostTypeDef.PayCostContext context)
-		{
-			if (typeDef.itemTier != ItemTier.Tier1)
-			{
-				_oldCost!(typeDef, context);
-				return;
-			}
-
-			try
-			{
-				var inv = context.activatorBody.inventory;
-
-				var highestPriority = new WeightedSelection<ItemIndex>();
-				var higherPriority = new WeightedSelection<ItemIndex>();
-				var highPriority = new WeightedSelection<ItemIndex>();
-				var normalPriority = new WeightedSelection<ItemIndex>();
-
-				if (!TryGetInstance(out VoidJunkToScrapTier1 voidJunkToScrapTier1)) return;
-				var voidAmount = Math.Max(0, inv.GetItemCount(voidJunkToScrapTier1!.ItemDef) - (CanConsumeLastStack!.Value ? 0 : 1));
-				if (voidAmount > 0) highestPriority.AddChoice(voidJunkToScrapTier1.ItemDef.itemIndex, voidAmount);
-
-				foreach (var itemIndex in ItemCatalog.tier1ItemList)
+				var itemTransformation = new Inventory.ItemTransformation
 				{
-					if (itemIndex == context.avoidedItemIndex) continue;
-					var count = inv.GetItemCount(itemIndex);
-					if (count > 0)
-					{
-						var itemDef = ItemCatalog.GetItemDef(itemIndex);
-						(itemDef.ContainsTag(ItemTag.PriorityScrap) ? higherPriority : itemDef.ContainsTag(ItemTag.Scrap) ? highPriority : normalPriority).AddChoice(itemIndex, count);
-					}
-				}
-
-				var itemsToTake = new List<ItemIndex>();
-
-				TakeFromWeightedSelection(highestPriority, ref context, ref itemsToTake);
-				TakeFromWeightedSelection(higherPriority, ref context, ref itemsToTake);
-				TakeFromWeightedSelection(highPriority, ref context, ref itemsToTake);
-				TakeFromWeightedSelection(normalPriority, ref context, ref itemsToTake);
-
-				for (var i = itemsToTake.Count; i < context.cost; i++) itemsToTake.Add(context.avoidedItemIndex);
-
-				context.results.itemsTaken = itemsToTake;
-				foreach (var itemIndex in itemsToTake) inv.RemoveItem(itemIndex);
-				MultiShopCardUtils.OnNonMoneyPurchase(context);
-			}
-			catch (Exception e)
-			{
-				BubbetsItemsPlugin.Log.LogError(e);
-			}
-		}
-
-		public static bool IsAffordable(CostTypeDef typeDef, CostTypeDef.IsAffordableContext context)
-		{
-			if (_oldCan!(typeDef, context)) return true;
-			try
-			{
-				if (typeDef.itemTier != ItemTier.Tier1) return false;
-				var inv = context.activator.GetComponent<CharacterBody>().inventory;
-				if (!TryGetInstance(out VoidJunkToScrapTier1 voidJunkToScrapTier1)) return false;
-				var voidAmount = Math.Max(0, inv.GetItemCount(voidJunkToScrapTier1!.ItemDef) - (CanConsumeLastStack!.Value ? 0 : 1));
-				return inv.GetTotalItemCountOfTier(ItemTier.Tier1) + voidAmount >= context.cost;
-			}
-			catch (Exception e)
-			{
-				BubbetsItemsPlugin.Log.LogError(e);
-				return false;
-			}
-		}
-
-		public static void TakeFromWeightedSelection(WeightedSelection<ItemIndex> weightedSelection, ref CostTypeDef.PayCostContext context, ref List<ItemIndex> itemsToTake)
-		{
-			while (weightedSelection.Count > 0 && itemsToTake.Count < context.cost)
-			{
-				var choiceIndex = weightedSelection.EvaluateToChoiceIndex(context.rng.nextNormalizedFloat);
-				var choice = weightedSelection.GetChoice(choiceIndex);
-				var value = choice.value;
-				var num = (int)choice.weight;
-				num--;
-				if (num <= 0)
+					originalItemIndex = voidJunkToScrapTier1.ItemDef.itemIndex,
+					newItemIndex = ItemIndex.None,
+					maxToTransform = 1,
+					forbidTempItems = true
+				};
+				if (itemTransformation.TryTransform(inv, out var tryTransformResult))
 				{
-					weightedSelection.RemoveChoice(choiceIndex);
+					result.AddTakenItemsFromTransformation(tryTransformResult);
+					context.cost--;
 				}
-				else
-				{
-					weightedSelection.ModifyChoiceWeight(choiceIndex, num);
-				}
-				itemsToTake.Add(value);
 			}
 		}
 	}
