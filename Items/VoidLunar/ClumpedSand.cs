@@ -81,7 +81,7 @@ namespace BubbetsItems.Items.VoidLunar
 			if (!TryGetInstance(out ClumpedSand inst)) return;
 			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return;
-			__instance.regen += inst.ScalingInfos[1].ScalingFunction(amount);
+			args.baseRegenAdd += inst.ScalingInfos[1].ScalingFunction(amount);
 		}
 	}
 }

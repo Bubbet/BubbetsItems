@@ -236,7 +236,7 @@ namespace BubbetsItems.Items
             if (!TryGetInstance(out BunnyFoot bunnyFoot)) return oldSolvedVelocity;
             var count = 0;
             var inv = motor.body.inventory;
-            if (inv) count = inv.GetItemCountPermanent(bunnyFoot.ItemDef);
+            if (inv) count = inv.GetItemCountEffective(bunnyFoot.ItemDef);
             if (count <= 0 || motor.disableAirControlUntilCollision || motor.Motor.GroundingStatus.IsStableOnGround)
                 return oldSolvedVelocity;
 

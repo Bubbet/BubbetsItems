@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using BubbetsItems.Components;
 using BubbetsItems.Helpers;
 using HarmonyLib;
 using RoR2;
@@ -59,14 +58,12 @@ namespace BubbetsItems.Items.BarrierItems
 		{
 			base.MakeBehaviours();
 			GlobalEventManager.onCharacterDeathGlobal += OnDeath;
-			CommonBodyPatches.CollectExtraStats += GetBarrierDecay;
 		}
 
 		protected override void DestroyBehaviours()
 		{
 			base.MakeBehaviours();
 			GlobalEventManager.onCharacterDeathGlobal -= OnDeath;
-			CommonBodyPatches.CollectExtraStats -= GetBarrierDecay;
 		}
 
 		private void OnDeath(DamageReport obj)
@@ -85,18 +82,22 @@ namespace BubbetsItems.Items.BarrierItems
 			NetworkServer.Spawn(shard);
 		}
 
-		private void GetBarrierDecay(ref CommonBodyPatches.ExtraStats obj)
+		[HarmonyPostfix, HarmonyPatch(typeof(HealthComponent), nameof(HealthComponent.GetBarrierDecayRate))]
+		private static void GetBarrierDecay(HealthComponent __instance, ref float __result)
 		{
-			var count = obj.inventory.GetItemCount(ItemDef);
+			if (!TryGetInstance<BoneVisor>(out var inst)) return;
+			var body = __instance.body;
+			if (!body) return;
+			var inv = body.inventory;
+			if (!inv) return;
+			var count = inv.GetItemCountEffective(inst.ItemDef);
 			if (count <= 0) count = 1;
-			var buffCount = obj.body.GetBuffCount(BuffDef);
+			var buffCount = body.GetBuffCount(BuffDef);
 			if (buffCount <= 0) return;
-			var info = ScalingInfos[2];
+			var info = inst.ScalingInfos[2];
 			info.WorkingContext.b = buffCount;
-			info.WorkingContext.m = obj.body.maxBarrier;
-			obj.barrierDecayMult = 1f;
-			obj.barrierDecayAdd = -info.ScalingFunction(count);
-			obj.priority = 1;
+			info.WorkingContext.m = body.maxBarrier;
+			__result = -info.ScalingFunction(count);
 		}
 	}
 

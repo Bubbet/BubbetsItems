@@ -139,14 +139,14 @@ namespace BubbetsItems
 
         private static Regex formatArgParams = new Regex(@"({\d:?.*?})+", RegexOptions.Compiled);
 
-        public override string GetFormattedDescription(Inventory? inventory, string? token = null,
+        public override string GetFormattedDescription(AdditionalFormatOptions opts, Inventory? inventory, string? token = null,
             bool forceHideExtended = false)
         {
             // ReSharper disable twice Unity.NoNullPropagation
 
             if (ScalingInfos.Count <= 0) return Language.GetString(ItemDef.descriptionToken);
 
-            var formatArgs = ScalingInfos.Select(info => info.ScalingFunction(inventory?.GetItemCount(ItemDef)))
+            var formatArgs = ScalingInfos.Select(info => info.ScalingFunction(opts.OverrideItemCount ?? inventory?.GetItemCount(ItemDef)))
                 .Cast<object>().ToArray();
 
             var corruption = "";

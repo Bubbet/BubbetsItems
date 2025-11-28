@@ -34,7 +34,18 @@ namespace BubbetsItems.Items.VoidLunar
             AddToken(name + "_PICKUP", "Seems to do nothing... but... " + convert);
             AddToken(name + "_LORE", "");
         }
-
+        public override string GetFormattedDescription(Inventory? inventory, string? token = null,
+            bool forceHideExtended = false)
+        {
+            var master = inventory ? inventory!.GetComponent<CharacterMaster>() : null;
+            if (master)
+                return base.GetFormattedDescription(
+                    new AdditionalFormatOptions()
+                    {
+                        OverrideItemCount = Util.GetItemCountForTeam(master!.teamIndex, ItemDef.itemIndex, false, false)
+                    },null, token, forceHideExtended);
+            return base.GetFormattedDescription(null, token, forceHideExtended);
+        }
         protected override void MakeConfigs()
         {
             base.MakeConfigs();

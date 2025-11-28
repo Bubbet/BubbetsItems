@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BepInEx.Configuration;
+using BubbetsItems.Helpers;
 using HarmonyLib;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
@@ -11,6 +12,7 @@ using RiskOfOptions.Options;
 using RoR2;
 using RoR2.ContentManagement;
 using RoR2.ExpansionManagement;
+using RoR2.Networking;
 using UnityEngine.Networking;
 
 namespace BubbetsItems
@@ -22,9 +24,6 @@ namespace BubbetsItems
         {
             var name = GetType().Name;
             Enabled = sharedInfo.ConfigFile.Bind("Disable Equipments", name, true, "Should this equipment be enabled.");
-            Cooldown = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.EquipmentCooldowns, name,
-                EquipmentDef ? EquipmentDef.cooldown : 15f, "Cooldown for this equipment.");
-            Cooldown.SettingChanged += CooldownChanged;
         }
 
         //[SystemInitializer(typeof(EquipmentCatalog))]
@@ -73,7 +72,11 @@ namespace BubbetsItems
 
         protected virtual void PostEquipmentDef()
         {
-            EquipmentDef.cooldown = Cooldown.Value;
+            var name = GetType().Name;
+            Cooldown = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.EquipmentCooldowns, name,
+                EquipmentDef ? EquipmentDef.cooldown : 15f, "Cooldown for this equipment.");
+            Cooldown.SettingChanged += CooldownChanged;
+            CooldownChanged(null, null);
         }
 
         public EquipmentDef EquipmentDef = null!;
@@ -339,5 +342,74 @@ namespace BubbetsItems
             else
                 EquipmentDef.requiredExpansion = sharedInfo.Expansion;
         }
+
+        public static EquipmentSlot SetEquipmentSlotAndSet(EquipmentSlot equipSlot, short slot,
+            short set)
+        {
+            if (equipSlot.inventory != null)
+            {
+                var inv = equipSlot.inventory;
+
+                var clampedSlot = slot % inv.activeEquipmentSet.Length;
+                inv.activeEquipmentSlot = (byte)clampedSlot;
+                inv.activeEquipmentSet[clampedSlot] = (byte)(set % inv._equipmentStateSlots[clampedSlot].Length);
+                inv._activeEquipmentDirty = true;
+                inv.wasRecentlyExtraEquipmentSwapped = true;
+                inv.SetDirtyBit(16U);
+                inv.HandleInventoryChanged();
+            }
+            return equipSlot;
+        }
+        public static EquipmentSlot SetEquipmentSlotAndSet(NetworkMessage netMsg)
+        {
+            return SetEquipmentSlotAndSet(netMsg.reader.ReadNetworkIdentity().GetComponent<EquipmentSlot>(), netMsg.reader.ReadByte(),
+                netMsg.reader.ReadByte());
+        }
+
+        public static void SendEquipmentSlotAndSet(short msgType, EquipmentSlot equipSlot, short slot, short set)
+        {
+            _messageWriter.StartMessage(msgType);
+            _messageWriter.Write(equipSlot.netIdentity);
+            _messageWriter.Write(slot);
+            _messageWriter.Write(set);
+            _messageWriter.FinishMessage();
+            ClientScene.readyConnection.SendWriter(_messageWriter, QosChannelIndex.defaultReliable.intVal);
+        }
+        
+        [ExtraNetworkMessageHandler(server = true)]
+        public static void HandleSetEquipmentSlotAndSet(NetworkMessage netMsg)
+        {
+            SetEquipmentSlotAndSet(netMsg);
+        }
+
+        public static void CmdSetEquipmentSlotAndSet(EquipmentSlot equipSlot, short slot, short set)
+        {
+            if (NetworkServer.active)
+            {
+                SetEquipmentSlotAndSet(equipSlot, slot, set);
+                return;
+            }
+            SendEquipmentSlotAndSet(ExtraNetworkMessageHandlerAttribute.GetMsgType<EquipmentBase>(nameof(HandleSetEquipmentSlotAndSet)) ?? throw new InvalidOperationException(), equipSlot, slot, set);
+        }
+        
+        [ExtraNetworkMessageHandler(server = true)]
+        public static void HandleExecuteEquipmentSlotAndSet(NetworkMessage netMsg)
+        {
+            var slot = SetEquipmentSlotAndSet(netMsg);
+            slot.Invoke(nameof(EquipmentSlot.ExecuteIfReady), 0.1f);
+        }
+        
+        public static void CmdExecuteEquipmentSlotAndSet(EquipmentSlot equipSlot, short slot, short set)
+        {
+            if (NetworkServer.active)
+            {
+                SetEquipmentSlotAndSet(equipSlot, slot, set);
+                equipSlot.ExecuteIfReady();
+                return;
+            }
+            SendEquipmentSlotAndSet(ExtraNetworkMessageHandlerAttribute.GetMsgType<EquipmentBase>(nameof(HandleExecuteEquipmentSlotAndSet)) ?? throw new InvalidOperationException(), equipSlot, slot, set);            
+        }
+        
+        private static NetworkWriter _messageWriter = new NetworkWriter();
     }
 }

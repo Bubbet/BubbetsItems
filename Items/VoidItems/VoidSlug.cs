@@ -67,7 +67,7 @@ namespace BubbetsItems.Items
 			if (count <= 0 || __instance.outOfDanger) return;
 			var info = voidSlug.ScalingInfos[0];
 			info.WorkingContext.h = __instance.healthComponent.missingCombinedHealth;
-			__instance.regen += info.ScalingFunction(count);
+			args.baseRegenAdd += info.ScalingFunction(count);
 		}
 	}
 }

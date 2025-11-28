@@ -12,7 +12,7 @@ using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BubbetsItems.Behaviours;
-using BubbetsItems.Components;
+using BubbetsItems.Equipments;
 using BubbetsItems.Helpers;
 using EntityStates;
 using HarmonyLib;
@@ -110,10 +110,6 @@ namespace BubbetsItems
             
             VoidLunarShopController.Init();
 
-            InLobbyConfigCompat.Init();
-            RiskOfOptionsCompat.Init();
-
-            new PatchClassProcessor(harm, typeof(CommonBodyPatches)).Patch();
             new PatchClassProcessor(harm, typeof(HarmonyPatches)).Patch();
             new PatchClassProcessor(harm, typeof(PickupTooltipFormat)).Patch();
             new PatchClassProcessor(harm, typeof(LogBookPageScalingGraph)).Patch();
@@ -125,6 +121,7 @@ namespace BubbetsItems
             {
                 Log.LogInfo("R2Api RecalcStats not present, patching myself.");
                 new PatchClassProcessor(harm, typeof(RecalculateStatsAPI)).Patch();
+                RecalculateStatsAPI.Initialize();
             }
             
             ColorCatalogPatches.AddNewColors();
@@ -148,13 +145,15 @@ namespace BubbetsItems
                 if (File.Exists(path))
                     list.Add(path);
             };
-
+            
             //PickupTooltipFormat.Init(harm);
             ItemStatsCompat.Init();
         }
 
         private void onLoad()
         {
+            InLobbyConfigCompat.Init();
+            RiskOfOptionsCompat.Init();
             if (Chainloader.PluginInfos.ContainsKey("bubbet.zioconfigfile"))
             {
                 ZioConfigSetup();
@@ -162,7 +161,7 @@ namespace BubbetsItems
                     Conf.MakeRiskOfOptionsZio();
             }
             ConfigCategories.Init();
-            BubEventFunctions.Init();
+            ExtraNetworkMessageHandlerAttribute.Initialize();
         }
 
         private void ZioConfigSetup()

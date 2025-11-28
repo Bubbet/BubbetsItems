@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using BubbetsItems.Helpers;
 using RoR2;
 using RoR2.Networking;
 using UnityEngine;
@@ -15,30 +16,15 @@ namespace BubbetsItems.Behaviours
 			if (!body) return;
 			if (!Util.HasEffectiveAuthority(interactor.gameObject) && NetworkServer.active)
 			{
-				interactor.connectionToClient.Send(MsgType, new EventMessage(GetComponent<NetworkIdentity>().netId, EventMessage.MessageType.Oob, body.netId));
+				body.master.playerCharacterMasterController.networkUser.connectionToClient.Send(MsgType, new EventMessage(GetComponent<NetworkIdentity>().netId, EventMessage.MessageType.Oob, body.netId));
 				return; 
 			}
 			var zone = InstanceTracker.GetInstancesList<MapZone>().First();
 			zone.TeleportBody(body);
 		}
 
-		public static void Init()
-		{
-			NetworkManagerSystem.onStartClientGlobal += RegisterMessages;
-		}
-
-		private const short MsgType = 391;
-		public static void RegisterMessages(NetworkClient client)
-		{
-			try
-			{
-				client.RegisterHandler(MsgType, EventMessage.Handle);
-			}
-			catch (Exception f)
-			{
-				BubbetsItemsPlugin.Log.LogError(f);
-			}
-		}
+		private static short? _msgType;
+		private static short MsgType => _msgType ??= ExtraNetworkMessageHandlerAttribute.GetMsgType<EventMessage>(nameof(EventMessage.Handle)) ?? throw new Exception("Failed to get MsgType for ConfigSync");
 	}
 
 	public class EventMessage : MessageBase
@@ -60,6 +46,8 @@ namespace BubbetsItems.Behaviours
 		{
 			Oob
 		}
+		
+		[ExtraNetworkMessageHandler(client = true)]
 		public static void Handle(NetworkMessage netmsg)
 		{
 			var message = netmsg.ReadMessage<EventMessage>();

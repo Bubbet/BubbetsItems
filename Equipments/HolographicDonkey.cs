@@ -13,6 +13,8 @@ namespace BubbetsItems.Equipments
 {
 	public class HolographicDonkey : EquipmentBase
 	{
+		public static ConfigEntry<int> SoundFrequency;
+		public static ConfigEntry<float> DonkeyVolume;
 		public const DeployableSlot Slot = (DeployableSlot) 340504;
 		protected override void MakeConfigs()
 		{
@@ -20,6 +22,7 @@ namespace BubbetsItems.Equipments
 			TargetAttachedTo = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Holographic Donkey Target Attached To", false, "Should the enemies try to target the enemy the donkey is attached to or just the donkey.");
 			Duration = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Holographic Donkey Duration", 15f, "Donkey effect duration.");
 			Range = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Holographic Donkey Range", 60f, "Donkey effect range.");
+			SoundFrequency = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Holographic Donkey Sound Frequency", 3, "Donkey sound play frequency in seconds.");
 			// range
 		}
 
@@ -59,8 +62,20 @@ namespace BubbetsItems.Equipments
 		public static ConfigEntry<bool> TargetAttachedTo = null!;
 		public static ConfigEntry<float> Duration = null!;
 		public static ConfigEntry<float> Range = null!;
-		public static GameObject Projectile => _projectile ??= BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("HolographicDonkeyProjectile");
-		
+		public static GameObject Projectile
+		{
+			get
+			{
+				if (_projectile is null)
+				{
+					_projectile = BubbetsItemsPlugin.AssetBundle.LoadAsset<GameObject>("HolographicDonkeyProjectile");
+					_projectile.GetComponent<HealthComponent>().dontShowHealthbar = true;
+				}
+
+				return _projectile;
+			}
+		}
+
 		public override void PerformClientAction(EquipmentSlot equipmentSlot, EquipmentActivationState state)
 		{
 			if (state == EquipmentActivationState.ConsumeStock)
@@ -86,6 +101,20 @@ namespace BubbetsItems.Equipments
 				}
 			);
 			return EquipmentActivationState.ConsumeStock;
+		}
+
+		public override void MakeZioOptions()
+		{
+			base.MakeZioOptions();
+			DonkeyVolume = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Donkey Volume", 50f, "Volume of the holographic donkey.", networked: false);
+			DonkeyVolume.SettingChanged += (_, _) => AkSoundEngine.SetRTPCValue("Volume_Donkey", DonkeyVolume.Value);
+			AkSoundEngine.SetRTPCValue("Volume_Donkey", DonkeyVolume.Value);
+		}
+
+		public override void MakeZioRiskOfOptions()
+		{
+			base.MakeZioRiskOfOptions();
+			ModSettingsManager.AddOption(new SliderOption(DonkeyVolume));
 		}
 	}
 
@@ -147,7 +176,8 @@ namespace BubbetsItems.Equipments
 			if (NetworkServer.active && justStuck && impact.stuckTransform)
 			{
 				justStuck = false;
-				stuckTo = impact.stuckBody;
+				if (impact.NetworksyncVictim)
+					stuckTo = impact.NetworksyncVictim.GetComponent<CharacterBody>();
 				if (stuckTo)
 				{
 					stuckToTeam = stuckTo.teamComponent.teamIndex;
@@ -199,7 +229,7 @@ namespace BubbetsItems.Equipments
 					}
 				}
 
-				if (sound % 2 == 0) Util.PlaySound("Play_AttractDonkey", gameObject); 
+				if (sound > 3 && sound % HolographicDonkey.SoundFrequency.Value == 0) Util.PlaySound("Play_AttractDonkey", gameObject); 
 				sound++;
 			}
 			donkeyTransform.Rotate(0, 30f * time, 0);
@@ -248,7 +278,12 @@ namespace BubbetsItems.Equipments
 					procCoefficient = damageReport.damageInfo.procCoefficient,
 					canRejectForce = damageReport.damageInfo.canRejectForce,
 					damageColorIndex = damageReport.damageInfo.damageColorIndex,
-					procChainMask = damageReport.damageInfo.procChainMask
+					procChainMask = damageReport.damageInfo.procChainMask,
+					
+					delayedDamageSecondHalf = damageReport.damageInfo.delayedDamageSecondHalf,
+					firstHitOfDelayedDamageSecondHalf = damageReport.damageInfo.firstHitOfDelayedDamageSecondHalf,
+					inflictedHurtbox = damageReport.damageInfo.inflictedHurtbox,
+					physForceFlags = damageReport.damageInfo.physForceFlags
 				};
 				stuckTo.healthComponent.TakeDamage(damageInfo);
 			}

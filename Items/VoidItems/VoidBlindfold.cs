@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using BepInEx.Configuration;
 using BubbetsItems.Helpers;
 using HarmonyLib;
 using RiskOfOptions;
 using RiskOfOptions.Options;
 using RoR2;
+using RoR2.ContentManagement;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -31,6 +33,17 @@ namespace BubbetsItems.Items
 			AddScalingFunction("[a]", "Barnacle Count");
 			AddScalingFunction("[a] * 3", "Item Count");
 			_killOld = sharedInfo.ConfigFile.Bind(ConfigCategoriesEnum.General, "Void Blindfold Should Kill Old", true, "Should it kill the old minion, or just not spawn more.");
+		}
+		
+		protected override void FillDefsFromSerializableCP(SerializableContentPack serializableContentPack)
+		{
+			base.FillDefsFromSerializableCP(serializableContentPack);
+			BuffDef = ScriptableObject.CreateInstance<BuffDef>();
+			BuffDef.name = "BuffDefVoidBlindfoldCooldown";
+			BuffDef.isCooldown = true;
+			//BuffDef.iconSprite = BubbetsItemsPlugin.AssetBundle.LoadAsset<Sprite>("SnailBuff");
+			BuffDef.iconSprite = ItemDef.pickupIconSprite;
+			serializableContentPack.buffDefs = serializableContentPack.buffDefs.AddItem(BuffDef).ToArray();
 		}
 
 		protected override void FillVoidConversions(List<ItemDef.Pair> pairs)
@@ -77,6 +90,7 @@ namespace BubbetsItems.Items
 		{
 			var body = obj.attackerBody;
 			if (!body) return;
+			if (body.HasBuff(BuffDef)) return;
 			var master = obj.attackerMaster;
 			if (!master) return;
 			var inv = body.inventory;
@@ -90,6 +104,7 @@ namespace BubbetsItems.Items
 				if (count >= maxCount) return;
 			}
 
+			body.AddTimedBuff(BuffDef, 0.25f);
 			var request = new DirectorSpawnRequest( // RoR2/DLC1/VoidBarnacle/cscVoidBarnacleNoCast.asset
 				Csc, // RoR2/DLC1/VoidBarnacle/cscVoidBarnacle.asset
 				new DirectorPlacementRule
@@ -105,6 +120,7 @@ namespace BubbetsItems.Items
 
 		private SpawnCard? _csc;
 		private ConfigEntry<bool> _killOld = null!;
+		private BuffDef BuffDef;
 
 		public SpawnCard Csc => _csc ??= Addressables
 			.LoadAssetAsync<SpawnCard>("RoR2/DLC1/VoidBarnacle/cscVoidBarnacleAlly.asset").WaitForCompletion(); 
