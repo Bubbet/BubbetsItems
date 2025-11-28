@@ -26,7 +26,7 @@ namespace BubbetsItems.Items.VoidLunar
 		{
 			base.MakeConfigs();
 			AddScalingFunction("[a]", "Attack Hit Count");
-			AddScalingFunction("-3 * [a]", "Regen Add");
+			AddScalingFunction("-3 * [a]", "Regen Add", desc: "[a] = item count; [r] = current regen;");
 			AddScalingFunction("0.5", "Damage Mult");
 		}
 
@@ -72,6 +72,13 @@ namespace BubbetsItems.Items.VoidLunar
 			base.DestroyBehaviours();
 			RecalculateStatsAPI.GetStatCoefficients -= ReduceRegen;
 		}
+
+		private static float _oldRegen;
+		[HarmonyPrefix, HarmonyPatch(typeof(CharacterBody), nameof(CharacterBody.RecalculateStats))]
+		public static void StoreRegen(CharacterBody __instance)
+		{
+			_oldRegen = __instance.regen;
+		}
 		
 		public static void ReduceRegen(CharacterBody __instance, RecalculateStatsAPI.StatHookEventArgs args)
 		{
@@ -81,6 +88,7 @@ namespace BubbetsItems.Items.VoidLunar
 			if (!TryGetInstance(out ClumpedSand inst)) return;
 			var amount = inv.GetItemCount(inst.ItemDef);
 			if (amount <= 0) return;
+			inst.ScalingInfos[1].WorkingContext.r = _oldRegen;
 			args.baseRegenAdd += inst.ScalingInfos[1].ScalingFunction(amount);
 		}
 	}

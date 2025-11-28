@@ -71,6 +71,11 @@ Patience is key~
     - `Conq#1738` for the item stats descriptions
 
 # Changelog
+* v1.8.19 Mod Changes:
+    * Fixed a issue with the r2api.recalcstats compat layer.
+    * Added the old regen as a parameter for clumped sand. (no clue how someone would use this, but its there now)
+    * Logged the error when changing scaling function fails.
+
 * v1.8.18 Mod Changes:
     * Holographic Donkey
         * Fixed damage not forwarding.

@@ -445,8 +445,9 @@ namespace BubbetsItems
                     _function = new Expression(_configEntry.Value).ToLambda<ExpressionContext, float>();
                     _oldValue = _configEntry.Value;
                 }
-                catch (EvaluationException)
+                catch (Exception ex)
                 {
+                    BubbetsItemsPlugin.Log.LogError("Error parsing expression for " + _name + ": " + ex);
                 }
             }
         }

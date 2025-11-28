@@ -123,7 +123,11 @@ public static class RecalculateStatsAPI
         foreach (var (key, value) in _r2StatHookEventArgsFields)
         {
             if (_statHookFields.TryGetValue(key, out var field))
-                field.SetValue(_statMods, value.GetValue(args));
+                if (field.Name ==
+                    nameof(StatHookEventArgs.shouldFreezeBarrier))
+                    field.SetValue(_statMods, (bool) value.GetValue(args) ? 1 : 0);
+                else
+                    field.SetValue(_statMods, value.GetValue(args));
         }
 
         if (_getStatCoefficients == null) return;
