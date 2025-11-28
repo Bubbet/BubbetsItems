@@ -15,7 +15,7 @@ namespace BubbetsItems.Behaviours
 			if (!body) return;
 			if (!Util.HasEffectiveAuthority(interactor.gameObject) && NetworkServer.active)
 			{
-				interactor.connectionToClient.Send(MsgType, new EventMessage(GetComponent<NetworkIdentity>().netId, EventMessage.MessageType.Oob, body.netId));
+				body.master.playerCharacterMasterController.networkUser.connectionToClient.Send(MsgType, new EventMessage(GetComponent<NetworkIdentity>().netId, EventMessage.MessageType.Oob, body.netId));
 				return; 
 			}
 			var zone = InstanceTracker.GetInstancesList<MapZone>().First();
@@ -27,7 +27,7 @@ namespace BubbetsItems.Behaviours
 			NetworkManagerSystem.onStartClientGlobal += RegisterMessages;
 		}
 
-		private const short MsgType = 391;
+		private const short MsgType = 391; // TODO move to new system and fix this shit
 		public static void RegisterMessages(NetworkClient client)
 		{
 			try

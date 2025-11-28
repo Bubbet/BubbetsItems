@@ -9,6 +9,7 @@ using RiskOfOptions;
 using RiskOfOptions.Options;
 using RoR2;
 using UnityEngine;
+using UnityEngine.Networking;
 using Object = UnityEngine.Object;
 
 namespace BubbetsItems.Equipments
@@ -140,6 +141,8 @@ namespace BubbetsItems.Equipments
                 {
                     AkSoundEngine.PostEvent("BrokenClock_Start", Body.gameObject);
                     if (!Body.hasEffectiveAuthority) return;
+                    Slot = Body.inventory.activeEquipmentSlot;
+                    Set = Body.inventory.activeEquipmentSet[Slot];
                     reversing = true;
                     _previousKeyframe = MakeKeyframe();
                     _currentTargetKeyframe = DropoutStack.Pop();
@@ -148,6 +151,7 @@ namespace BubbetsItems.Equipments
                 case EquipmentBase.EquipmentActivationState.ConsumeStock when Body.hasEffectiveAuthority:
                     reversing = false;
                     break;
+                case EquipmentBase.EquipmentActivationState.ConsumeStock:
                 case EquipmentBase.EquipmentActivationState.DidNothing:
                     break;
                 default:
@@ -260,26 +264,15 @@ namespace BubbetsItems.Equipments
         private BrokenClockKeyframe _previousKeyframe;
         private BrokenClockKeyframe _currentTargetKeyframe;
         private float _ratio;
+        private byte Slot;
+        private byte Set;
 
         private void DoReverseBehaviour()
         {
             var any = DropoutStack.Any(); 
             if (!any && Body != null && Body)
             {
-                reversing = false;
-                AkSoundEngine.PostEvent("BrokenClock_Break", Body.gameObject);
-                byte slot = 0;
-                foreach (var equipmentSlot in Body.inventory._equipmentStateSlots)
-                {
-                    byte set = 0;
-                    foreach (var state in equipmentSlot)
-                    {
-                        if (state.equipmentDef == BrokenClock.Instance.EquipmentDef)
-                            Body.inventory.DeductEquipmentCharges(slot, set, 1);
-                        set++;
-                    }
-                    slot++;
-                }
+                EquipmentBase.CmdExecuteEquipmentSlotAndSet(Body.equipmentSlot, Slot, Set);
                 //characterMotor.velocity = _lastVelocity;
                 return;
             }

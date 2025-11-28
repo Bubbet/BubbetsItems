@@ -47,7 +47,15 @@ namespace BubbetsItems.Items.VoidLunar
 			ScalingInfos[0].WorkingContext.r = 1;
 			ScalingInfos[1].WorkingContext.p = 1;
 			ScalingInfos[1].WorkingContext.r = 1;
-			return base.GetFormattedDescription(inventory, token, forceHideExtended);
+			
+			var master = inventory ? inventory!.GetComponent<CharacterMaster>() : null;
+			if (master)
+				return base.GetFormattedDescription(
+					new AdditionalFormatOptions()
+					{
+						OverrideItemCount = Util.GetItemCountForTeam(master!.teamIndex, ItemDef.itemIndex, false, false)
+					},null, token, forceHideExtended);
+			return base.GetFormattedDescription(null, token, forceHideExtended);
 		}
 
 		public override void MakeRiskOfOptions()

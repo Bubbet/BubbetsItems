@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BepInEx.Configuration;
+using BubbetsItems.Helpers;
 using RoR2;
 using RoR2.Networking;
 using UnityEngine.Networking;
@@ -111,12 +112,14 @@ namespace BubbetsItems
 
 		public static Dictionary<string, ConfigEntryBase> configEntries = new();
 		//public static Dictionary<string, ZioConfigEntryBase> configEntriesZio = new();
-		private const short MsgType = 389;
+		private static short? _msgType;
+		private static short MsgType => _msgType ??= ExtraNetworkMessageHandlerAttribute.GetMsgType<ConfigSync>(nameof(ConfigSync.Handle)) ?? throw new Exception("Failed to get MsgType for ConfigSync");
+		private static short? _msgTypeAll;
+		private static short MsgTypeAll => _msgTypeAll ??= ExtraNetworkMessageHandlerAttribute.GetMsgType<ConfigSyncAll>(nameof(ConfigSyncAll.Handle)) ?? throw new Exception("Failed to get MsgType for ConfigSyncAll");
 
 		public static void Init()
 		{
 			NetworkUser.onNetworkUserDiscovered += UserConnected;
-			NetworkManagerSystem.onStartClientGlobal += RegisterMessages;
 			NetworkManagerSystem.onStopClientGlobal += Disconnect;
 		}
 
@@ -131,26 +134,13 @@ namespace BubbetsItems
 			}
 		}
 
-		public static void RegisterMessages(NetworkClient client)
-		{
-			try
-			{
-				client.RegisterHandler(MsgType, ConfigSync.Handle);
-				client.RegisterHandler(MsgType + 1, ConfigSyncAll.Handle);
-			}
-			catch (Exception f)
-			{
-				BubbetsItemsPlugin.Log.LogError(f);
-			}
-		}
-
 		private static void UserConnected(NetworkUser networkuser)
 		{
 			try
 			{
 				if (!NetworkServer.active) return;
 				if (networkuser.connectionToClient == null) return; // escape your own user connecting
-				networkuser.connectionToClient.Send(MsgType + 1, new ConfigSyncAll());
+				networkuser.connectionToClient.Send(MsgTypeAll, new ConfigSyncAll());
 			}
 			catch (Exception f)
 			{
@@ -243,6 +233,7 @@ namespace BubbetsItems
 				value = TomlTypeConverter.ConvertToValue(valueSerialized, GetValueFromType(type));
 			}
 
+			[ExtraNetworkMessageHandler(priority = 10000, client = true)]
 			public static void Handle(NetworkMessage netmsg)
 			{
 				netmsg.ReadMessage<ConfigSync>().TempSet();
@@ -272,6 +263,7 @@ namespace BubbetsItems
 	public class ConfigSyncAll : MessageBase
 	{
 		private readonly List<ConfigCategories.ConfigSync> configs;
+		[ExtraNetworkMessageHandler(priority = 9999, client = true)]
 		public static void Handle(NetworkMessage netmsg)
 		{
 			netmsg.ReadMessage<ConfigSyncAll>().TempSet();

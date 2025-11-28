@@ -45,6 +45,7 @@ namespace BubbetsItems.EntityStates
         public override void FixedUpdate()
         {
             base.FixedUpdate();
+            if (!NetworkServer.active) return;
             if (_pulseCount < Mathf.FloorToInt(_holdoutZone.charge / _frequency))
             {
                 foreach (var component1 in TeamComponent.GetTeamMembers(_indicator.teamFilter.teamIndex))

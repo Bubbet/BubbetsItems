@@ -81,7 +81,7 @@ namespace BubbetsItems.Behaviours
 					break;
 				case AsyncOperationStatus.Failed:
 					DestroyInst();
-					Debug.LogError("Prefab load failed.");
+					BubbetsItemsPlugin.Log.LogError("Prefab load failed. VoidChest.prefab");
 					_loading = false;
 					break;
 				default:

@@ -1,12 +1,15 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
+using BubbetsItems;
 using RoR2;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Events;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.Serialization;
+using ZedMod;
 
 namespace MaterialHud
 {
@@ -126,7 +129,9 @@ namespace MaterialHud
 
 			if (string.IsNullOrEmpty(prefabAddress) || _loading) return;
 			_loading = true;
-			Addressables.LoadAssetAsync<GameObject>(prefabAddress).Completed += PrefabLoaded;
+			var address = PrefabLoader.AddressMap.GetValueOrDefault(prefabAddress, prefabAddress);
+			//var address = prefabAddress;
+			Addressables.LoadAssetAsync<GameObject>(address).Completed += PrefabLoaded;
 		}
 
 		private void PrefabLoaded(AsyncOperationHandle<GameObject> obj)
@@ -154,7 +159,7 @@ namespace MaterialHud
 					break;
 				case AsyncOperationStatus.Failed:
 					if (_instance != null) DestroyImmediate(_instance);
-					Debug.LogError("Prefab load failed.");
+					BubbetsItemsPlugin.Log.LogError($"Prefab load failed. {prefabAddress}");
 					_loading = false;
 					break;
 				case AsyncOperationStatus.None:

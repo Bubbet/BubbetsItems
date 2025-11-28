@@ -6,6 +6,8 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 
 using RoR2;
+using UnityEngine;
+using UnityEngine.Networking;
 
 namespace BubbetsItems.Items.VoidLunar
 {
@@ -75,12 +77,12 @@ namespace BubbetsItems.Items.VoidLunar
 			args.shieldMultAdd += inst.ScalingInfos[0].ScalingFunction(amount);
 		}
 
-		/*
+		
 		[HarmonyILManipulator, HarmonyPatch(typeof(CharacterBody), nameof(CharacterBody.RecalculateStats))]
 		public static void PatchIl(ILContext il)
 		{
 			var c = new ILCursor(il);
-			c.GotoNext(MoveType.After, x => x.MatchCallOrCallvirt<CharacterBody>("set_" + nameof(CharacterBody.maxShield)));
+			c.GotoNext(MoveType.After, x => x.MatchCallOrCallvirt<CharacterBody>("set_" + nameof(CharacterBody.maxBarrier)));
 			c.Emit(OpCodes.Ldarg_0);
 			c.EmitDelegate<Action<CharacterBody>>(cb =>
 			{
@@ -93,17 +95,31 @@ namespace BubbetsItems.Items.VoidLunar
 				cb.maxShield = 1;
 			});
 		}
-		*/
+		
 
-		[HarmonyPostfix, HarmonyPatch(typeof(CharacterBody), nameof(CharacterBody.RecalculateStats))]
+		//[HarmonyPostfix, HarmonyPatch(typeof(CharacterBody), nameof(CharacterBody.RecalculateStats))]
 		public static void UsedToBePatchIL(CharacterBody __instance)
 		{
 			if (!TryGetInstance(out Imperfect inst)) return;
 			var inv = __instance.inventory;
 			if (inv && inv.GetItemCount(inst.ItemDef) > 0 && __instance.maxShield > 1)
 			{
+				var maxShield = __instance.maxShield;
 				__instance.maxHealth += __instance.maxShield - 1;
 				__instance.maxShield = 1;
+				
+				if (NetworkServer.active)
+				{
+					float num118 = __instance.maxShield - maxShield;
+					if (num118 > 0f)
+					{
+						__instance.healthComponent.RechargeShield(num118);
+					}
+					else if (__instance.healthComponent.shield > __instance.maxShield)
+					{
+						__instance.healthComponent.Networkshield = Mathf.Max(__instance.healthComponent.shield + num118, __instance.maxShield);
+					}
+				}
             }
         }
 	}

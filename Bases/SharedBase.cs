@@ -75,10 +75,22 @@ namespace BubbetsItems
         //This is probably bad practice
         public virtual bool RequiresSotv => false;
 
-        public virtual string GetFormattedDescription(Inventory? inventory = null, string? token = null,
+        
+        public virtual string GetFormattedDescription(AdditionalFormatOptions opts, Inventory? inventory = null, string? token = null,
             bool forceHideExtended = false)
         {
             return "Not Implemented";
+        }
+
+        public virtual string GetFormattedDescription(Inventory? inventory = null, string? token = null,
+            bool forceHideExtended = false)
+        {
+            return GetFormattedDescription(new AdditionalFormatOptions(), inventory, token, forceHideExtended);
+        }
+        
+        public class AdditionalFormatOptions
+        {
+            public int? OverrideItemCount = null;
         }
 
         public static void Initialize(ManualLogSource manualLogSource, ConfigFile configFile, out SharedInfo info,

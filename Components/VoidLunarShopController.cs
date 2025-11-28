@@ -238,12 +238,15 @@ namespace BubbetsItems
                 else
                     voidCoinChances.Add(component, chance);
 
-                if (!component || !Util.CheckRoll(chance)) return;
-
-                PickupDropletController.CreatePickupDroplet(
-                    PickupCatalog.FindPickupIndex(DLC1Content.MiscPickups.VoidCoin.miscPickupIndex),
-                    damageReport.victim.transform.position, Vector3.up * 10f);
-                voidCoinChances[component] = chance * BubbetsItemsPlugin.Conf.VoidCoinDropChanceMult.Value;
+                var wasInfestor = damageReport.victimBodyIndex == DLC1Content.BodyPrefabs.VoidInfestorBody.bodyIndex;
+                if (wasInfestor || component && Util.CheckRoll(chance))
+                {
+                    PickupDropletController.CreatePickupDroplet(
+                        PickupCatalog.FindPickupIndex(DLC1Content.MiscPickups.VoidCoin.miscPickupIndex),
+                        damageReport.victim.transform.position, Vector3.up * 10f);
+                    if (!wasInfestor)
+                        voidCoinChances[component] = chance * BubbetsItemsPlugin.Conf.VoidCoinDropChanceMult.Value;
+                }
             };
         }
     }

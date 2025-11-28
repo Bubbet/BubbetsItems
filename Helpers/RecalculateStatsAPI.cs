@@ -29,6 +29,22 @@ public static class RecalculateStatsAPI
 
         #endregion
 
+        #region regen
+
+        /// <summary>Added to base health regen.</summary> <remarks>HEALTH_REGEN ~ (BASE_REGEN + baseRegenAdd + levelRegenAdd * <inheritdoc cref="_levelMultiplier"/>) * (REGEN_MULT + regenMultAdd) * regenTotalMult</remarks>
+        public float baseRegenAdd = 0f;
+
+        /// <summary>Multiplied by level and added to base health regen.</summary> <inheritdoc cref="baseRegenAdd"/>
+        public float levelRegenAdd = 0f;
+
+        /// <summary>Added to the direct multiplier to base health regen.</summary> <inheritdoc cref="baseRegenAdd"/>
+        public float regenMultAdd = 0f;
+
+        /// <summary>Base health regen is multiplied by this number. Multiply this value by your multiplier.</summary> <inheritdoc cref="baseRegenAdd"/>
+        public float regenTotalMult = 1f;
+
+        #endregion
+
         #region moveSpeed
 
         /// <summary>Added to base move speed.</summary> <remarks>MOVE_SPEED ~ (BASE_MOVE_SPEED + baseMoveSpeedAdd + levelMoveSpeedAdd * <inheritdoc cref="_levelMultiplier"/>) * (MOVE_SPEED_MULT + moveSpeedMultAdd) / (MOVE_SPEED_REDUCTION_MULT + moveSpeedReductionMultAdd)</remarks>
@@ -76,6 +92,26 @@ public static class RecalculateStatsAPI
         public float levelArmorAdd = 0f;
 
         #endregion
+
+        #region barrier
+
+        /// <summary>Set to TRUE to freeze barrier decay.</summary> <remarks>BARRIER_DECAY_RATE ~ (shouldFreezeBarrier == true) ? 0 : BARRIER_DECAY_RATE</remarks>
+        public int shouldFreezeBarrier = 0;
+
+        /// <summary>Multiply to increase or decrease barrier decay rate.</summary> <remarks>BARRIER_DECAY_RATE ~ (BASE_DECAY_RATE + barrierDecayAdd) * (barrierDecayMult). Cannot be less than 0.</remarks>
+        public float barrierDecayMult = 1;
+
+        /// <summary>ADD to increase or decrease barrier decay rate. Expressed as a rate per second.</summary> <inheritdoc cref="barrierDecayMult"/>
+        public float barrierDecayAdd = 0;
+
+        #endregion
+
+        #region luck
+
+        /// <summary>Add to increase or decrease Luck. Can be negative.</summary> <remarks>LUCK ~ (MASTER_LUCK + luckAdd).</remarks>
+        public float luckAdd = 0;
+
+        #endregion
     }
 
     public delegate void StatHookEventHandler(CharacterBody sender, StatHookEventArgs args);
@@ -108,7 +144,15 @@ public static class RecalculateStatsAPI
         foreach (var (key, value) in _statHookFields)
         {
             if (_r2StatHookEventArgsFields.TryGetValue(key, out var field))
-                field.SetValue(args, value.GetValue(_statMods));
+            {
+                if (field.Name ==
+                    nameof(StatHookEventArgs.shouldFreezeBarrier)) // Its dumb this isn't a int to begin with.
+                {
+                    field.SetValue(args, (int)value.GetValue(_statMods) > 0);
+                }
+                else
+                    field.SetValue(args, value.GetValue(_statMods));
+            }
         }
     }
 
@@ -131,10 +175,12 @@ public static class RecalculateStatsAPI
                     {
                         _r2StatHookEventArgsFields[field.Name] = field;
                     }
+
                     foreach (var field in typeof(StatHookEventArgs).GetFields())
                     {
                         _statHookFields[field.Name] = field;
                     }
+
                     _r2Delegate = Delegate.CreateDelegate(handlerType,
                         typeof(RecalculateStatsAPI).GetMethod(nameof(R2ApiHandler),
                             BindingFlags.Static | BindingFlags.Public)!);
@@ -230,9 +276,36 @@ public static class RecalculateStatsAPI
 
         Action emitLevelMultiplier = locLevelMultiplierIndex >= 0 ? EmitLevelMultiplier : EmitFallbackLevelMultiplier;
 
+        c.Emit(OpCodes.Ldarg_0);
+        c.EmitDelegate<Action<CharacterBody>>((body) => SetCustomStats(body));
+
+        void SetCustomStats(CharacterBody body)
+        {
+            //get stats
+            BodyCustomStats = GetCustomStatsFromBody(body);
+            if (body.master)
+            {
+                body.master.luck -= BodyCustomStats.luckFromBody;
+            }
+
+            BodyCustomStats.ResetStats();
+
+            if (body.master)
+            {
+                body.master.luck += _statMods.luckAdd;
+                BodyCustomStats.luckFromBody = _statMods.luckAdd;
+            }
+
+            BodyCustomStats.barrierDecayFrozen = _statMods.shouldFreezeBarrier;
+            BodyCustomStats.barrierDecayRateMult = _statMods.barrierDecayMult;
+            if (BodyCustomStats.barrierDecayRateMult < 0)
+                BodyCustomStats.barrierDecayRateMult = 0;
+            BodyCustomStats.barrierDecayRateAdd = _statMods.barrierDecayAdd;
+        }
+
         //ModifyHealthStat(c, emitLevelMultiplier);
         ModifyShieldStat(c, emitLevelMultiplier);
-        //ModifyHealthRegenStat(c, emitLevelMultiplier);
+        ModifyHealthRegenStat(c, emitLevelMultiplier);
         ModifyMovementSpeedStat(c, emitLevelMultiplier);
         //ModifyJumpStat(c, emitLevelMultiplier);
         //ModifyDamageStat(c, emitLevelMultiplier);
@@ -242,6 +315,8 @@ public static class RecalculateStatsAPI
         //ModifyCurseStat(c);
         //ModifyCooldownStat(c);
         //ModifyLevelingStat(c);
+        //ModifyJumpCountStat(c);
+        ModifyLuckStat(c);
     }
 
     private static void ModifyShieldStat(ILCursor c, Action emitLevelMultiplier)
@@ -253,8 +328,7 @@ public static class RecalculateStatsAPI
             x => x.MatchLdfld<CharacterBody>(nameof(CharacterBody.baseMaxShield)),
             x => x.MatchLdarg(0),
             x => x.MatchLdfld<CharacterBody>(nameof(CharacterBody.levelMaxShield))
-        ) && c.TryGotoNext(
-            x => x.MatchStloc(out locBaseShieldIndex)
+        ) && c.TryGotoNext(x => x.MatchStloc(out locBaseShieldIndex)
         ) && c.TryGotoNext(
             x => x.MatchLdloc(locBaseShieldIndex),
             x => x.MatchCallOrCallvirt(typeof(CharacterBody).GetProperty(nameof(CharacterBody.maxShield),
@@ -281,6 +355,45 @@ public static class RecalculateStatsAPI
         }
     }
 
+    private static void ModifyHealthRegenStat(ILCursor c, Action emitLevelMultiplier)
+    {
+        c.Index = 0;
+
+        int locRegenMultIndex = -1;
+        int locFinalRegenIndex = -1;
+        bool ILFound = c.TryGotoNext(
+            x => x.MatchLdloc(out locFinalRegenIndex),
+            x => x.MatchCallOrCallvirt(typeof(CharacterBody).GetProperty(nameof(CharacterBody.regen),
+                BindingFlags.Public | BindingFlags.NonPublic |
+                BindingFlags.Static | BindingFlags.Instance)!.GetSetMethod(true))
+        ) && c.TryGotoPrev(
+            x => x.MatchAdd(),
+            x => x.MatchLdloc(out locRegenMultIndex),
+            x => x.MatchMul(),
+            x => x.MatchStloc(out locFinalRegenIndex)
+        );
+
+        if (ILFound)
+        {
+            c.GotoNext(x => x.MatchLdloc(out locRegenMultIndex));
+            emitLevelMultiplier();
+            c.EmitDelegate<Func<float, float>>((levelMultiplier) =>
+                _statMods.baseRegenAdd + _statMods.levelRegenAdd * levelMultiplier);
+            c.Emit(OpCodes.Add);
+
+            c.EmitDelegate<Func<float>>(() => _statMods.regenTotalMult);
+            c.Emit(OpCodes.Mul);
+
+            c.GotoNext(x => x.MatchMul());
+            c.EmitDelegate<Func<float>>(() => _statMods.regenMultAdd);
+            c.Emit(OpCodes.Add);
+        }
+        else
+        {
+            BubbetsItemsPlugin.Log.LogError($"{nameof(ModifyHealthRegenStat)} failed.");
+        }
+    }
+
     private static void ModifyMovementSpeedStat(ILCursor c, Action emitLevelMultiplier)
     {
         c.Index = 0;
@@ -292,8 +405,7 @@ public static class RecalculateStatsAPI
             x => x.MatchLdfld<CharacterBody>(nameof(CharacterBody.baseMoveSpeed)),
             x => x.MatchLdarg(0),
             x => x.MatchLdfld<CharacterBody>(nameof(CharacterBody.levelMoveSpeed))
-        ) && c.TryGotoNext(
-            x => x.MatchStloc(out locBaseSpeedIndex)
+        ) && c.TryGotoNext(x => x.MatchStloc(out locBaseSpeedIndex)
         ) && c.TryGotoNext(
             x => x.MatchLdloc(locBaseSpeedIndex),
             x => x.MatchLdloc(out locSpeedMultIndex),
@@ -358,8 +470,7 @@ public static class RecalculateStatsAPI
             x => x.MatchLdfld<CharacterBody>(nameof(CharacterBody.baseAttackSpeed)),
             x => x.MatchLdarg(0),
             x => x.MatchLdfld<CharacterBody>(nameof(CharacterBody.levelAttackSpeed))
-        ) && c.TryGotoNext(
-            x => x.MatchStloc(out locBaseAttackSpeedIndex)
+        ) && c.TryGotoNext(x => x.MatchStloc(out locBaseAttackSpeedIndex)
         ) && c.TryGotoNext(
             x => x.MatchLdloc(locBaseAttackSpeedIndex),
             x => x.MatchLdloc(out locAttackSpeedMultIndex),
@@ -396,12 +507,10 @@ public static class RecalculateStatsAPI
     {
         c.Index = 0;
 
-        bool ILFound = c.TryGotoNext(
-            x => x.MatchLdfld<CharacterBody>(nameof(CharacterBody.baseArmor))
-        ) && c.TryGotoNext(
-            x => x.MatchCallOrCallvirt(typeof(CharacterBody).GetProperty(nameof(CharacterBody.armor),
-                BindingFlags.Public | BindingFlags.NonPublic |
-                BindingFlags.Static | BindingFlags.Instance)!.GetSetMethod(true)));
+        bool ILFound = c.TryGotoNext(x => x.MatchLdfld<CharacterBody>(nameof(CharacterBody.baseArmor))
+        ) && c.TryGotoNext(x => x.MatchCallOrCallvirt(typeof(CharacterBody).GetProperty(nameof(CharacterBody.armor),
+            BindingFlags.Public | BindingFlags.NonPublic |
+            BindingFlags.Static | BindingFlags.Instance)!.GetSetMethod(true)));
 
         if (ILFound)
         {
@@ -415,4 +524,91 @@ public static class RecalculateStatsAPI
             BubbetsItemsPlugin.Log.LogError($"{nameof(ModifyArmorStat)} failed.");
         }
     }
+
+    [HarmonyPostfix, HarmonyPatch(typeof(HealthComponent), nameof(HealthComponent.GetBarrierDecayRate))]
+    private static void ModifyBarrierDecayRate(HealthComponent __instance, ref float __result)
+    {
+        var stats = GetCustomStatsFromBody(__instance.body);
+        if (stats == null)
+            return;
+
+        if (stats.barrierDecayFrozen <= 0)
+        {
+            __result += stats.barrierDecayRateAdd;
+            __result *= stats.barrierDecayRateMult;
+        }
+
+        /*
+        if (stats.barrierDecayFrozen > 0)
+        {
+            __result = stats.barrierDecayRateAdd < 0 ? stats.barrierDecayRateAdd : 0;
+            return;
+        }
+        __result += stats.barrierDecayRateAdd;
+        __result *= stats.barrierDecayRateMult;
+        */
+    }
+
+    private static void ModifyLuckStat(ILCursor c)
+    {
+        c.Index = 0;
+
+        bool ILFound = c.TryGotoNext(MoveType.Before, x => x.MatchCallOrCallvirt<CharacterMaster>("set_luck"));
+
+        if (ILFound)
+        {
+            c.EmitDelegate<Func<float>>(() => _statMods!.luckAdd);
+            c.Emit(OpCodes.Add);
+        }
+        else
+        {
+            BubbetsItemsPlugin.Log.LogError($"{nameof(ModifyLuckStat)} failed.");
+        }
+    }
+
+    public static void Initialize()
+    {
+        CharacterBody.onBodyDestroyGlobal += CustomStatsCleanup;
+    }
+
+    #region custom stats
+
+    private static CustomStats BodyCustomStats;
+
+    private static Dictionary<CharacterBody, CustomStats> characterCustomStats =
+        new Dictionary<CharacterBody, CustomStats>();
+
+    private static void CustomStatsCleanup(CharacterBody body)
+    {
+        characterCustomStats.Remove(body);
+    }
+
+    internal static CustomStats GetCustomStatsFromBody(CharacterBody body)
+    {
+        if (body == null)
+            return null;
+        if (!characterCustomStats.TryGetValue(body, out var customStats))
+            characterCustomStats[body] = customStats = new CustomStats();
+        return customStats;
+    }
+
+    public class CustomStats
+    {
+        public int barrierDecayFrozen = 0;
+        public float barrierDecayRateAdd = 0;
+        public float barrierDecayRateMult = 1;
+
+        public float luckFromBody = 0;
+
+        internal void ResetStats()
+        {
+            barrierDecayFrozen = 0;
+            barrierDecayRateAdd = 0;
+            barrierDecayRateMult = 1;
+
+            luckFromBody = 0;
+        }
+    }
+
+    #endregion
 }

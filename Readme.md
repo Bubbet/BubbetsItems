@@ -71,6 +71,33 @@ Patience is key~
     - `Conq#1738` for the item stats descriptions
 
 # Changelog
+* v1.8.18 Mod Changes:
+    * Holographic Donkey
+        * Fixed damage not forwarding.
+        * Hid healthbar.
+        * Added more lines.
+        * Added dedicated volume slider, you better not mute him.
+    * Broken Clock
+        * Fixed ticking continuing for clients when the timer runs out.
+    * Jellied Soles
+        * Networked the stored damage.
+        * Changed the way damage is stored/used.
+            * The stored damage is now 1 to 1 with enemy health, meaning if you have 1000 stored damage you do 1000 damage to the boss, the damage scaling happens when the fall-damage is absorbed.
+            * You can now add a maximum storage amount by using Min in the scaling function. ex: Damage Add = "Min(1000, [s] + [a] * [d] * [f])" 
+        * Fixed it not instakilling a dude if you had more than his health stored.
+        * Added config option to clamp fall damage to max health, preventing big falls from adding a ton of damage. (off by default)
+        * Added config option to transfer the damage when it gets stolen, to mithrix or dlc3 extractor. (on by default)
+    * Void lunar shop
+        * Fixed return to blue portal button not working for clients.
+        * Fixed alot of the prefabs not loading down at the shop for clients.
+    * Fixed Clumped Sand negative regen.
+    * Fixed Clay Catalyst buff ward not working.
+    * Fixed Imperfection shield to health not working.
+    * Fixed void slug not working.
+    * Actually added the "recharges when out of combat" part of mechanical snail.
+    * Fixed Lost Seers Tragedy leaving behind Xs and corpses when multi-killing by adding a very short cooldown. (0.25s) 
+  
+
 * v1.8.17 Mod Changes:
     * Updated for Alloyed Collective
         * Fix void scrap cost pay

@@ -1,6 +1,5 @@
 using BubbetsItems.Helpers;
 using System;
-using BubbetsItems.Components;
 using BubbetsItems.Behaviours;
 using HarmonyLib;
 using Mono.Cecil.Cil;
@@ -81,20 +80,22 @@ namespace BubbetsItems.Items.BarrierItems
 		{
 			base.MakeBehaviours();
 			ExtraHealthBarSegments.AddType<SlugData>();
-			CommonBodyPatches.CollectExtraStats += GetBarrierDecay;
+			RecalculateStatsAPI.GetStatCoefficients += GetBarrierDecay;
 		}
 
 		protected override void DestroyBehaviours()
 		{
 			base.DestroyBehaviours();
-			CommonBodyPatches.CollectExtraStats -= GetBarrierDecay;
+			RecalculateStatsAPI.GetStatCoefficients -= GetBarrierDecay;
 		}
 
-		private void GetBarrierDecay(ref CommonBodyPatches.ExtraStats obj)
+		private void GetBarrierDecay(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)
 		{
-			var count = obj.inventory.GetItemCount(ItemDef);
+			var inv = sender.inventory;
+			if (!inv) return;
+			var count = inv.GetItemCountEffective(ItemDef);
 			if (count <= 0) return;
-			obj.barrierDecayMult += ScalingInfos[0].ScalingFunction(count);
+			args.barrierDecayMult -= ScalingInfos[0].ScalingFunction(count);
 		}
 
 		public class SlugData : ExtraHealthBarSegments.BarData
