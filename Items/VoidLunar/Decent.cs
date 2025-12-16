@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using BubbetsItems.Helpers;
 using HarmonyLib;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RoR2;
+using RoR2.Items;
 using UnityEngine;
 
 namespace BubbetsItems.Items.VoidLunar
@@ -38,6 +40,8 @@ namespace BubbetsItems.Items.VoidLunar
             base.MakeConfigs();
             AddScalingFunction("[a]", "Equipment Activation Amount");
             AddScalingFunction("0.35 + 0.15 * [a]", "Equipment Cooldown");
+            AddScalingFunction("[a]", "Executive Card Shop Duplication Amount");
+            AddScalingFunction("[a]", "Executive Card Drone Shop Duplication Amount");
         }
 
         protected override void FillVoidConversions(List<ItemDef.Pair> pairs)
@@ -53,6 +57,59 @@ namespace BubbetsItems.Items.VoidLunar
             var amount = __instance.GetItemCount(inst.ItemDef);
             if (amount <= 0) return;
             __result *= 1f + inst.ScalingInfos[1].ScalingFunction(amount);
+        }
+
+        [HarmonyILManipulator, HarmonyPatch(typeof(MultiShopCardUtils), nameof(MultiShopCardUtils.OnPurchase))]
+        public static void MultiShopPatch(ILContext il)
+        {
+            var c = new ILCursor(il);
+            var shopIndex = 0;
+            if (c.TryGotoNext(x =>
+                    x.MatchCallOrCallvirt<MultiShopController>(
+                        nameof(MultiShopController.SetCloseOnTerminalPurchase))) &&
+                c.TryGotoPrev(x => x.MatchLdloc(out shopIndex)))
+            {
+                c.Emit(OpCodes.Ldloc, shopIndex);
+                c.Emit(OpCodes.Ldarg_0);
+                c.EmitDelegate<Action<ShopTerminalBehavior, CostTypeDef.PayCostContext>>(DupeShopPurchase);
+            }
+            else
+            {
+                BubbetsItemsPlugin.Log.LogError($"Failed to patch MultiShopCardUtils.OnPurchase");
+            }
+        }
+
+        private static void DupeShopPurchase(ShopTerminalBehavior shop, CostTypeDef.PayCostContext context)
+        {
+            if (!context.activatorInventory) return;
+            if (!TryGetInstance<Decent>(out var inst)) return;
+            var amount = context.activatorInventory.GetItemCount(inst.ItemDef);
+            if (amount <= 0) return;
+            shop.debt += 1 + Mathf.RoundToInt(inst.ScalingInfos[2].ScalingFunction(amount));
+        }
+
+        public static bool suppressDroneDuping = false;
+        [HarmonyPrefix,
+         HarmonyPatch(typeof(DroneVendorTerminalBehavior), nameof(DroneVendorTerminalBehavior.DispatchDrone),
+             typeof(Interactor))]
+        public static void DupeDronePurchase(DroneVendorTerminalBehavior __instance, Interactor interactor)
+        {
+            if (suppressDroneDuping) return;
+            if (!TryGetInstance<Decent>(out var inst)) return;
+            if (!interactor) return;
+            var body = interactor.GetComponent<CharacterBody>();
+            if (!body) return;
+            var inv = body.inventory;
+            if (!inv) return;
+            if (!inv.HasEquipment(DLC1Content.Equipment.MultiShopCard.equipmentIndex)) return;
+            var amount = inv.GetItemCount(inst.ItemDef);
+            if (amount <= 0) return;
+            suppressDroneDuping = true;
+            for (var i = 0; i < Mathf.FloorToInt(inst.ScalingInfos[3].ScalingFunction(amount)); i++)
+            {
+                __instance.DispatchDrone(interactor);
+            }
+            suppressDroneDuping = false;
         }
 
         protected override void MakeBehaviours()

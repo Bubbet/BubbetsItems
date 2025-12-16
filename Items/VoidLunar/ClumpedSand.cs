@@ -28,6 +28,7 @@ namespace BubbetsItems.Items.VoidLunar
 			AddScalingFunction("[a]", "Attack Hit Count");
 			AddScalingFunction("-3 * [a]", "Regen Add", desc: "[a] = item count; [r] = current regen;");
 			AddScalingFunction("0.5", "Damage Mult");
+			AddScalingFunction("1", "Regen Mult", desc: "[a] = item count;");
 		}
 
 		protected override void FillVoidConversions(List<ItemDef.Pair> pairs)
@@ -90,6 +91,7 @@ namespace BubbetsItems.Items.VoidLunar
 			if (amount <= 0) return;
 			inst.ScalingInfos[1].WorkingContext.r = _oldRegen;
 			args.baseRegenAdd += inst.ScalingInfos[1].ScalingFunction(amount);
+			args.regenTotalMult += inst.ScalingInfos[3].ScalingFunction(amount);
 		}
 	}
 }

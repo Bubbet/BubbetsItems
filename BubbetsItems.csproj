@@ -57,6 +57,11 @@
             <HintPath>G:\SteamLibrary\steamapps\common\Risk of Rain 2\Risk of Rain 2_Data\Managed\Unity.ResourceManager.dll</HintPath>
         </Reference>
     </ItemGroup>
+    <ItemGroup>
+      <Reference Include="Newtonsoft.Json">
+        <HintPath>..\..\..\..\Users\Bubbet\AppData\Roaming\com.kesomannen.gale\riskofrain2\profiles\Default\BepInEx\plugins\Newtonsoft.Json.dll</HintPath>
+      </Reference>
+    </ItemGroup>
 
     <Target Name="CopyDLLs" AfterTargets="Build">
         <Message Text="Executing CopyDLLs task" Importance="High" />

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using BepInEx.Bootstrap;
+using BepInEx.Configuration;
 using HarmonyLib;
 using MaterialHud;
 using MonoMod.Cil;
@@ -95,11 +96,11 @@ namespace BubbetsItems
 
         public static void MakeTokens()
         {
-            Language.english.SetStringByToken("BUB_VOIDLUNARSHOP_NAME", "Void Bud");
-            Language.english.SetStringByToken("BUB_VOIDLUNARSHOP_CONTEXT", "Open Void Bud");
-            Language.english.SetStringByToken("BUB_VOIDLUNARSHOP_REROLL_NAME", "Slab");
-            Language.english.SetStringByToken("BUB_VOIDLUNARSHOP_REROLL_CONTEXT", "Refresh Shop");
-            Language.english.SetStringByToken("BUB_RETURN_TO_PORTALBLUE", "Return to Blue Portal");
+            BubbetsItemsPlugin.AddToken("BUB_VOIDLUNARSHOP_NAME", "Void Bud");
+            BubbetsItemsPlugin.AddToken("BUB_VOIDLUNARSHOP_CONTEXT", "Open Void Bud");
+            BubbetsItemsPlugin.AddToken("BUB_VOIDLUNARSHOP_REROLL_NAME", "Slab");
+            BubbetsItemsPlugin.AddToken("BUB_VOIDLUNARSHOP_REROLL_CONTEXT", "Refresh Shop");
+            BubbetsItemsPlugin.AddToken("BUB_RETURN_TO_PORTALBLUE", "Return to Blue Portal");
 
             if (!Chainloader.PluginInfos.ContainsKey("com.Anreol.ReleasedFromTheVoid")) EnableVoidCoins();
         }
@@ -239,7 +240,7 @@ namespace BubbetsItems
                     voidCoinChances.Add(component, chance);
 
                 var wasInfestor = damageReport.victimBodyIndex == DLC1Content.BodyPrefabs.VoidInfestorBody.bodyIndex;
-                if (wasInfestor || component && Util.CheckRoll(chance))
+                if (wasInfestor && BubbetsItemsPlugin.Conf.GuarenteedInfestorDrop.Value || component && Util.CheckRoll(chance))
                 {
                     PickupDropletController.CreatePickupDroplet(
                         PickupCatalog.FindPickupIndex(DLC1Content.MiscPickups.VoidCoin.miscPickupIndex),

@@ -8,6 +8,7 @@ using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
+using Newtonsoft.Json;
 using RiskOfOptions;
 using RiskOfOptions.Options;
 using RoR2;
@@ -295,11 +296,12 @@ namespace BubbetsItems
                 }
             }
         }
-
+        
+        
         protected void AddToken(string key, string value)
         {
             Language.english.SetStringByToken(sharedInfo.TokenPrefix + key, value);
-            //sharedInfo.Logger.LogInfo($"\"{sharedInfo.TokenPrefix + key}\": \"{value}\"");
+            sharedInfo.Tokens.Add(sharedInfo.TokenPrefix + key, value);
         }
 
         /* other languages get unloaded on language change, and these keys would be discarded
@@ -333,7 +335,15 @@ namespace BubbetsItems
             public List<SharedBase> Instances = new();
 
             private bool _zioRiskOfOptionsMade;
+
+            public readonly Dictionary<string, string> Tokens = new Dictionary<string, string>();
             //public ZioConfigFile.ZioConfigFile zioConfigFile;
+
+            public void DumpTokens(string path)
+            {
+                var text = JsonConvert.SerializeObject(Tokens);
+                System.IO.File.WriteAllText(path, text);
+            }
 
             public SharedInfo(ManualLogSource manualLogSource, ConfigFile configFile, Harmony? harmony,
                 string tokenPrefix)

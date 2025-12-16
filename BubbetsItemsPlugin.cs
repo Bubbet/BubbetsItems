@@ -186,13 +186,15 @@ namespace BubbetsItems
                 Application.OpenURL("https://ko-fi.com/snakeygemo/gallery");
             }));
             Conf.MakeRiskOfOptions();
+            RiskOfOptions.ModSettingsManager.AddOption(new GenericButtonOption("Dump Tokens", "General", "Dumps all the tokens to the plugin folder.", "Dump Tokens",
+                () => Instance._sharedInfo.DumpTokens(Path.Join(Path.GetDirectoryName(Instance.Info.Location), "tokens.json"))));
         }
 
         private static uint _bankID;
         public static ItemTierDef VoidLunarTier = null!;
         private static PickupIndex[]? _voidLunarItems;
         //private ZioConfigFile.ZioConfigFile zConfigFile;
-        private SharedBase.SharedInfo _sharedInfo = null!;
+        internal SharedBase.SharedInfo _sharedInfo = null!;
         public static bool RiskOfOptionsEnabled;
 
         //[SystemInitializer]
@@ -216,13 +218,19 @@ namespace BubbetsItems
         //[SystemInitializer]
         public static void ExtraTokens()
         {
-            Language.english.SetStringByToken("BUB_HOLD_TOOLTIP", "Hold Capslock for more.");
+            AddToken("BUB_HOLD_TOOLTIP", "Hold Capslock for more.");
             
-            Language.english.SetStringByToken("BUB_EXPANSION", "Bubbet's Content");
-            Language.english.SetStringByToken("BUB_EXPANSION_DESC", "Adds content from 'Bubbets Items' to the game.");
-            Language.english.SetStringByToken("BUB_EXPANSION_VOID", "Bubbet's Void Content");
-            Language.english.SetStringByToken("BUB_EXPANSION_VOID_DESC", "Adds the void content from 'Bubbets Items' and requires 'Survivors of the Void'.");
-            Language.english.SetStringByToken("BUB_DEFAULT_CONVERT", "Corrupts all {0}.");
+            AddToken("BUB_EXPANSION", "Bubbet's Content");
+            AddToken("BUB_EXPANSION_DESC", "Adds content from 'Bubbets Items' to the game.");
+            AddToken("BUB_EXPANSION_VOID", "Bubbet's Void Content");
+            AddToken("BUB_EXPANSION_VOID_DESC", "Adds the void content from 'Bubbets Items' and requires 'Survivors of the Void'.");
+            AddToken("BUB_DEFAULT_CONVERT", "Corrupts all {0}.");
+        }
+
+        public static void AddToken(string key, string value)
+        {
+            Language.english.SetStringByToken(key, value);
+            Instance._sharedInfo.Tokens.Add(key, value);
         }
 
         public static class Conf
@@ -234,6 +242,7 @@ namespace BubbetsItems
             public static ConfigEntry<bool> VoidCoinBarrelDrop = null!;
             public static ConfigEntry<bool> VoidCoinVoidFields = null!;
             public static ConfigEntry<float> EffectVolume = null!;
+            public static ConfigEntry<bool> GuarenteedInfestorDrop = null!;
             //public static bool RequiresR2Api;
 
             internal static void Init(ConfigFile configFile)
@@ -244,6 +253,7 @@ namespace BubbetsItems
                 VoidCoinDropChanceMult = configFile.Bind(ConfigCategoriesEnum.General, "Void Coin Drop Chance Mult", 0.5f, "Not used if using Released from the void. Drop chance multiplier to chance upon getting coin.");
                 VoidCoinBarrelDrop = configFile.Bind(ConfigCategoriesEnum.General, "Void Coin Drop From Void Barrel", true, "Not used if using Released from the void. Should the void coin drop from barrels.");
                 VoidCoinVoidFields = configFile.Bind(ConfigCategoriesEnum.General, "Void Coin Drop From Void Fields", true, "Should the void coin drop from void fields.");
+                GuarenteedInfestorDrop = configFile.Bind(ConfigCategoriesEnum.General, "Void Coin Drop From Infestor Guaranteed", true, "Should the void coin drop from infestors every time.");
             }
 
             internal static void InitZio(ConfigFile configFile)

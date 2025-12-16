@@ -104,6 +104,13 @@ namespace BubbetsItems.Items.VoidLunar
 
         private void RecalcStats(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)
         {
+            if (!TryGetInstance(out Tarnished instance)) return;
+            if (!sender) return;
+            var inv = sender.inventory;
+            if (!inv) return;
+            var stack = sender.inventory.GetItemCount(instance!.ItemDef);
+            if (stack <= 0) return;
+            
             var skills = sender.skillLocator.allSkills;
             var contains = skills.Where(x => x.skillOverrides.Any(y => y.skillDef == SkillDef)).ToArray();
             if (sender.HasBuff(BuffDef2) && !contains.Any())
@@ -113,13 +120,25 @@ namespace BubbetsItems.Items.VoidLunar
             {
                 foreach (var genericSkill in contains)
                     genericSkill.UnsetSkillOverride(this, SkillDef, GenericSkill.SkillOverridePriority.Contextual);
-                if (!TryGetInstance(out Tarnished instance)) return;
-                var stack = sender.inventory.GetItemCount(instance!.ItemDef);
                 var toAdd = Mathf.FloorToInt(ScalingInfos[0].ScalingFunction(stack));
                 if (NetworkServer.active)
                     sender.SetBuffCount(Tarnished.BuffDef!.buffIndex, toAdd);
                 sender.master.OnInventoryChanged();
             }
+            
+            
+            var luckDifference = 0;
+            if (sender.GetBuffCount(BuffDef) <= 0)
+            {
+                if (OldTarnished.Value)
+                    luckDifference = Mathf.FloorToInt(instance.ScalingInfos[1].ScalingFunction(stack));
+            }
+            else
+            {
+                luckDifference = Mathf.RoundToInt(instance.ScalingInfos[3].ScalingFunction(stack));
+            }
+
+            args.luckAdd += luckDifference;
         }
 
         private static BuffDef? _buffDef2;
@@ -194,7 +213,7 @@ namespace BubbetsItems.Items.VoidLunar
             }
         }
 
-        [HarmonyPostfix, HarmonyPatch(typeof(CharacterMaster), nameof(CharacterMaster.OnInventoryChanged))]
+        //[HarmonyPostfix, HarmonyPatch(typeof(CharacterMaster), nameof(CharacterMaster.OnInventoryChanged))]
         public static void ApplyLuck(CharacterMaster __instance)
         {
             if (!TryGetInstance(out Tarnished instance)) return;

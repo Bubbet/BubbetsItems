@@ -24,9 +24,12 @@ namespace BubbetsItems
                 x => x.MatchCallOrCallvirt(typeof(Enum), nameof(Enum.GetValues)));
             c.EmitDelegate<Func<Array, Array>>(_ => ItemTierCatalog.allItemTierDefs.Select(x => x.tier).ToArray());
             var i = -1;
-            c.GotoNext(MoveType.After, x => x.MatchLdloc(out i), x => x.MatchCallOrCallvirt(typeof(Array), "get_Length"));
-            c.Emit(OpCodes.Ldloc, i);
-            c.EmitDelegate<Func<int, ItemTier[], int>>((_, tiers) => (int)tiers.Max() + 1);
+            if (c.TryGotoNext(MoveType.After, x => x.MatchLdloc(out i),
+                    x => x.MatchCallOrCallvirt(typeof(Array), "get_Length")))
+            {
+                c.Emit(OpCodes.Ldloc, i);
+                c.EmitDelegate<Func<int, ItemTier[], int>>((_, tiers) => (int)tiers.Max() + 1);
+            }
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(LocalUserManager), nameof(LocalUserManager.Init))]

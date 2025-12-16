@@ -71,6 +71,16 @@ Patience is key~
     - `Conq#1738` for the item stats descriptions
 
 # Changelog
+* v1.8.20 Mod Changes:
+    * Added config value for the guaranteed coin drop from infestors.
+    * Fixed an issue with the rule catalog now using enumerators instead of array length for enumeration.
+      * Caused issues getting out of the pod with hourglass. 
+      * Also caused issues with multi stage attacks.
+    * Added a config entry for each item to enable being droppable as temp.
+    * Fixed tarnished not adding any luck.
+      * They moved luck to be owned by the body, not the master.
+    * Make Deep Decent actually work with Executive Card
+  
 * v1.8.19 Mod Changes:
     * Fixed a issue with the r2api.recalcstats compat layer.
     * Added the old regen as a parameter for clumped sand. (no clue how someone would use this, but its there now)

@@ -16,7 +16,8 @@ namespace BubbetsItems
 		BalancingFunctions,
 		DisableModParts,
 		EquipmentCooldowns,
-		VoidConversions
+		VoidConversions,
+		CanBeTemp,
 	}
 
 	public static class ConfigCategories
@@ -26,7 +27,8 @@ namespace BubbetsItems
 			"Balancing Functions",
 			"Disable Mod Parts",
 			"Equipment Cooldowns",
-			"Void Conversions"
+			"Void Conversions",
+			"Can Be Temp"
 		};
 
 		public static ConfigEntry<T> Bind<T>(this ConfigFile file, ConfigCategoriesEnum which, string key, T defaultValue, string description, T? oldDefault = default, bool networked = true)

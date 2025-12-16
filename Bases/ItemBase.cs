@@ -31,8 +31,31 @@ namespace BubbetsItems
         {
             var name = GetType().Name;
             Enabled = sharedInfo.ConfigFile.Bind("Disable Items", name, true, "Should this item be enabled.");
+            CanBeTemp = sharedInfo.ConfigFile.Bind("Can Be Temporary", name, true, "Can this item be temporary?");
+            CanBeTemp.SettingChanged += TempChanged; 
             var pairs = new List<ItemDef.Pair>();
             FillVoidConversions(pairs);
+        }
+
+        private void TempChanged(object sender, EventArgs e)
+        {
+            if (CanBeTemp.Value)
+            {
+                HG.ArrayUtils.ArrayAppend(ref ItemDef.tags, ItemTag.CanBeTemporary);
+            }
+            else
+            {
+                var indexes = new List<int>();
+                for (int i = 0; i < ItemDef.tags.Length; i++)
+                {
+                    if (ItemDef.tags[i] == ItemTag.CanBeTemporary) indexes.Add(i);
+                }
+
+                foreach (var index in indexes)
+                {
+                    HG.ArrayUtils.ArrayRemoveAtAndResize(ref ItemDef.tags, index);
+                }
+            }
         }
 
         public ItemDef ItemDef = null!;
@@ -44,6 +67,7 @@ namespace BubbetsItems
         // ReSharper disable once InconsistentNaming
         public VoidPairing? voidPairing;
         protected string SimpleDescriptionToken = null!;
+        public ConfigEntry<bool> CanBeTemp = null!;
 
         protected void AddScalingFunction(string defaultValue, string name, string? desc = null,
             string? oldDefault = null)
@@ -225,6 +249,7 @@ namespace BubbetsItems
         public override void MakeInLobbyConfig(Dictionary<ConfigCategoriesEnum, List<object>> scalingFunctions)
         {
             base.MakeInLobbyConfig(scalingFunctions);
+            scalingFunctions[ConfigCategoriesEnum.CanBeTemp].Add(ConfigFieldUtilities.CreateFromBepInExConfigEntry(CanBeTemp));
             foreach (var info in ScalingInfos)
             {
                 info.MakeInLobbyConfig(scalingFunctions[ConfigCategoriesEnum.BalancingFunctions]);
@@ -234,6 +259,7 @@ namespace BubbetsItems
         public override void MakeRiskOfOptions()
         {
             base.MakeRiskOfOptions();
+            ModSettingsManager.AddOption(new CheckBoxOption(CanBeTemp));
             foreach (var info in ScalingInfos)
             {
                 info.MakeRiskOfOptions();
@@ -292,6 +318,11 @@ namespace BubbetsItems
                 foreach (var itemDef in pack.itemDefs)
                     if (MatchName(itemDef.name, name))
                         ItemDef = itemDef;
+            }
+
+            foreach (var instance in Items)
+            {
+                instance.TempChanged(null, null);
             }
 
             if (ItemDef == null)
