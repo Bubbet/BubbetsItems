@@ -71,6 +71,13 @@ Patience is key~
     - `Conq#1738` for the item stats descriptions
 
 # Changelog
+* v1.8.21 Mod Changes:
+  * Added unfinished voidscrapatstart artifact disabled by default.
+    * It functions, it just doesn't have a icon so it looks buggy as shit in the menu.
+    * I want to add a unlock to it later too.
+  * Fixed the sepia filter on wildlife camera.
+  * Fixed the healthbars being broke with the new update.
+
 * v1.8.20 Mod Changes:
     * Added config value for the guaranteed coin drop from infestors.
     * Fixed an issue with the rule catalog now using enumerators instead of array length for enumeration.

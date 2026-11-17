@@ -212,6 +212,7 @@ namespace BubbetsItems.Items
             }
 
             c.GotoNext(MoveType.After, x => x == target.Target);
+            c.GotoNext(x => x.MatchStloc(out var which) && which == num2);
             c.Emit(OpCodes.Ldarg_0);
             c.Emit(OpCodes.Ldloc, masterNum);
             c.Emit(OpCodes.Ldarg_1);
@@ -245,8 +246,6 @@ namespace BubbetsItems.Items
 
                 return amount;
             });
-            c.Emit(OpCodes.Dup);
-            c.Emit(OpCodes.Stloc, num2);
         }
 
         private static NetworkSoundEventDef? _hitSound;

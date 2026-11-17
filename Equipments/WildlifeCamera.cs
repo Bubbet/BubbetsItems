@@ -242,9 +242,8 @@ Luckily they seem friendly enough");
         public void SetupSummonedInventory(MasterSummon masterSummon, Inventory summonedInventory)
         {
             //summonedInventory.SetEquipmentIndex(BubbetsItemsPlugin.ContentPack.eliteDefs[0].eliteEquipmentDef.equipmentIndex); ArtificerExtended throws an nre here. 
-            summonedInventory.SetEquipment(
-                new EquipmentState(BubbetsItemsPlugin.ContentPack.eliteDefs[0].eliteEquipmentDef.equipmentIndex,
-                    Run.FixedTimeStamp.negativeInfinity, 1), 0); // TODO replace hard reference
+            //summonedInventory.SetEquipment(new EquipmentState(BubbetsItemsPlugin.ContentPack.eliteDefs[0].eliteEquipmentDef.equipmentIndex, Run.FixedTimeStamp.negativeInfinity, 1), 0); // TODO replace hard reference
+            summonedInventory.SetEquipment(new EquipmentState(BubbetsItemsPlugin.ContentPack.eliteDefs[0].eliteEquipmentDef.equipmentIndex, Run.FixedTimeStamp.negativeInfinity, 1), new EquipmentLocation());
             summonedInventory.GetComponent<CharacterMaster>().onBodyStart += BodyStart;
             /* This doesnt work, because the elite system doesnt care about the second slot
             if (_targetEquipment.equipmentIndex != EquipmentIndex.None)
@@ -255,9 +254,9 @@ Luckily they seem friendly enough");
 
         private void BodyStart(CharacterBody obj)
         {
-            if (_targetEquipment.equipmentIndex != EquipmentIndex.None && _targetEquipment.equipmentDef &&
-                _targetEquipment.equipmentDef!.passiveBuffDef)
-                obj.AddBuff(_targetEquipment.equipmentDef.passiveBuffDef);
+
+            obj.AddBuff(WildlifeCamera.BuffDef);
+            obj.modelLocator.modelTransform.GetComponent<CharacterModel>().forceUpdate = true;
         }
     }
 }

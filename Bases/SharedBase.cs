@@ -128,6 +128,7 @@ namespace BubbetsItems
                     }
                     catch (Exception e)
                     {
+                        sharedInfo.Logger.LogError("Exception when patching " + shared.GetType().Name);
                         sharedInfo.Logger.LogError(e);
                     }
                 }

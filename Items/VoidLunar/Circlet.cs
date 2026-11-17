@@ -96,7 +96,7 @@ namespace BubbetsItems.Items.VoidLunar
 			if (change < 0) return true;
 			var body = __instance.GetBody();
 			if (!body) return true;
-			if (body.HasBuff(BuffDef)) return false;
+			if (body.HasBuff(BuffDef)) return false; // TODO maybe move this after the recharge would buff the item
 
 			var info = inst.ScalingInfos[0];
 			info.WorkingContext.m = change;

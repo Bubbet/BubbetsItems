@@ -11,7 +11,6 @@ using RiskOfOptions.OptionConfigs;
 using RiskOfOptions.Options;
 using RoR2;
 using RoR2.ContentManagement;
-using RoR2.ExpansionManagement;
 using RoR2.Networking;
 using UnityEngine.Networking;
 
@@ -218,13 +217,16 @@ namespace BubbetsItems
             return Language.GetString(token ?? EquipmentDef.descriptionToken);
         }
 
-        [HarmonyPrefix, HarmonyPatch(typeof(Inventory), nameof(Inventory.SetEquipmentInternal), typeof(EquipmentState), typeof(uint), typeof(uint))]
-        public static void OnEquipmentSwap(Inventory __instance, EquipmentState equipmentState, uint slot, uint set)
+        //[HarmonyPrefix, HarmonyPatch(typeof(Inventory), nameof(Inventory.SetEquipmentInternal), typeof(EquipmentState), typeof(uint), typeof(uint))]
+        [HarmonyPrefix, HarmonyPatch(typeof(Inventory), nameof(Inventory.SetEquipmentInternal), [typeof(EquipmentState), typeof(EquipmentLocation)], [ArgumentType.Ref, ArgumentType.Ref])]
+        public static void OnEquipmentSwap(Inventory __instance, ref EquipmentState equipmentState, ref EquipmentLocation location)
         {
+            var slot = location.slot;
+            var set = location.set;
             EquipmentState? oldState = null;
             try
             {
-                oldState = __instance._equipmentStateSlots[slot][set];
+                oldState = __instance._equipmentSlots[slot]._sets[set];
             }
             catch (IndexOutOfRangeException)
             {
@@ -352,11 +354,11 @@ namespace BubbetsItems
 
                 var clampedSlot = slot % inv.activeEquipmentSet.Length;
                 inv.activeEquipmentSlot = (byte)clampedSlot;
-                inv.activeEquipmentSet[clampedSlot] = (byte)(set % inv._equipmentStateSlots[clampedSlot].Length);
-                inv._activeEquipmentDirty = true;
-                inv.wasRecentlyExtraEquipmentSwapped = true;
-                inv.SetDirtyBit(16U);
-                inv.HandleInventoryChanged();
+                
+                var activeEquipmentLocation = inv.activeEquipmentLocation;
+                activeEquipmentLocation.slot = (uint)slot;
+                activeEquipmentLocation.set = (uint)set;
+                inv.TrySetActiveEquipmentLocation(activeEquipmentLocation);
             }
             return equipSlot;
         }

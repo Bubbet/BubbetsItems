@@ -99,7 +99,7 @@ namespace BubbetsItems.Items.BarrierItems
             if (inst == null) return;
 
             ZoneInstances.TryGetValue(__instance, out var zones);
-            zones ??= new GameObject[5];
+            zones ??= new GameObject[(int)TeamIndex.Count];
 
             for (TeamIndex teamIndex = TeamIndex.Neutral; teamIndex < TeamIndex.Count; teamIndex += 1)
             {

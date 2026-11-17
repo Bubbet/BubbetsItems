@@ -41,7 +41,7 @@ namespace BubbetsItems.Items
 			AddVoidPairing("FragileDamageBonusConsumed HealingPotionConsumed ExtraLifeVoidConsumed ExtraLifeConsumed MysticsItems_LimitedArmorBroken DRUMSTICKCONSUMED ITEM_CARTRIDGECONSUMED ITEM_SINGULARITYCONSUMED ITEM_BROKEN_MESS ConsumedGlassShield_ItemDef TreasureCacheConsumed TreasureCacheVoidConsumed", oldDefault: "FragileDamageBonusConsumed HealingPotionConsumed ExtraLifeVoidConsumed ExtraLifeConsumed");
 		}
 
-		[HarmonyPrefix, HarmonyPatch(typeof(CostTypeCatalog), "<Init>g__PayCostItems|5_1")]
+		[HarmonyPrefix, HarmonyPatch(typeof(CostTypeCatalog), "<Init>g__PayCostItems|6_2")]
 		public static void PrefixItemPayCost(CostTypeDef.PayCostContext context, CostTypeDef.PayCostResults result)
 		{
 			if (context.costTypeDef.itemTier != ItemTier.Tier1) return;

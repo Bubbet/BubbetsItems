@@ -77,12 +77,12 @@ namespace BubbetsItems.Items.BarrierItems
 
                 if (TryGetInstance<BrokenCeremonialProbe>(out var broke))
                 {
-                    body.inventory.GiveItem(broke.ItemDef);
+                    body.inventory.GiveItemPermanent(broke.ItemDef);
                     CharacterMasterNotificationQueue.SendTransformNotification(body.master, inst.ItemDef.itemIndex,
                         broke.ItemDef.itemIndex, CharacterMasterNotificationQueue.TransformationType.Default);
                 }
 
-                body.inventory.RemoveItem(inst.ItemDef);
+                body.inventory.RemoveItemPermanent(inst.ItemDef);
             }
         }
 
@@ -92,10 +92,10 @@ namespace BubbetsItems.Items.BarrierItems
             if (!RegenOnStage.Value) return;
             if (TryGetInstance<BrokenCeremonialProbe>(out var broke) && TryGetInstance<CeremonialProbe>(out var inst))
             {
-                var itemCount = __instance.inventory.GetItemCount(broke.ItemDef);
+                var itemCount = __instance.inventory.GetItemCountPermanent(broke.ItemDef); // TODO Handle temp, rented, etc items
                 if (itemCount <= 0) return;
-                __instance.inventory.RemoveItem(broke.ItemDef, itemCount);
-                __instance.inventory.GiveItem(inst.ItemDef, itemCount);
+                __instance.inventory.RemoveItemPermanent(broke.ItemDef, itemCount);
+                __instance.inventory.GiveItemPermanent(inst.ItemDef, itemCount);
                 CharacterMasterNotificationQueue.SendTransformNotification(__instance, broke.ItemDef.itemIndex,
                     inst.ItemDef.itemIndex,
                     CharacterMasterNotificationQueue.TransformationType.RegeneratingScrapRegen);
